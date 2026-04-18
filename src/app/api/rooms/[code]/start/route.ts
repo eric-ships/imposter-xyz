@@ -23,12 +23,15 @@ export async function POST(
     return NextResponse.json({ error: "playerId required" }, { status: 400 });
   }
 
-  const { data: room } = await supabaseAdmin
+  const { data: room, error: roomErr } = await supabaseAdmin
     .from("rooms")
-    .select("code, host_id, state, recent_words, recent_categories")
+    .select("*")
     .eq("code", code)
     .maybeSingle();
 
+  if (roomErr) {
+    return NextResponse.json({ error: roomErr.message }, { status: 500 });
+  }
   if (!room) {
     return NextResponse.json({ error: "room not found" }, { status: 404 });
   }
@@ -56,30 +59,40 @@ export async function POST(
   const imposterId = ids[Math.floor(Math.random() * ids.length)];
   const turnOrder = shuffle(ids);
 
-  const recentWords: string[] = room.recent_words ?? [];
-  const recentCategories: string[] = room.recent_categories ?? [];
+  // Tolerate older rooms that haven't been migrated yet: only track recent
+  // words/categories if the columns exist on the row.
+  const hasRecentWords = "recent_words" in room;
+  const hasRecentCategories = "recent_categories" in room;
+  const recentWords: string[] = hasRecentWords ? (room.recent_words ?? []) : [];
+  const recentCategories: string[] = hasRecentCategories
+    ? (room.recent_categories ?? [])
+    : [];
+
   const { category, word } = await generateWordPrompt({
     words: recentWords,
     categories: recentCategories,
   });
 
-  const nextRecentWords = [...recentWords, word].slice(-20);
-  const nextRecentCategories = [...recentCategories, category].slice(-20);
+  const update: Record<string, unknown> = {
+    state: "playing",
+    category,
+    secret_word: word,
+    imposter_id: imposterId,
+    round: 1,
+    turn_index: 0,
+    turn_order: turnOrder,
+    updated_at: new Date().toISOString(),
+  };
+  if (hasRecentWords) {
+    update.recent_words = [...recentWords, word].slice(-20);
+  }
+  if (hasRecentCategories) {
+    update.recent_categories = [...recentCategories, category].slice(-20);
+  }
 
   const { error } = await supabaseAdmin
     .from("rooms")
-    .update({
-      state: "playing",
-      category,
-      secret_word: word,
-      imposter_id: imposterId,
-      round: 1,
-      turn_index: 0,
-      turn_order: turnOrder,
-      recent_words: nextRecentWords,
-      recent_categories: nextRecentCategories,
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq("code", code);
 
   if (error) {
