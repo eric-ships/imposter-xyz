@@ -256,7 +256,69 @@ function RoomPlay({
           )}
         </motion.div>
       </AnimatePresence>
+
+      {you.isHost &&
+        (view.state === "playing" ||
+          view.state === "voting" ||
+          view.state === "guessing") && (
+          <VoidGameButton code={code} playerId={playerId} />
+        )}
     </main>
+  );
+}
+
+function VoidGameButton({
+  code,
+  playerId,
+}: {
+  code: string;
+  playerId: string;
+}) {
+  const [armed, setArmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+
+  async function voidGame() {
+    if (!armed) {
+      setArmed(true);
+      return;
+    }
+    setSubmitting(true);
+    try {
+      await fetch(`/api/rooms/${code}/void`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId }),
+      });
+    } finally {
+      setArmed(false);
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="mt-6 flex justify-center border-t border-line-soft pt-6">
+      <button
+        onClick={voidGame}
+        disabled={submitting}
+        className={`text-[10px] uppercase tracking-[0.3em] transition ${
+          armed
+            ? "text-oxblood hover:opacity-80"
+            : "text-ink-faint hover:text-oxblood"
+        }`}
+      >
+        {submitting
+          ? "Voiding..."
+          : armed
+            ? "Tap again to confirm · void game"
+            : "Void game"}
+      </button>
+    </div>
   );
 }
 
