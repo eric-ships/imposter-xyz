@@ -59,60 +59,67 @@ export default function HomePage() {
     nickname.trim().length > 0 && joinCode.trim().length === 4 && !loading;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-10 px-6 py-12">
+    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-14 px-8 py-16">
       <header className="text-center">
-        <h1 className="text-4xl font-black tracking-tight">imposter.xyz</h1>
-        <p className="mt-2 text-sm text-neutral-400">
-          Everyone sees the category. One person is the imposter.
+        <h1 className="font-serif text-5xl font-light italic tracking-tight text-ink">
+          imposter
+        </h1>
+        <div className="mt-2 text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          A parlor game
+        </div>
+        <p className="mt-6 text-sm leading-relaxed text-ink-soft">
+          Everyone sees the category.
+          <br />
+          One person is the imposter.
         </p>
       </header>
 
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-8">
         <label className="block">
-          <span className="mb-2 block text-xs uppercase tracking-wider text-neutral-400">
-            Your nickname
+          <span className="mb-3 block text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            Your name
           </span>
           <input
             value={nickname}
             onChange={(e) => setNickname(e.target.value)}
             maxLength={20}
-            placeholder="e.g. Alice"
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-lg outline-none focus:border-neutral-500"
+            placeholder="Alice"
+            className="w-full border-b border-line bg-transparent px-1 pb-2 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
           />
         </label>
 
         <button
           onClick={createRoom}
           disabled={!canCreate}
-          className="w-full rounded-lg bg-indigo-500 px-4 py-3 text-lg font-semibold text-white transition hover:bg-indigo-400 disabled:cursor-not-allowed disabled:opacity-40"
+          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
         >
-          {loading === "create" ? "Creating..." : "Create room"}
+          {loading === "create" ? "Creating" : "Create a room"}
         </button>
 
-        <div className="relative text-center text-xs text-neutral-500">
-          <span className="bg-neutral-950 px-3">or join</span>
-          <div className="absolute inset-x-0 top-1/2 -z-10 h-px bg-neutral-800" />
+        <div className="relative py-1 text-center text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          <span className="bg-page px-4">or join</span>
+          <div className="absolute inset-x-0 top-1/2 -z-10 h-px bg-line" />
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <input
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
             maxLength={4}
             placeholder="CODE"
-            className="flex-1 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-center text-xl font-mono tracking-widest outline-none focus:border-neutral-500"
+            className="flex-1 border-b border-line bg-transparent px-1 pb-2 text-center font-serif text-2xl tracking-[0.4em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
           />
           <button
             onClick={joinRoom}
             disabled={!canJoin}
-            className="rounded-lg bg-neutral-800 px-5 py-3 font-semibold transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-sm border border-ink px-6 py-3 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page disabled:cursor-not-allowed disabled:opacity-30"
           >
             {loading === "join" ? "..." : "Join"}
           </button>
         </div>
 
         {error && (
-          <p className="rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-300">
+          <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
             {error}
           </p>
         )}

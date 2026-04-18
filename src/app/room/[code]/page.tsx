@@ -15,6 +15,7 @@ export default function RoomPage({
   const router = useRouter();
 
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
   const [joinNickname, setJoinNickname] = useState("");
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState<string | null>(null);
@@ -22,10 +23,10 @@ export default function RoomPage({
   const [view, setView] = useState<PublicRoomView | null>(null);
   const [notFound, setNotFound] = useState(false);
 
-  // Mount: look for stored playerId.
   useEffect(() => {
     const stored = localStorage.getItem(`ci:${code}:playerId`);
     if (stored) setPlayerId(stored);
+    setHydrated(true);
   }, [code]);
 
   const refetch = useCallback(async () => {
@@ -42,10 +43,10 @@ export default function RoomPage({
   }, [code, playerId]);
 
   useEffect(() => {
+    if (!hydrated) return;
     refetch();
-  }, [refetch]);
+  }, [hydrated, refetch]);
 
-  // Subscribe to room events via Supabase Realtime.
   useEffect(() => {
     const channel = supabase
       .channel(`room_events:${code}`)
@@ -91,12 +92,15 @@ export default function RoomPage({
 
   if (notFound) {
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6">
-        <h1 className="text-2xl font-bold">Room not found</h1>
-        <p className="text-sm text-neutral-400">Code {code} doesn&apos;t exist.</p>
+      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-8 text-center">
+        <h1 className="font-serif text-3xl italic text-ink">Room not found</h1>
+        <p className="text-sm text-ink-soft">
+          Code <span className="font-serif italic">{code}</span> doesn&apos;t
+          exist.
+        </p>
         <button
           onClick={() => router.push("/")}
-          className="rounded-lg bg-neutral-800 px-4 py-2 text-sm"
+          className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page"
         >
           Back home
         </button>
@@ -107,23 +111,26 @@ export default function RoomPage({
   if (!view) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md items-center justify-center">
-        <p className="text-sm text-neutral-500">Loading...</p>
+        <p className="text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+          Loading
+        </p>
       </main>
     );
   }
 
-  // If not a player in this room yet, show join form (room exists).
   if (!view.you) {
     if (view.state !== "lobby") {
       return (
-        <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6">
-          <h1 className="text-2xl font-bold">Game in progress</h1>
-          <p className="text-sm text-neutral-400">
+        <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-8 text-center">
+          <h1 className="font-serif text-3xl italic text-ink">
+            Game in progress
+          </h1>
+          <p className="text-sm text-ink-soft">
             This room has already started. Wait for the next round.
           </p>
           <button
             onClick={() => router.push("/")}
-            className="rounded-lg bg-neutral-800 px-4 py-2 text-sm"
+            className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page"
           >
             Back home
           </button>
@@ -131,35 +138,51 @@ export default function RoomPage({
       );
     }
     return (
-      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-6">
-        <h1 className="text-2xl font-bold">
-          Join room{" "}
-          <span className="font-mono tracking-widest text-indigo-300">
+      <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-8 px-8">
+        <div className="text-center">
+          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+            Join room
+          </div>
+          <div className="mt-2 font-serif text-4xl tracking-[0.3em] text-ink">
             {code}
+          </div>
+        </div>
+        <label className="block w-full">
+          <span className="mb-3 block text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            Your name
           </span>
-        </h1>
-        <input
-          value={joinNickname}
-          onChange={(e) => setJoinNickname(e.target.value)}
-          maxLength={20}
-          placeholder="Your nickname"
-          className="w-full rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 text-lg outline-none focus:border-neutral-500"
-        />
+          <input
+            value={joinNickname}
+            onChange={(e) => setJoinNickname(e.target.value)}
+            maxLength={20}
+            placeholder="Alice"
+            className="w-full border-b border-line bg-transparent px-1 pb-2 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+          />
+        </label>
         <button
           onClick={doJoin}
           disabled={joining || joinNickname.trim().length === 0}
-          className="w-full rounded-lg bg-indigo-500 px-4 py-3 font-semibold disabled:opacity-40"
+          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
         >
-          {joining ? "Joining..." : "Join"}
+          {joining ? "Joining" : "Join"}
         </button>
         {joinError && (
-          <p className="text-sm text-red-400">{joinError}</p>
+          <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+            {joinError}
+          </p>
         )}
       </main>
     );
   }
 
-  return <RoomPlay view={view} playerId={view.you.id} code={code} onRefetch={refetch} />;
+  return (
+    <RoomPlay
+      view={view}
+      playerId={view.you.id}
+      code={code}
+      onRefetch={refetch}
+    />
+  );
 }
 
 function RoomPlay({
@@ -177,24 +200,38 @@ function RoomPlay({
   const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-6 px-6 py-8">
-      <header className="flex items-baseline justify-between border-b border-neutral-800 pb-3">
+    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-8 px-8 py-10">
+      <header className="flex items-end justify-between border-b border-line pb-4">
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-neutral-500">
+          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
             Room
           </div>
-          <div className="font-mono text-2xl font-bold tracking-widest text-indigo-300">
+          <div className="mt-1 font-serif text-2xl tracking-[0.3em] text-ink">
             {code}
           </div>
         </div>
-        <div className="text-right text-xs text-neutral-400">
-          You: <span className="text-neutral-100">{nicknameById.get(playerId)}</span>
-          {you.isHost && <span className="ml-2 text-indigo-400">(host)</span>}
+        <div className="text-right">
+          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+            You
+          </div>
+          <div className="mt-1 text-sm text-ink">
+            {nicknameById.get(playerId)}
+            {you.isHost && (
+              <span className="ml-2 text-[10px] uppercase tracking-[0.3em] text-accent">
+                Host
+              </span>
+            )}
+          </div>
         </div>
       </header>
 
       {view.state === "lobby" && (
-        <LobbyPhase view={view} playerId={playerId} code={code} onRefetch={onRefetch} />
+        <LobbyPhase
+          view={view}
+          playerId={playerId}
+          code={code}
+          onRefetch={onRefetch}
+        />
       )}
 
       {view.state === "playing" && (
@@ -212,35 +249,50 @@ function RoomPlay({
   );
 }
 
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+      {children}
+    </h2>
+  );
+}
+
 function PlayerList({
   view,
-  highlightId,
+  showScores = true,
 }: {
   view: PublicRoomView;
-  highlightId?: string | null;
+  showScores?: boolean;
 }) {
   return (
-    <ul className="space-y-1">
-      {view.players.map((p) => (
-        <li
-          key={p.id}
-          className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
-            highlightId === p.id
-              ? "bg-indigo-500/20 ring-1 ring-indigo-400/50"
-              : "bg-neutral-900"
-          }`}
-        >
-          <span>
-            {p.nickname}
-            {p.id === view.hostId && (
-              <span className="ml-2 text-[10px] uppercase text-neutral-500">
-                host
-              </span>
+    <ul className="divide-y divide-line-soft border-y border-line-soft">
+      {view.players.map((p) => {
+        const { color, initial } = avatarFor(p.id, p.nickname);
+        return (
+          <li key={p.id} className="flex items-center gap-4 py-3">
+            <div
+              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white ${color}`}
+            >
+              {initial}
+            </div>
+            <div className="flex-1">
+              <div className="text-sm text-ink">
+                {p.nickname}
+                {p.id === view.hostId && (
+                  <span className="ml-2 text-[9px] uppercase tracking-[0.3em] text-accent">
+                    Host
+                  </span>
+                )}
+              </div>
+            </div>
+            {showScores && (
+              <div className="font-serif text-lg italic text-ink-soft">
+                {p.score}
+              </div>
             )}
-          </span>
-          <span className="text-xs text-neutral-500">{p.score} pts</span>
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -258,8 +310,10 @@ function LobbyPhase({
 }) {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const isHost = playerId === view.hostId;
   const canStart = view.players.length >= 3;
+  const anyScore = view.players.some((p) => p.score > 0);
 
   async function start() {
     setError(null);
@@ -281,32 +335,43 @@ function LobbyPhase({
   }
 
   const shareUrl =
-    typeof window !== "undefined" ? `${window.location.origin}/room/${code}` : "";
+    typeof window !== "undefined"
+      ? `${window.location.origin}/room/${code}`
+      : "";
 
   return (
     <>
-      <section className="space-y-3">
-        <h2 className="text-xs uppercase tracking-widest text-neutral-400">
-          Players ({view.players.length})
-        </h2>
-        <PlayerList view={view} />
+      <section className="space-y-4">
+        <div className="flex items-baseline justify-between">
+          <SectionLabel>
+            {anyScore ? "Match Score" : `Players · ${view.players.length}`}
+          </SectionLabel>
+          {anyScore && (
+            <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+              {view.players.length} players
+            </span>
+          )}
+        </div>
+        <PlayerList view={view} showScores={anyScore} />
       </section>
 
-      <section className="space-y-2">
-        <div className="text-xs uppercase tracking-widest text-neutral-400">
-          Invite
-        </div>
+      <section className="space-y-3">
+        <SectionLabel>Invite</SectionLabel>
         <div className="flex gap-2">
           <input
             readOnly
             value={shareUrl}
-            className="flex-1 rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-xs text-neutral-400"
+            className="flex-1 border-b border-line bg-transparent px-1 pb-1 text-xs text-ink-soft outline-none"
           />
           <button
-            onClick={() => navigator.clipboard.writeText(shareUrl)}
-            className="rounded-md bg-neutral-800 px-3 py-2 text-xs hover:bg-neutral-700"
+            onClick={() => {
+              navigator.clipboard.writeText(shareUrl);
+              setCopied(true);
+              setTimeout(() => setCopied(false), 1500);
+            }}
+            className="text-[10px] uppercase tracking-[0.3em] text-accent transition hover:text-ink"
           >
-            Copy
+            {copied ? "Copied" : "Copy"}
           </button>
         </div>
       </section>
@@ -315,21 +380,25 @@ function LobbyPhase({
         <button
           onClick={start}
           disabled={!canStart || starting}
-          className="rounded-lg bg-indigo-500 px-4 py-3 font-semibold disabled:opacity-40"
+          className="rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
         >
           {starting
-            ? "Starting..."
+            ? "Starting"
             : canStart
-              ? "Start game"
-              : `Need ${3 - view.players.length} more player${3 - view.players.length === 1 ? "" : "s"}`}
+              ? "Begin the game"
+              : `Awaiting ${3 - view.players.length} more`}
         </button>
       ) : (
-        <p className="text-center text-sm text-neutral-500">
-          Waiting for host to start...
+        <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+          Awaiting the host
         </p>
       )}
 
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
     </>
   );
 }
@@ -349,6 +418,12 @@ function PlayingPhase({
   const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
   const currentPlayerId = view.turnOrder[view.turnIndex];
   const isMyTurn = currentPlayerId === playerId;
+  const nextTurnIndex =
+    view.turnOrder.length > 0
+      ? (view.turnIndex + 1) % view.turnOrder.length
+      : 0;
+  const iAmNext =
+    !isMyTurn && view.turnOrder[nextTurnIndex] === playerId;
   const you = view.you!;
 
   async function submit() {
@@ -372,29 +447,29 @@ function PlayingPhase({
 
   return (
     <>
-      <section className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-5">
-        <div className="text-[10px] uppercase tracking-widest text-neutral-500">
-          Category (everyone sees this)
+      <section className="border border-line bg-surface p-8 text-center">
+        <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          Category
         </div>
-        <div className="mt-1 text-xl font-bold text-neutral-100">
+        <div className="mt-3 font-serif text-3xl italic text-ink">
           {view.category}
         </div>
-        <div className="mt-4 border-t border-neutral-800 pt-4">
+        <div className="mt-6 border-t border-line-soft pt-6">
           {you.isImposter ? (
             <>
-              <div className="text-[10px] uppercase tracking-widest text-rose-400">
+              <div className="text-[10px] uppercase tracking-[0.4em] text-oxblood">
                 You are the imposter
               </div>
-              <div className="mt-1 text-sm text-neutral-300">
-                Bluff. Guess the secret word from others&apos; clues.
+              <div className="mt-2 text-sm leading-relaxed text-ink-soft">
+                Bluff. Deduce the secret word from the others&apos; clues.
               </div>
             </>
           ) : (
             <>
-              <div className="text-[10px] uppercase tracking-widest text-emerald-400">
+              <div className="text-[10px] uppercase tracking-[0.4em] text-leaf">
                 Secret word
               </div>
-              <div className="mt-1 text-2xl font-bold text-emerald-300">
+              <div className="mt-2 font-serif text-3xl text-ink">
                 {you.secretWord}
               </div>
             </>
@@ -402,24 +477,23 @@ function PlayingPhase({
         </div>
       </section>
 
-      <section className="rounded-lg bg-neutral-900 px-4 py-3 text-center text-xs uppercase tracking-widest text-neutral-400">
+      <section className="text-center text-[10px] uppercase tracking-[0.4em] text-ink-faint">
         Round {view.round} of {view.totalRounds}
       </section>
 
       <TurnStrip view={view} playerId={playerId} />
 
       {isMyTurn ? (
-        <div className="space-y-2">
-          <label className="block text-xs uppercase tracking-widest text-neutral-400">
-            Your one-word clue
-          </label>
+        <div className="space-y-3">
+          <SectionLabel>Your one-word clue</SectionLabel>
           <div className="flex gap-2">
             <input
               value={word}
               onChange={(e) => setWord(e.target.value)}
               maxLength={40}
-              placeholder="e.g. slippery"
-              className="flex-1 rounded-lg border border-neutral-800 bg-neutral-900 px-4 py-3 outline-none focus:border-neutral-500"
+              placeholder="e.g. syrup"
+              autoFocus
+              className="flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl italic text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && word.trim() && !submitting) submit();
               }}
@@ -427,16 +501,32 @@ function PlayingPhase({
             <button
               onClick={submit}
               disabled={submitting || word.trim().length === 0}
-              className="rounded-lg bg-indigo-500 px-5 font-semibold disabled:opacity-40"
+              className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
             >
               {submitting ? "..." : "Submit"}
             </button>
           </div>
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && (
+            <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+              {error}
+            </p>
+          )}
         </div>
       ) : (
-        <p className="text-center text-sm text-neutral-500">
-          Waiting for {nicknameById.get(currentPlayerId)}...
+        <p className="text-center text-[11px] uppercase tracking-[0.3em]">
+          {iAmNext ? (
+            <>
+              <span className="text-accent">You&apos;re up next</span>
+              <span className="text-ink-faint">
+                {" "}
+                · Awaiting {nicknameById.get(currentPlayerId)}
+              </span>
+            </>
+          ) : (
+            <span className="text-ink-faint">
+              Awaiting {nicknameById.get(currentPlayerId)}
+            </span>
+          )}
         </p>
       )}
 
@@ -446,16 +536,16 @@ function PlayingPhase({
 }
 
 const AVATAR_PALETTE = [
-  "bg-rose-500",
-  "bg-amber-500",
-  "bg-emerald-500",
-  "bg-sky-500",
-  "bg-violet-500",
-  "bg-fuchsia-500",
-  "bg-teal-500",
-  "bg-orange-500",
-  "bg-lime-500",
-  "bg-cyan-500",
+  "bg-[#a8856a]",
+  "bg-[#6b7f5c]",
+  "bg-[#6a7d94]",
+  "bg-[#a67e7b]",
+  "bg-[#8a7a9b]",
+  "bg-[#b39560]",
+  "bg-[#5a8580]",
+  "bg-[#9a7357]",
+  "bg-[#7d8b6a]",
+  "bg-[#8a6b80]",
 ];
 
 function avatarFor(id: string, nickname: string) {
@@ -488,7 +578,7 @@ function TurnStrip({
   ];
 
   return (
-    <section className="flex gap-3 overflow-x-auto pb-1">
+    <section className="-mx-2 flex gap-4 overflow-x-auto px-2 py-3">
       {orderedIds.map((id) => {
         const p = playerById.get(id);
         if (!p) return null;
@@ -500,31 +590,29 @@ function TurnStrip({
         return (
           <div
             key={id}
-            className="flex min-w-[64px] flex-col items-center gap-1"
+            className="flex min-w-[64px] flex-col items-center gap-2"
           >
             <div className="relative">
               <div
-                className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold text-white transition ${color} ${
+                className={`flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold text-white transition ${color} ${
                   isCurrent
-                    ? "ring-4 ring-indigo-400 ring-offset-2 ring-offset-neutral-950"
+                    ? "ring-2 ring-accent ring-offset-4 ring-offset-page"
                     : isDone
-                      ? "opacity-40"
+                      ? "opacity-30"
                       : ""
                 }`}
               >
                 {initial}
               </div>
               {isDone && (
-                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">
+                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-leaf text-[10px] text-white">
                   ✓
                 </span>
               )}
             </div>
             <span
-              className={`max-w-[72px] truncate text-xs ${
-                isCurrent
-                  ? "font-semibold text-indigo-300"
-                  : "text-neutral-400"
+              className={`max-w-[72px] truncate text-[10px] uppercase tracking-[0.15em] ${
+                isCurrent ? "font-semibold text-accent" : "text-ink-faint"
               }`}
               title={p.nickname}
             >
@@ -547,28 +635,26 @@ function ClueLog({ view }: { view: PublicRoomView }) {
   if (view.clues.length === 0) return null;
 
   return (
-    <section className="space-y-3">
-      <h3 className="text-xs uppercase tracking-widest text-neutral-400">
-        Clues
-      </h3>
-      <div className="space-y-3">
+    <section className="space-y-4">
+      <SectionLabel>Clues</SectionLabel>
+      <div className="space-y-5">
         {Object.entries(rounds)
           .sort(([a], [b]) => Number(a) - Number(b))
           .map(([round, clues]) => (
-            <div key={round} className="rounded-lg bg-neutral-900 p-3">
-              <div className="mb-2 text-[10px] uppercase tracking-widest text-neutral-500">
+            <div key={round}>
+              <div className="mb-2 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
                 Round {round}
               </div>
-              <ul className="space-y-1 text-sm">
+              <ul className="divide-y divide-line-soft border-y border-line-soft">
                 {clues.map((c) => (
                   <li
                     key={c.id}
-                    className="flex justify-between border-b border-neutral-800 pb-1 last:border-0 last:pb-0"
+                    className="flex items-baseline justify-between py-2 text-sm"
                   >
-                    <span className="text-neutral-400">
+                    <span className="text-ink-soft">
                       {nicknameById.get(c.player_id)}
                     </span>
-                    <span className="font-medium text-neutral-100">
+                    <span className="font-serif text-base italic text-ink">
                       {c.word}
                     </span>
                   </li>
@@ -620,42 +706,55 @@ function VotingPhase({
 
   return (
     <>
-      <section className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-5">
-        <div className="text-[10px] uppercase tracking-widest text-neutral-500">
-          Category was
+      <section className="border border-line bg-surface p-8 text-center">
+        <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          The category was
         </div>
-        <div className="mt-1 text-xl font-bold">{view.category}</div>
+        <div className="mt-3 font-serif text-2xl italic text-ink">
+          {view.category}
+        </div>
       </section>
 
       <ClueLog view={view} />
 
-      <section className="space-y-3">
-        <h3 className="text-xs uppercase tracking-widest text-neutral-400">
-          Who is the imposter?
-        </h3>
-        <div className="grid gap-2">
+      <section className="space-y-4">
+        <SectionLabel>Who is the imposter?</SectionLabel>
+        <div className="divide-y divide-line-soft border-y border-line-soft">
           {view.players.map((p) => {
             const isYou = p.id === playerId;
             const selected = target === p.id;
+            const { color, initial } = avatarFor(p.id, p.nickname);
             return (
               <button
                 key={p.id}
                 onClick={() => !alreadyVoted && !isYou && setTarget(p.id)}
                 disabled={alreadyVoted || isYou}
-                className={`flex items-center justify-between rounded-lg border px-4 py-3 text-left transition ${
-                  selected
-                    ? "border-indigo-400 bg-indigo-500/20"
-                    : "border-neutral-800 bg-neutral-900"
-                } ${isYou || alreadyVoted ? "opacity-40" : "hover:border-neutral-600"}`}
+                className={`flex w-full items-center gap-4 py-4 text-left transition ${
+                  selected ? "bg-accent/10" : ""
+                } ${isYou || alreadyVoted ? "opacity-40" : "hover:bg-cream/40"}`}
               >
-                <span>
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white ${color}`}
+                >
+                  {initial}
+                </div>
+                <div className="flex-1 text-sm text-ink">
                   {p.nickname}
                   {isYou && (
-                    <span className="ml-2 text-xs text-neutral-500">(you)</span>
+                    <span className="ml-2 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+                      (you)
+                    </span>
                   )}
-                </span>
+                </div>
                 {alreadyVoted && myVote.target_id === p.id && (
-                  <span className="text-xs text-indigo-300">your vote</span>
+                  <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
+                    Your vote
+                  </span>
+                )}
+                {selected && !alreadyVoted && (
+                  <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
+                    Selected
+                  </span>
                 )}
               </button>
             );
@@ -665,16 +764,20 @@ function VotingPhase({
           <button
             onClick={submit}
             disabled={!target || submitting}
-            className="w-full rounded-lg bg-indigo-500 px-4 py-3 font-semibold disabled:opacity-40"
+            className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
           >
-            {submitting ? "Submitting..." : "Lock in vote"}
+            {submitting ? "Submitting" : "Lock in vote"}
           </button>
         ) : (
-          <p className="text-center text-sm text-neutral-500">
-            Vote locked. Waiting for others... ({votesReceived}/{totalPlayers})
+          <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+            Vote locked · {votesReceived} of {totalPlayers}
           </p>
         )}
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && (
+          <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+            {error}
+          </p>
+        )}
       </section>
     </>
   );
@@ -695,7 +798,6 @@ function RevealPhase({
   const [restarting, setRestarting] = useState(false);
   const router = useRouter();
 
-  // Vote tally
   const counts = new Map<string, number>();
   for (const v of view.votes) {
     counts.set(v.target_id, (counts.get(v.target_id) ?? 0) + 1);
@@ -706,6 +808,24 @@ function RevealPhase({
     .map(([id]) => id);
   const tied = topTargets.length > 1;
   const caught = !tied && topTargets[0] === reveal.imposterId;
+
+  const youAreImposter = playerId === reveal.imposterId;
+  const youWon = youAreImposter ? !caught : caught;
+  const pointsEarned = youAreImposter ? (caught ? 0 : 2) : caught ? 1 : 0;
+  const outcomeLabel = caught
+    ? "Crewmates prevail"
+    : tied
+      ? "Tied vote · imposter escapes"
+      : "Imposter prevails";
+  const subtitle = youAreImposter
+    ? caught
+      ? "They sniffed you out."
+      : "You fooled them all."
+    : caught
+      ? "You caught the imposter."
+      : tied
+        ? "The vote was tied. Imposter slips away."
+        : "The imposter slipped past you.";
 
   async function playAgain() {
     setRestarting(true);
@@ -718,122 +838,97 @@ function RevealPhase({
   }
 
   const sortedPlayers = [...view.players].sort((a, b) => b.score - a.score);
-  const youAreImposter = playerId === reveal.imposterId;
-  const youWon = youAreImposter ? !caught : caught;
-  const pointsEarned = youAreImposter ? (caught ? 0 : 2) : caught ? 1 : 0;
-  const outcomeLabel = caught
-    ? "Crewmates win"
-    : tied
-      ? "Tie vote - imposter wins"
-      : "Imposter wins";
-  const subtitle = youAreImposter
-    ? caught
-      ? "They sniffed you out."
-      : "You fooled them all."
-    : caught
-      ? "You caught the imposter."
-      : tied
-        ? "The vote was tied - imposter escapes."
-        : "The imposter slipped past you.";
 
   return (
     <>
       <section
-        className={`rounded-2xl border-2 p-6 text-center ${
+        className={`border-2 p-10 text-center ${
           youWon
-            ? "border-emerald-400/50 bg-emerald-500/10"
-            : "border-rose-400/50 bg-rose-500/10"
+            ? "border-leaf bg-leaf/5"
+            : "border-oxblood bg-oxblood/5"
         }`}
       >
         <div
-          className={`text-5xl font-black tracking-tight ${
-            youWon ? "text-emerald-300" : "text-rose-300"
+          className={`font-serif text-6xl italic ${
+            youWon ? "text-leaf" : "text-oxblood"
           }`}
         >
-          {youWon ? "You won!" : "You lost"}
+          {youWon ? "You won" : "You lost"}
         </div>
-        <div className="mt-2 text-sm text-neutral-300">{subtitle}</div>
+        <div className="mt-4 text-sm text-ink-soft">{subtitle}</div>
         {pointsEarned > 0 && (
-          <div className="mt-3 inline-block rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold text-neutral-200">
-            +{pointsEarned} pt{pointsEarned === 1 ? "" : "s"}
+          <div className="mt-5 inline-block border border-ink px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-ink">
+            +{pointsEarned} point{pointsEarned === 1 ? "" : "s"}
           </div>
         )}
       </section>
 
-      <section className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-5 text-center">
-        <div className="text-[10px] uppercase tracking-widest text-neutral-500">
+      <section className="border border-line bg-surface p-8 text-center">
+        <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
           The imposter was
         </div>
-        <div className="mt-2 text-3xl font-black text-rose-300">
+        <div className="mt-3 font-serif text-3xl italic text-oxblood">
           {nicknameById.get(reveal.imposterId)}
         </div>
-        <div className="mt-4 border-t border-neutral-800 pt-4">
-          <div className="text-[10px] uppercase tracking-widest text-neutral-500">
+        <div className="mt-6 border-t border-line-soft pt-6">
+          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
             Secret word
           </div>
-          <div className="mt-1 text-2xl font-bold text-emerald-300">
+          <div className="mt-2 font-serif text-3xl text-ink">
             {reveal.secretWord}
           </div>
-          <div className="text-xs text-neutral-500">
-            Category: {view.category}
+          <div className="mt-2 text-xs text-ink-faint">
+            Category · {view.category}
           </div>
         </div>
-        <div
-          className={`mt-5 inline-block rounded-full px-4 py-1 text-xs font-bold ${
-            caught
-              ? "bg-emerald-500/20 text-emerald-300"
-              : "bg-rose-500/20 text-rose-300"
-          }`}
-        >
+        <div className="mt-5 text-[10px] uppercase tracking-[0.3em] text-ink-soft">
           {outcomeLabel}
         </div>
       </section>
 
-      <section className="space-y-2">
-        <h3 className="text-xs uppercase tracking-widest text-neutral-400">
-          Votes
-        </h3>
-        <ul className="space-y-1 text-sm">
+      <section className="space-y-4">
+        <SectionLabel>Votes</SectionLabel>
+        <ul className="divide-y divide-line-soft border-y border-line-soft">
           {view.votes.map((v, i) => (
             <li
               key={i}
-              className="flex justify-between rounded-md bg-neutral-900 px-3 py-2"
+              className="flex items-baseline justify-between py-2 text-sm"
             >
-              <span className="text-neutral-400">
+              <span className="text-ink-soft">
                 {nicknameById.get(v.voter_id)}
               </span>
-              <span>→ {nicknameById.get(v.target_id)}</span>
+              <span className="font-serif italic text-ink">
+                → {nicknameById.get(v.target_id)}
+              </span>
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="space-y-2">
-        <h3 className="text-xs uppercase tracking-widest text-neutral-400">
-          Scoreboard
-        </h3>
+      <section className="space-y-4">
+        <SectionLabel>Scoreboard</SectionLabel>
         <PlayerList view={{ ...view, players: sortedPlayers }} />
       </section>
 
       {isHost ? (
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button
             onClick={playAgain}
             disabled={restarting}
-            className="flex-1 rounded-lg bg-indigo-500 px-4 py-3 font-semibold disabled:opacity-40"
+            className="flex-1 rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
           >
             {restarting ? "..." : "Play again"}
           </button>
           <button
             onClick={() => router.push("/")}
-            className="rounded-lg bg-neutral-800 px-4 py-3 font-semibold"
+            className="rounded-sm border border-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page"
           >
             Exit
           </button>
         </div>
       ) : (
-        <p className="text-center text-sm text-neutral-500">
-          Waiting for host to start the next round...
+        <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+          Awaiting the host
         </p>
       )}
     </>

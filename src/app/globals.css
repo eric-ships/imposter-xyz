@@ -1,26 +1,32 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-page: #f5f0e6;
+  --color-surface: #ffffff;
+  --color-cream: #ece4d1;
+  --color-ink: #1a1815;
+  --color-ink-soft: #5a5349;
+  --color-ink-faint: #8b8275;
+  --color-line: #ddd3c0;
+  --color-line-soft: #e8e0cf;
+  --color-accent: #8b7355;
+  --color-accent-soft: #c4a882;
+  --color-leaf: #4a5d3a;
+  --color-oxblood: #8b3a3a;
+  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-inter);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-serif {
+  font-family: var(--font-fraunces), "Iowan Old Style", "Hoefler Text", Georgia, serif;
+  font-feature-settings: "liga", "dlig";
 }
