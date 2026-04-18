@@ -402,17 +402,11 @@ function PlayingPhase({
         </div>
       </section>
 
-      <section className="flex items-center justify-between rounded-lg bg-neutral-900 px-4 py-3 text-sm">
-        <span className="text-neutral-400">
-          Round {view.round} of {view.totalRounds}
-        </span>
-        <span>
-          Turn:{" "}
-          <span className={isMyTurn ? "font-bold text-indigo-300" : ""}>
-            {isMyTurn ? "You" : nicknameById.get(currentPlayerId)}
-          </span>
-        </span>
+      <section className="rounded-lg bg-neutral-900 px-4 py-3 text-center text-xs uppercase tracking-widest text-neutral-400">
+        Round {view.round} of {view.totalRounds}
       </section>
+
+      <TurnStrip view={view} playerId={playerId} />
 
       {isMyTurn ? (
         <div className="space-y-2">
@@ -448,6 +442,98 @@ function PlayingPhase({
 
       <ClueLog view={view} />
     </>
+  );
+}
+
+const AVATAR_PALETTE = [
+  "bg-rose-500",
+  "bg-amber-500",
+  "bg-emerald-500",
+  "bg-sky-500",
+  "bg-violet-500",
+  "bg-fuchsia-500",
+  "bg-teal-500",
+  "bg-orange-500",
+  "bg-lime-500",
+  "bg-cyan-500",
+];
+
+function avatarFor(id: string, nickname: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  }
+  const color = AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+  const initial = nickname.trim().charAt(0).toUpperCase() || "?";
+  return { color, initial };
+}
+
+function TurnStrip({
+  view,
+  playerId,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+}) {
+  const currentPlayerId = view.turnOrder[view.turnIndex];
+  const cluedThisRound = new Set(
+    view.clues.filter((c) => c.round === view.round).map((c) => c.player_id)
+  );
+  const playerById = new Map(view.players.map((p) => [p.id, p]));
+  const orderedIds = [
+    ...view.turnOrder,
+    ...view.players
+      .map((p) => p.id)
+      .filter((id) => !view.turnOrder.includes(id)),
+  ];
+
+  return (
+    <section className="flex gap-3 overflow-x-auto pb-1">
+      {orderedIds.map((id) => {
+        const p = playerById.get(id);
+        if (!p) return null;
+        const isCurrent = id === currentPlayerId;
+        const isDone = cluedThisRound.has(id);
+        const isYou = id === playerId;
+        const { color, initial } = avatarFor(id, p.nickname);
+
+        return (
+          <div
+            key={id}
+            className="flex min-w-[64px] flex-col items-center gap-1"
+          >
+            <div className="relative">
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-full text-lg font-bold text-white transition ${color} ${
+                  isCurrent
+                    ? "ring-4 ring-indigo-400 ring-offset-2 ring-offset-neutral-950"
+                    : isDone
+                      ? "opacity-40"
+                      : ""
+                }`}
+              >
+                {initial}
+              </div>
+              {isDone && (
+                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white">
+                  ✓
+                </span>
+              )}
+            </div>
+            <span
+              className={`max-w-[72px] truncate text-xs ${
+                isCurrent
+                  ? "font-semibold text-indigo-300"
+                  : "text-neutral-400"
+              }`}
+              title={p.nickname}
+            >
+              {isYou ? `${p.nickname} (you)` : p.nickname}
+            </span>
+          </div>
+        );
+      })}
+    </section>
   );
 }
 
