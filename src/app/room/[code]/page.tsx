@@ -521,21 +521,32 @@ function PlayingPhase({
   // Merge the optimistic clue into a local view so ClueLog + TurnStrip
   // reflect the pending state immediately. Advance turn_index locally too,
   // so the ring glides to the next player right away.
-  const displayView: PublicRoomView = optimisticClue
-    ? {
-        ...view,
-        clues: [
-          ...view.clues,
-          {
-            id: -Date.now(),
-            player_id: optimisticClue.playerId,
-            round: optimisticClue.round,
-            word: optimisticClue.word,
-          },
-        ],
-        turnIndex: nextTurnIndex,
-      }
-    : view;
+  // Skip the optimistic entry if the server has already echoed a matching
+  // clue (same player + round): prevents a duplicate row and removes the
+  // exit/enter flicker when the real clue lands.
+  const serverHasMatchingClue =
+    !!optimisticClue &&
+    view.clues.some(
+      (c) =>
+        c.player_id === optimisticClue.playerId &&
+        c.round === optimisticClue.round
+    );
+  const displayView: PublicRoomView =
+    optimisticClue && !serverHasMatchingClue
+      ? {
+          ...view,
+          clues: [
+            ...view.clues,
+            {
+              id: -Date.now(),
+              player_id: optimisticClue.playerId,
+              round: optimisticClue.round,
+              word: optimisticClue.word,
+            },
+          ],
+          turnIndex: nextTurnIndex,
+        }
+      : view;
 
   const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
   const currentPlayerId = view.turnOrder[view.turnIndex];
@@ -789,14 +800,17 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                         c.player_id,
                         nickname
                       );
+                      // Stable key across optimistic -> real swap: clues are
+                      // unique per (player, round). Using this key lets React
+                      // reuse the DOM node so the optimistic -> server
+                      // transition is invisible, and only the genuine 'new
+                      // clue from someone else' case animates in.
                       return (
                         <motion.li
-                          key={c.id}
-                          layout
-                          initial={{ opacity: 0, y: -8 }}
+                          key={`${c.player_id}-${c.round}`}
+                          initial={{ opacity: 0, y: -6 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          transition={{ duration: 0.18, ease: "easeOut" }}
                           className="flex items-center gap-4 py-3"
                         >
                           <div
