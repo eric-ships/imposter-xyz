@@ -16,6 +16,8 @@ create table if not exists rooms (
   turn_order uuid[] not null default '{}',
   imposter_guess text,
   guess_outcome text, -- 'exact' | 'close' | 'wrong' | null
+  recent_words text[] not null default '{}',
+  recent_categories text[] not null default '{}',
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -23,6 +25,10 @@ create table if not exists rooms (
 -- For projects that already ran an older schema.sql:
 alter table rooms add column if not exists imposter_guess text;
 alter table rooms add column if not exists guess_outcome text;
+alter table rooms
+  add column if not exists recent_words text[] not null default '{}';
+alter table rooms
+  add column if not exists recent_categories text[] not null default '{}';
 
 create table if not exists players (
   id uuid primary key default gen_random_uuid(),

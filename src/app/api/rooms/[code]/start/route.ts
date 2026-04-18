@@ -25,7 +25,7 @@ export async function POST(
 
   const { data: room } = await supabaseAdmin
     .from("rooms")
-    .select("code, host_id, state")
+    .select("code, host_id, state, recent_words, recent_categories")
     .eq("code", code)
     .maybeSingle();
 
@@ -55,7 +55,16 @@ export async function POST(
   const ids = players.map((p) => p.id);
   const imposterId = ids[Math.floor(Math.random() * ids.length)];
   const turnOrder = shuffle(ids);
-  const { category, word } = await generateWordPrompt();
+
+  const recentWords: string[] = room.recent_words ?? [];
+  const recentCategories: string[] = room.recent_categories ?? [];
+  const { category, word } = await generateWordPrompt({
+    words: recentWords,
+    categories: recentCategories,
+  });
+
+  const nextRecentWords = [...recentWords, word].slice(-20);
+  const nextRecentCategories = [...recentCategories, category].slice(-20);
 
   const { error } = await supabaseAdmin
     .from("rooms")
@@ -67,6 +76,8 @@ export async function POST(
       round: 1,
       turn_index: 0,
       turn_order: turnOrder,
+      recent_words: nextRecentWords,
+      recent_categories: nextRecentCategories,
       updated_at: new Date().toISOString(),
     })
     .eq("code", code);

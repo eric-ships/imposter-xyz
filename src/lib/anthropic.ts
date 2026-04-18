@@ -22,7 +22,28 @@ Rules:
 
 Return ONLY the JSON, no prose, no markdown fences.`;
 
-export async function generateWordPrompt(): Promise<WordPrompt> {
+export async function generateWordPrompt(
+  avoid: { categories?: string[]; words?: string[] } = {}
+): Promise<WordPrompt> {
+  const avoidLines: string[] = [];
+  if (avoid.categories?.length) {
+    avoidLines.push(
+      `Do NOT use any of these recent categories: ${avoid.categories
+        .map((c) => `"${c}"`)
+        .join(", ")}.`
+    );
+  }
+  if (avoid.words?.length) {
+    avoidLines.push(
+      `Do NOT use any of these recent words: ${avoid.words
+        .map((w) => `"${w}"`)
+        .join(", ")}.`
+    );
+  }
+  const userContent =
+    `Generate a fresh category and word. Return only JSON.\n` +
+    (avoidLines.length ? avoidLines.join("\n") + "\n" : "");
+
   const resp = await client.messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 200,
@@ -31,7 +52,7 @@ export async function generateWordPrompt(): Promise<WordPrompt> {
     messages: [
       {
         role: "user",
-        content: "Generate a fresh category and word. Return only JSON.",
+        content: userContent,
       },
     ],
   });
