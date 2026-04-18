@@ -34,6 +34,31 @@ alter table rooms add column if not exists prewarm_category text;
 alter table rooms
   add column if not exists prewarm_started_at timestamptz;
 
+-- Pot / escrow fields.
+alter table rooms add column if not exists pot_enabled boolean not null default false;
+-- Ante stored as the exact integer string in token base units (USDC: 6 decimals),
+-- e.g. "1000000" for 1 USDC. Avoids any numeric <-> bigint conversion drift.
+alter table rooms add column if not exists ante_amount text;
+alter table rooms add column if not exists chain_game_id text;
+alter table rooms add column if not exists chain_create_tx text;
+alter table rooms add column if not exists chain_resolve_tx text;
+
+alter table players add column if not exists wallet_address text;
+alter table players add column if not exists ante_tx text;
+
+create table if not exists payouts (
+  id bigserial primary key,
+  room_code text not null references rooms(code) on delete cascade,
+  player_id uuid references players(id) on delete set null,
+  wallet text not null,
+  amount text not null,
+  tx_hash text not null,
+  kind text not null, -- 'payout' | 'refund'
+  created_at timestamptz not null default now()
+);
+
+create index if not exists payouts_room_idx on payouts(room_code, created_at);
+
 create table if not exists players (
   id uuid primary key default gen_random_uuid(),
   room_code text not null references rooms(code) on delete cascade,
