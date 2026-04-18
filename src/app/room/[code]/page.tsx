@@ -200,29 +200,24 @@ function RoomPlay({
   const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-8 px-8 py-10">
-      <header className="flex items-end justify-between border-b border-line pb-4">
-        <div>
-          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-            Room
-          </div>
-          <div className="mt-1 font-serif text-2xl tracking-[0.3em] text-ink">
+    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-7 px-8 py-8">
+      <header className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+        <span className="flex items-baseline gap-2">
+          <span>Room</span>
+          <span className="font-serif text-base tracking-[0.25em] text-ink normal-case">
             {code}
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-            You
-          </div>
-          <div className="mt-1 text-sm text-ink">
+          </span>
+        </span>
+        <span className="flex items-baseline gap-2">
+          <span className="font-serif text-base italic text-ink normal-case tracking-normal">
             {nicknameById.get(playerId)}
-            {you.isHost && (
-              <span className="ml-2 text-[10px] uppercase tracking-[0.3em] text-accent">
-                Host
-              </span>
-            )}
-          </div>
-        </div>
+          </span>
+          {you.isHost && (
+            <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[9px] tracking-[0.3em] text-accent">
+              Host
+            </span>
+          )}
+        </span>
       </header>
 
       {view.state === "lobby" && (
@@ -451,36 +446,29 @@ function PlayingPhase({
 
   return (
     <>
-      <section className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
-        <span>
-          <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
-            {view.category}
-          </span>
+      <section className="flex items-baseline justify-between pb-1">
+        <span className="font-serif text-base italic text-ink-soft">
+          {view.category}
         </span>
-        <span>
+        <span className="text-[10px] uppercase tracking-[0.35em] text-ink-faint">
           Round {view.round} / {view.totalRounds}
         </span>
       </section>
 
-      <section className="border border-line bg-surface px-6 py-5 text-center">
+      <section className="relative border-y border-line bg-surface/70 py-7 text-center">
+        <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.4em]">
+          <span className={you.isImposter ? "text-oxblood" : "text-leaf"}>
+            {you.isImposter ? "Imposter" : "Your word"}
+          </span>
+        </span>
         {you.isImposter ? (
-          <>
-            <div className="text-[10px] uppercase tracking-[0.4em] text-oxblood">
-              You are the imposter
-            </div>
-            <div className="mt-2 font-serif text-xl italic text-ink">
-              Bluff. Find the word.
-            </div>
-          </>
+          <div className="font-serif text-2xl italic text-ink">
+            Bluff · Find the word
+          </div>
         ) : (
-          <>
-            <div className="text-[10px] uppercase tracking-[0.4em] text-leaf">
-              Your word
-            </div>
-            <div className="mt-2 font-serif text-3xl font-semibold leading-none text-ink">
-              {you.secretWord}
-            </div>
-          </>
+          <div className="font-serif text-4xl font-semibold leading-none tracking-tight text-ink">
+            {you.secretWord}
+          </div>
         )}
       </section>
 
