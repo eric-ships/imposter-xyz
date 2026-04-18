@@ -451,7 +451,7 @@ function PlayingPhase({
         <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
           Category
         </div>
-        <div className="mt-3 font-serif text-3xl italic text-ink">
+        <div className="mt-2 font-serif text-xl italic text-ink-soft">
           {view.category}
         </div>
         <div className="mt-6 border-t border-line-soft pt-6">
@@ -460,16 +460,19 @@ function PlayingPhase({
               <div className="text-[10px] uppercase tracking-[0.4em] text-oxblood">
                 You are the imposter
               </div>
-              <div className="mt-2 text-sm leading-relaxed text-ink-soft">
-                Bluff. Deduce the secret word from the others&apos; clues.
+              <div className="mt-3 font-serif text-3xl italic text-ink">
+                Bluff. Find the word.
+              </div>
+              <div className="mt-3 text-sm leading-relaxed text-ink-soft">
+                Deduce the secret word from the others&apos; clues.
               </div>
             </>
           ) : (
             <>
               <div className="text-[10px] uppercase tracking-[0.4em] text-leaf">
-                Secret word
+                Your secret word
               </div>
-              <div className="mt-2 font-serif text-3xl text-ink">
+              <div className="mt-3 font-serif text-6xl font-semibold leading-none tracking-tight text-ink">
                 {you.secretWord}
               </div>
             </>
