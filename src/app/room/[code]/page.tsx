@@ -637,43 +637,57 @@ function ClueLog({ view }: { view: PublicRoomView }) {
 
   if (view.clues.length === 0) return null;
 
+  const activeRound = view.state === "playing" ? view.round : null;
+
   return (
     <section className="space-y-4">
       <SectionLabel>Clues</SectionLabel>
-      <div className="space-y-5">
+      <div className="space-y-6">
         {Object.entries(rounds)
-          .sort(([a], [b]) => Number(a) - Number(b))
-          .map(([round, clues]) => (
-            <div key={round}>
-              <div className="mb-2 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-                Round {round}
-              </div>
-              <ul className="divide-y divide-line-soft border-y border-line-soft">
-                {clues.map((c) => {
-                  const nickname = nicknameById.get(c.player_id) ?? "";
-                  const { color, initial } = avatarFor(c.player_id, nickname);
-                  return (
-                    <li
-                      key={c.id}
-                      className="flex items-center gap-4 py-3"
-                    >
-                      <div
-                        className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ${color}`}
+          .sort(([a], [b]) => Number(b) - Number(a))
+          .map(([round, clues]) => {
+            const roundNum = Number(round);
+            const isActive = activeRound === roundNum;
+            return (
+              <div key={round}>
+                <div
+                  className={`mb-2 flex items-baseline justify-between text-[10px] uppercase tracking-[0.3em] ${
+                    isActive ? "text-accent" : "text-ink-faint"
+                  }`}
+                >
+                  <span>Round {round}</span>
+                  {isActive && <span>In progress</span>}
+                </div>
+                <ul className="divide-y divide-line-soft border-y border-line-soft">
+                  {[...clues].reverse().map((c) => {
+                    const nickname = nicknameById.get(c.player_id) ?? "";
+                    const { color, initial } = avatarFor(
+                      c.player_id,
+                      nickname
+                    );
+                    return (
+                      <li
+                        key={c.id}
+                        className="flex items-center gap-4 py-3"
                       >
-                        {initial}
-                      </div>
-                      <span className="flex-1 text-xs uppercase tracking-[0.15em] text-ink-faint">
-                        {nickname}
-                      </span>
-                      <span className="font-serif text-xl italic text-ink">
-                        {c.word}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+                        <div
+                          className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ${color}`}
+                        >
+                          {initial}
+                        </div>
+                        <span className="flex-1 text-xs uppercase tracking-[0.15em] text-ink-faint">
+                          {nickname}
+                        </span>
+                        <span className="font-serif text-xl italic text-ink">
+                          {c.word}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
       </div>
     </section>
   );
