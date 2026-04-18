@@ -1,4 +1,11 @@
-export type RoomState = "lobby" | "playing" | "voting" | "reveal";
+export type RoomState =
+  | "lobby"
+  | "playing"
+  | "voting"
+  | "guessing"
+  | "reveal";
+
+export type GuessOutcome = "exact" | "close" | "wrong";
 
 export type Player = {
   id: string;
@@ -41,5 +48,8 @@ export type PublicRoomView = {
   reveal: {
     imposterId: string;
     secretWord: string;
+    caught: boolean;
+    guess: string | null;
+    guessOutcome: GuessOutcome | null;
   } | null;
 };

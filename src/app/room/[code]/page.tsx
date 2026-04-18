@@ -242,6 +242,10 @@ function RoomPlay({
         <VotingPhase view={view} playerId={playerId} code={code} />
       )}
 
+      {view.state === "guessing" && (
+        <GuessPhase view={view} playerId={playerId} code={code} />
+      )}
+
       {view.state === "reveal" && (
         <RevealPhase view={view} playerId={playerId} code={code} />
       )}
@@ -447,41 +451,37 @@ function PlayingPhase({
 
   return (
     <>
-      <section className="border border-line bg-surface p-8 text-center">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-          Category
-        </div>
-        <div className="mt-2 font-serif text-xl italic text-ink-soft">
-          {view.category}
-        </div>
-        <div className="mt-6 border-t border-line-soft pt-6">
-          {you.isImposter ? (
-            <>
-              <div className="text-[10px] uppercase tracking-[0.4em] text-oxblood">
-                You are the imposter
-              </div>
-              <div className="mt-3 font-serif text-3xl italic text-ink">
-                Bluff. Find the word.
-              </div>
-              <div className="mt-3 text-sm leading-relaxed text-ink-soft">
-                Deduce the secret word from the others&apos; clues.
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-[10px] uppercase tracking-[0.4em] text-leaf">
-                Your secret word
-              </div>
-              <div className="mt-3 font-serif text-6xl font-semibold leading-none tracking-tight text-ink">
-                {you.secretWord}
-              </div>
-            </>
-          )}
-        </div>
+      <section className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+        <span>
+          <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
+            {view.category}
+          </span>
+        </span>
+        <span>
+          Round {view.round} / {view.totalRounds}
+        </span>
       </section>
 
-      <section className="text-center text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-        Round {view.round} of {view.totalRounds}
+      <section className="border border-line bg-surface px-6 py-5 text-center">
+        {you.isImposter ? (
+          <>
+            <div className="text-[10px] uppercase tracking-[0.4em] text-oxblood">
+              You are the imposter
+            </div>
+            <div className="mt-2 font-serif text-xl italic text-ink">
+              Bluff. Find the word.
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="text-[10px] uppercase tracking-[0.4em] text-leaf">
+              Your word
+            </div>
+            <div className="mt-2 font-serif text-3xl font-semibold leading-none text-ink">
+              {you.secretWord}
+            </div>
+          </>
+        )}
       </section>
 
       <TurnStrip view={view} playerId={playerId} />
@@ -649,19 +649,28 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                 Round {round}
               </div>
               <ul className="divide-y divide-line-soft border-y border-line-soft">
-                {clues.map((c) => (
-                  <li
-                    key={c.id}
-                    className="flex items-baseline justify-between py-2 text-sm"
-                  >
-                    <span className="text-ink-soft">
-                      {nicknameById.get(c.player_id)}
-                    </span>
-                    <span className="font-serif text-base italic text-ink">
-                      {c.word}
-                    </span>
-                  </li>
-                ))}
+                {clues.map((c) => {
+                  const nickname = nicknameById.get(c.player_id) ?? "";
+                  const { color, initial } = avatarFor(c.player_id, nickname);
+                  return (
+                    <li
+                      key={c.id}
+                      className="flex items-center gap-4 py-3"
+                    >
+                      <div
+                        className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ${color}`}
+                      >
+                        {initial}
+                      </div>
+                      <span className="flex-1 text-xs uppercase tracking-[0.15em] text-ink-faint">
+                        {nickname}
+                      </span>
+                      <span className="font-serif text-xl italic text-ink">
+                        {c.word}
+                      </span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}
@@ -786,6 +795,124 @@ function VotingPhase({
   );
 }
 
+function GuessPhase({
+  view,
+  playerId,
+  code,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+}) {
+  // In guessing phase, "you.isImposter" is still valid.
+  const you = view.you!;
+  const [guess, setGuess] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/guess`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, guess: guess.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (!you.isImposter) {
+    return (
+      <>
+        <section className="border border-line bg-surface p-8 text-center">
+          <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
+            Caught
+          </div>
+          <div className="mt-3 font-serif text-3xl italic text-ink">
+            One last chance
+          </div>
+          <div className="mt-4 text-sm leading-relaxed text-ink-soft">
+            The imposter gets one guess at the secret word.
+            <br />
+            Exact match: they steal the win. Close: a point for both sides.
+          </div>
+        </section>
+
+        <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+          Awaiting the imposter&apos;s guess
+        </p>
+
+        <ClueLog view={view} />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <section className="border-2 border-accent bg-accent/5 p-8 text-center">
+        <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
+          You were caught
+        </div>
+        <div className="mt-3 font-serif text-3xl italic text-ink">
+          One last chance
+        </div>
+        <div className="mt-4 text-sm leading-relaxed text-ink-soft">
+          Guess the secret word.
+          <br />
+          Exact match: you win the round.
+          <br />
+          Close enough: a split point for everyone.
+        </div>
+      </section>
+
+      <section className="flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+        <span>Category</span>
+        <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
+          {view.category}
+        </span>
+      </section>
+
+      <ClueLog view={view} />
+
+      <div className="space-y-3">
+        <SectionLabel>Your guess</SectionLabel>
+        <div className="flex gap-2">
+          <input
+            value={guess}
+            onChange={(e) => setGuess(e.target.value)}
+            maxLength={80}
+            placeholder="e.g. Medusa"
+            autoFocus
+            className="flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl italic text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && guess.trim() && !submitting) submit();
+            }}
+          />
+          <button
+            onClick={submit}
+            disabled={submitting || guess.trim().length === 0}
+            className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            {submitting ? "Judging" : "Submit"}
+          </button>
+        </div>
+        {error && (
+          <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+            {error}
+          </p>
+        )}
+      </div>
+    </>
+  );
+}
+
 function RevealPhase({
   view,
   playerId,
@@ -801,34 +928,61 @@ function RevealPhase({
   const [restarting, setRestarting] = useState(false);
   const router = useRouter();
 
-  const counts = new Map<string, number>();
-  for (const v of view.votes) {
-    counts.set(v.target_id, (counts.get(v.target_id) ?? 0) + 1);
-  }
-  const topCount = Math.max(...Array.from(counts.values()), 0);
-  const topTargets = Array.from(counts.entries())
-    .filter(([, n]) => n === topCount)
-    .map(([id]) => id);
-  const tied = topTargets.length > 1;
-  const caught = !tied && topTargets[0] === reveal.imposterId;
-
   const youAreImposter = playerId === reveal.imposterId;
-  const youWon = youAreImposter ? !caught : caught;
-  const pointsEarned = youAreImposter ? (caught ? 0 : 2) : caught ? 1 : 0;
-  const outcomeLabel = caught
-    ? "Crewmates prevail"
-    : tied
-      ? "Tied vote · imposter escapes"
-      : "Imposter prevails";
+  const caught = reveal.caught;
+  const outcome = reveal.guessOutcome;
+
+  type Side = "imposter" | "crewmates" | "draw";
+  const winner: Side = !caught
+    ? "imposter"
+    : outcome === "exact"
+      ? "imposter"
+      : outcome === "close"
+        ? "draw"
+        : "crewmates";
+
+  const youWon =
+    winner === "draw"
+      ? false
+      : (youAreImposter && winner === "imposter") ||
+        (!youAreImposter && winner === "crewmates");
+  const youDrew = winner === "draw";
+
+  const pointsEarned = youAreImposter
+    ? !caught
+      ? 2
+      : outcome === "exact"
+        ? 2
+        : outcome === "close"
+          ? 1
+          : 0
+    : caught && outcome !== "exact"
+      ? 1
+      : 0;
+
+  const outcomeLabel = !caught
+    ? "Imposter slips away"
+    : outcome === "exact"
+      ? "Imposter guessed the word"
+      : outcome === "close"
+        ? "Split decision"
+        : "Crewmates prevail";
+
   const subtitle = youAreImposter
-    ? caught
-      ? "They sniffed you out."
-      : "You fooled them all."
-    : caught
-      ? "You caught the imposter."
-      : tied
-        ? "The vote was tied. Imposter slips away."
-        : "The imposter slipped past you.";
+    ? !caught
+      ? "You fooled them all."
+      : outcome === "exact"
+        ? "You were caught, but you guessed the word."
+        : outcome === "close"
+          ? "Close enough. The table splits the point."
+          : "Your guess missed. The crewmates take it."
+    : !caught
+      ? "The imposter slipped past you."
+      : outcome === "exact"
+        ? "You caught them, but they named the word."
+        : outcome === "close"
+          ? "Caught them, but their guess was nearly right."
+          : "You caught the imposter clean.";
 
   async function playAgain() {
     setRestarting(true);
@@ -846,17 +1000,19 @@ function RevealPhase({
     <>
       <section
         className={`border-2 p-10 text-center ${
-          youWon
-            ? "border-leaf bg-leaf/5"
-            : "border-oxblood bg-oxblood/5"
+          youDrew
+            ? "border-accent bg-accent/5"
+            : youWon
+              ? "border-leaf bg-leaf/5"
+              : "border-oxblood bg-oxblood/5"
         }`}
       >
         <div
           className={`font-serif text-6xl italic ${
-            youWon ? "text-leaf" : "text-oxblood"
+            youDrew ? "text-accent" : youWon ? "text-leaf" : "text-oxblood"
           }`}
         >
-          {youWon ? "You won" : "You lost"}
+          {youDrew ? "Split point" : youWon ? "You won" : "You lost"}
         </div>
         <div className="mt-4 text-sm text-ink-soft">{subtitle}</div>
         {pointsEarned > 0 && (
@@ -884,6 +1040,29 @@ function RevealPhase({
             Category · {view.category}
           </div>
         </div>
+        {reveal.guess && (
+          <div className="mt-6 border-t border-line-soft pt-6">
+            <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+              Imposter guessed
+            </div>
+            <div className="mt-2 flex items-center justify-center gap-3">
+              <span className="font-serif text-2xl italic text-ink">
+                {reveal.guess}
+              </span>
+              <span
+                className={`rounded-sm px-2 py-0.5 text-[9px] uppercase tracking-[0.3em] ${
+                  reveal.guessOutcome === "exact"
+                    ? "bg-leaf text-white"
+                    : reveal.guessOutcome === "close"
+                      ? "bg-accent text-white"
+                      : "bg-oxblood text-white"
+                }`}
+              >
+                {reveal.guessOutcome}
+              </span>
+            </div>
+          </div>
+        )}
         <div className="mt-5 text-[10px] uppercase tracking-[0.3em] text-ink-soft">
           {outcomeLabel}
         </div>

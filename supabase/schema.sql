@@ -6,7 +6,7 @@ create extension if not exists "pgcrypto";
 create table if not exists rooms (
   code text primary key,
   host_id uuid not null,
-  state text not null default 'lobby', -- lobby | playing | voting | reveal
+  state text not null default 'lobby', -- lobby | playing | voting | guessing | reveal
   category text,
   secret_word text,
   imposter_id uuid,
@@ -14,9 +14,15 @@ create table if not exists rooms (
   total_rounds int not null default 3,
   turn_index int not null default 0,
   turn_order uuid[] not null default '{}',
+  imposter_guess text,
+  guess_outcome text, -- 'exact' | 'close' | 'wrong' | null
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- For projects that already ran an older schema.sql:
+alter table rooms add column if not exists imposter_guess text;
+alter table rooms add column if not exists guess_outcome text;
 
 create table if not exists players (
   id uuid primary key default gen_random_uuid(),

@@ -53,3 +53,63 @@ export async function generateWordPrompt(): Promise<WordPrompt> {
   }
   return parsed;
 }
+
+export function normalizeWord(input: string): string {
+  return input.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+const JUDGE_SYSTEM = `You judge whether a player's guess is "close enough" to a secret word in a word-guessing game. The imposter is trying to guess the secret word after being caught, and deserves partial credit if they're clearly on the right track.
+
+Return ONLY JSON: {"close": true|false, "reason": "brief explanation"}
+
+Consider "close" if the guess is:
+- A plural/singular variant or close misspelling of the secret word
+- A direct synonym or near-synonym
+- A specific instance of the same concept (e.g. "labrador" for "dog")
+- A generic parent category that uniquely points at the secret (e.g. "breakfast pancake" for "Pancakes")
+
+Do NOT consider close:
+- A different item in the same broad category (e.g. "waffles" for "pancakes", "cat" for "dog")
+- Vague or generic guesses that could fit many words
+- Unrelated concepts
+
+Be strict. If unsure, return close=false.`;
+
+export async function judgeGuess(
+  secretWord: string,
+  guess: string
+): Promise<{ close: boolean; reason: string }> {
+  const resp = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 200,
+    temperature: 0,
+    system: JUDGE_SYSTEM,
+    messages: [
+      {
+        role: "user",
+        content: `Secret word: "${secretWord}"\nGuess: "${guess}"\n\nReturn only JSON.`,
+      },
+    ],
+  });
+
+  const text = resp.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("")
+    .trim();
+
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) {
+    return { close: false, reason: "parse failed" };
+  }
+
+  try {
+    const parsed = JSON.parse(match[0]) as {
+      close: boolean;
+      reason: string;
+    };
+    return { close: !!parsed.close, reason: parsed.reason ?? "" };
+  } catch {
+    return { close: false, reason: "parse failed" };
+  }
+}

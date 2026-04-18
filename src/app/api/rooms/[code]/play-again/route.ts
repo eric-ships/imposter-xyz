@@ -47,6 +47,8 @@ export async function POST(
       round: 0,
       turn_index: 0,
       turn_order: [],
+      imposter_guess: null,
+      guess_outcome: null,
       updated_at: new Date().toISOString(),
     })
     .eq("code", code);
