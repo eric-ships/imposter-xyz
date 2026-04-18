@@ -718,9 +718,48 @@ function RevealPhase({
   }
 
   const sortedPlayers = [...view.players].sort((a, b) => b.score - a.score);
+  const youAreImposter = playerId === reveal.imposterId;
+  const youWon = youAreImposter ? !caught : caught;
+  const pointsEarned = youAreImposter ? (caught ? 0 : 2) : caught ? 1 : 0;
+  const outcomeLabel = caught
+    ? "Crewmates win"
+    : tied
+      ? "Tie vote - imposter wins"
+      : "Imposter wins";
+  const subtitle = youAreImposter
+    ? caught
+      ? "They sniffed you out."
+      : "You fooled them all."
+    : caught
+      ? "You caught the imposter."
+      : tied
+        ? "The vote was tied - imposter escapes."
+        : "The imposter slipped past you.";
 
   return (
     <>
+      <section
+        className={`rounded-2xl border-2 p-6 text-center ${
+          youWon
+            ? "border-emerald-400/50 bg-emerald-500/10"
+            : "border-rose-400/50 bg-rose-500/10"
+        }`}
+      >
+        <div
+          className={`text-5xl font-black tracking-tight ${
+            youWon ? "text-emerald-300" : "text-rose-300"
+          }`}
+        >
+          {youWon ? "You won!" : "You lost"}
+        </div>
+        <div className="mt-2 text-sm text-neutral-300">{subtitle}</div>
+        {pointsEarned > 0 && (
+          <div className="mt-3 inline-block rounded-full bg-neutral-900 px-3 py-1 text-xs font-semibold text-neutral-200">
+            +{pointsEarned} pt{pointsEarned === 1 ? "" : "s"}
+          </div>
+        )}
+      </section>
+
       <section className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-5 text-center">
         <div className="text-[10px] uppercase tracking-widest text-neutral-500">
           The imposter was
@@ -740,13 +779,13 @@ function RevealPhase({
           </div>
         </div>
         <div
-          className={`mt-5 inline-block rounded-full px-4 py-1 text-sm font-bold ${
+          className={`mt-5 inline-block rounded-full px-4 py-1 text-xs font-bold ${
             caught
               ? "bg-emerald-500/20 text-emerald-300"
               : "bg-rose-500/20 text-rose-300"
           }`}
         >
-          {caught ? "Crewmates win!" : tied ? "Tie vote - imposter wins" : "Imposter wins!"}
+          {outcomeLabel}
         </div>
       </section>
 
