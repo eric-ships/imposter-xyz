@@ -1,0 +1,71 @@
+import { supabaseAdmin } from "@/lib/supabase/server";
+import type { PublicRoomView, RoomState } from "@/lib/game";
+
+export async function notifyRoom(code: string, kind: string) {
+  await supabaseAdmin.from("room_events").insert({ room_code: code, kind });
+}
+
+export async function fetchRoomView(
+  code: string,
+  playerId: string | null
+): Promise<PublicRoomView | null> {
+  const { data: room } = await supabaseAdmin
+    .from("rooms")
+    .select("*")
+    .eq("code", code)
+    .maybeSingle();
+
+  if (!room) return null;
+
+  const [{ data: players }, { data: clues }, { data: votes }] =
+    await Promise.all([
+      supabaseAdmin
+        .from("players")
+        .select("id, nickname, score")
+        .eq("room_code", code)
+        .order("joined_at", { ascending: true }),
+      supabaseAdmin
+        .from("clues")
+        .select("id, player_id, round, word")
+        .eq("room_code", code)
+        .order("id", { ascending: true }),
+      supabaseAdmin
+        .from("votes")
+        .select("voter_id, target_id")
+        .eq("room_code", code),
+    ]);
+
+  const state = room.state as RoomState;
+  const isImposter = !!playerId && playerId === room.imposter_id;
+  const isHost = !!playerId && playerId === room.host_id;
+
+  const you = playerId
+    ? {
+        id: playerId,
+        isHost,
+        isImposter,
+        secretWord: isImposter ? null : room.secret_word,
+      }
+    : null;
+
+  const reveal =
+    state === "reveal" && room.imposter_id && room.secret_word
+      ? { imposterId: room.imposter_id, secretWord: room.secret_word }
+      : null;
+
+  return {
+    code: room.code,
+    hostId: room.host_id,
+    state,
+    category: room.category,
+    round: room.round,
+    totalRounds: room.total_rounds,
+    turnIndex: room.turn_index,
+    turnOrder: room.turn_order ?? [],
+    players: (players ?? []) as PublicRoomView["players"],
+    clues: (clues ?? []) as PublicRoomView["clues"],
+    votes: (votes ?? []) as PublicRoomView["votes"],
+    you,
+    reveal,
+  };
+}

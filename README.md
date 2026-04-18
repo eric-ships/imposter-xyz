@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# imposter.xyz
 
-## Getting Started
+A real-time social deduction word game. Everyone sees a shared category. Everyone except one player (the imposter) also sees the secret word. Take turns giving one-word clues for 3 rounds, then vote on who the imposter is.
 
-First, run the development server:
+Built with Next.js 16, Supabase (Postgres + Realtime), and Claude Haiku for dynamic category/word generation.
+
+## Setup
+
+### 1. Create a Supabase project
+
+1. Go to [supabase.com](https://supabase.com) and create a new project (free tier is fine).
+2. Once it's ready, open the SQL editor and paste the contents of `supabase/schema.sql`. Run it.
+3. In **Project Settings → API**, grab these three values:
+   - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
+   - `anon` public key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `service_role` secret key → `SUPABASE_SERVICE_ROLE_KEY`
+
+### 2. Get an Anthropic API key
+
+1. Go to [console.anthropic.com](https://console.anthropic.com) and create an API key.
+2. Save it as `ANTHROPIC_API_KEY`.
+
+### 3. Set up env vars
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
+# fill in the values
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4. Run locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Open [http://localhost:3000](http://localhost:3000). Create a room, share the link, and play with 3+ people.
 
-## Learn More
+## Deploy to Vercel
 
-To learn more about Next.js, take a look at the following resources:
+1. Push to GitHub.
+2. Import the repo on [vercel.com](https://vercel.com).
+3. Add the four env vars from `.env.example` in the Vercel project settings.
+4. Deploy.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## How the game works
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Lobby**: host creates a room, shares the 4-letter code. Players join with a nickname. Minimum 3 players.
+- **Start**: host clicks start. The server generates a category + secret word via Claude Haiku, picks a random imposter, and randomizes turn order.
+- **Play**: 3 rounds. On each turn, the current player submits a one-word clue. The imposter only sees the category (not the word) and must bluff.
+- **Vote**: after 3 rounds, everyone votes on who they think the imposter is.
+- **Reveal**: imposter revealed. If caught (plurality), all non-imposters get +1 point. Otherwise, the imposter gets +2.
+- **Play again**: host can restart the round with the same players (scores persist).
 
-## Deploy on Vercel
+## Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `src/app/api/rooms/...` — REST endpoints for all mutations. The server is authoritative; it holds the secret word and imposter id.
+- `src/app/page.tsx` — home (create/join).
+- `src/app/room/[code]/page.tsx` — room page with all phases (lobby / playing / voting / reveal).
+- `src/lib/anthropic.ts` — `generateWordPrompt()` calls Claude Haiku 4.5 for a fresh `{category, word}` each game.
+- `src/lib/supabase/server.ts` — service-role client, server only.
+- `src/lib/supabase/browser.ts` — anon client for Realtime subscriptions.
+- Clients subscribe to INSERTs on the `room_events` table (realtime over Postgres changes) and refetch the full filtered state via `GET /api/rooms/:code?playerId=X` on every event. The server hides the secret word from the imposter's view and hides the imposter id until the reveal phase.
