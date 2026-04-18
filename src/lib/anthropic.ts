@@ -9,110 +9,103 @@ export type WordPrompt = {
   word: string;
 };
 
-// Generic seed domains: broad, universal categories most adults would
-// recognize, spanning food, nature, places, entertainment, objects, and
-// concepts. Claude narrows the seed into a specific single-word
+// Mainstream seed domains: categories a 7-year-old and their grandparent
+// would both recognize. No alcohol, no adult media, no politics, no
+// narrow subcultures. Claude narrows the seed into a specific single-word
 // category + item per round.
 const SEED_DOMAINS = [
-  // food & drink
+  // food
   "fruits",
   "vegetables",
   "desserts",
   "candy",
-  "cheeses",
-  "spices",
+  "cereals",
   "breads",
   "pastas",
   "soups",
   "sandwiches",
-  "cocktails",
-  "coffee drinks",
-  "teas",
-  "cereals",
-  "sauces",
   "snacks",
-  "fast food",
-  "street food",
   "ice cream flavors",
   "pizzas",
+  "fast food",
+  "cheeses",
+  "spices",
+  "sauces",
+  "beverages",
   // animals
   "mammals",
   "birds",
   "reptiles",
-  "amphibians",
   "fish",
   "insects",
   "sea creatures",
   "dinosaurs",
-  "mythical creatures",
-  "dog breeds",
-  "cat breeds",
   "farm animals",
   "pets",
+  "dog breeds",
+  "jungle animals",
+  "arctic animals",
   // places
   "countries",
   "capital cities",
+  "continents",
   "islands",
   "mountains",
   "rivers",
-  "deserts",
   "beaches",
   "landmarks",
   "national parks",
-  "volcanoes",
-  // entertainment
-  "movies",
-  "sitcoms",
-  "cartoons",
+  "deserts",
+  // entertainment (family-safe)
+  "disney movies",
+  "pixar movies",
   "animated films",
+  "cartoons",
   "superhero movies",
-  "horror movies",
-  "musicals",
-  "tv shows",
+  "family tv shows",
   "video games",
-  "anime",
-  // music
-  "bands",
-  "pop stars",
-  "rock bands",
-  "rappers",
-  "instruments",
-  "songs",
-  "dance styles",
-  "composers",
+  "board games",
+  "card games",
+  "toys",
+  "puppet shows",
   // characters & fiction
   "superheroes",
   "villains",
   "princesses",
+  "fairy tales",
   "cartoon characters",
-  "sitcom characters",
-  "video-game characters",
-  "fictional detectives",
-  "book characters",
-  // games & sports
-  "board games",
-  "card games",
+  "storybook characters",
+  "mythical creatures",
+  // music
+  "instruments",
+  "bands",
+  "songs",
+  "dance styles",
+  // sports & activities
   "sports",
   "olympic events",
+  "team sports",
+  "playground games",
   "martial arts",
-  "extreme sports",
   // objects
   "kitchen utensils",
   "tools",
   "office supplies",
   "clothing",
   "shoes",
+  "hats",
   "jewelry",
   "furniture",
   "appliances",
-  "toys",
-  "musical instruments",
+  "school supplies",
   // vehicles
   "cars",
+  "trucks",
   "airplanes",
   "boats",
   "trains",
   "bicycles",
+  "construction vehicles",
   // nature
   "flowers",
   "trees",
@@ -120,44 +113,28 @@ const SEED_DOMAINS = [
   "weather phenomena",
   "clouds",
   "rocks",
+  "seasons",
   // space & science
   "planets",
   "constellations",
   "chemical elements",
-  "scientists",
   "inventions",
+  "dinosaur eras",
   // people
-  "historical figures",
-  "artists",
-  "authors",
-  "philosophers",
-  "explorers",
   "professions",
-  // culture
-  "greek gods",
-  "norse mythology",
-  "egyptian gods",
-  "religions",
+  "historical figures",
+  "explorers",
+  "artists",
+  "scientists",
+  // culture & everyday
   "holidays",
   "zodiac signs",
-  "festivals",
-  // tech
-  "tech companies",
-  "programming languages",
-  "apps",
-  "websites",
-  "gadgets",
-  "video-game consoles",
-  // misc
+  "greek gods",
   "colors",
   "emotions",
   "shapes",
-  "knots",
-  "yoga poses",
-  "magic tricks",
-  "fashion brands",
-  "cosmetics",
-  "beverages",
+  "body parts",
+  "numbers",
 ];
 
 function pickSeed(avoidCategories: string[]): string {
@@ -167,18 +144,20 @@ function pickSeed(avoidCategories: string[]): string {
   return src[Math.floor(Math.random() * src.length)];
 }
 
-const SYSTEM = `You generate prompts for a social deduction word game.
+const SYSTEM = `You generate prompts for a social deduction word game played across mixed ages (kids through grandparents).
+
+AUDIENCE: a 7-year-old and their grandparent should both recognize the pick. Think picture-book universal: common animals, common foods, Pixar/Disney movies, famous landmarks, weather, planets, fairy-tale characters, schoolyard sports. No alcohol, no adult media, no politics, no religion, no regional/subculture deep cuts.
 
 You will be given a SEED DOMAIN to anchor the round. Produce:
-- "category": a SINGLE word (Title Case, no spaces, hyphens allowed). Broad enough to fit several specific items. Examples: "Cartoons", "Cocktails", "Cereals", "Sitcoms", "Sneakers", "Villains", "Anime", "Pastries", "Planets", "Instruments".
-- "word": a SINGLE word (Title Case, no spaces, hyphens allowed). One specific, well-known item that unambiguously belongs to that category. Examples: "Squirtle", "Negroni", "Rocky", "Crocs", "Naruto", "Eclair", "Jupiter", "Clarinet".
+- "category": a SINGLE word (Title Case, no spaces, hyphens allowed). Broad and familiar. Examples: "Cartoons", "Cereals", "Planets", "Instruments", "Flowers", "Dinosaurs", "Superheroes".
+- "word": a SINGLE word (Title Case, no spaces, hyphens allowed). One specific, universally well-known item that unambiguously belongs to that category. Examples: "Simba", "Jupiter", "Clarinet", "Rose", "Triceratops", "Batman".
 
 Hard rules:
 - BOTH category and word must be exactly ONE word. No spaces. Hyphens and apostrophes allowed. If the natural phrase has a space (e.g. "French Toast"), pick a one-word alternative (e.g. "Croissant") or drop the qualifier (e.g. "Toast").
-- The word must be broadly recognizable to an average adult — not niche inside-baseball.
-- Lean toward the second- or third-most-recognizable option within the category for freshness. Do NOT fall back to the most obvious pick (no Pancakes, Medusa, Paris, Everest, Spider-Man, Beyoncé, Friends, Voldemort).
+- The item must be broadly recognizable to almost anyone — from a curious 7-year-old to a 75-year-old. If in doubt, pick something more famous, not more obscure.
+- Lean toward the second- or third-most-recognizable option within the category for freshness. Do NOT fall back to the single most obvious pick (no Pancakes, Medusa, Paris, Everest, Spider-Man, Voldemort).
 - Different pick every call.
-- Avoid offensive, political, or obscure content. Keep it SFW and inclusive.
+- Absolutely no offensive, political, religious, adult, or gory content. Keep it kid-safe.
 
 Return ONLY JSON: {"category": "...", "word": "..."}. No prose, no markdown fences.`;
 
