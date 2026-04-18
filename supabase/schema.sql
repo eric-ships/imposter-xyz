@@ -29,6 +29,10 @@ alter table rooms
   add column if not exists recent_words text[] not null default '{}';
 alter table rooms
   add column if not exists recent_categories text[] not null default '{}';
+alter table rooms add column if not exists prewarm_word text;
+alter table rooms add column if not exists prewarm_category text;
+alter table rooms
+  add column if not exists prewarm_started_at timestamptz;
 
 create table if not exists players (
   id uuid primary key default gen_random_uuid(),

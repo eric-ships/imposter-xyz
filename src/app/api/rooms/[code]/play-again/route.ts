@@ -13,12 +13,15 @@ export async function POST(
     return NextResponse.json({ error: "playerId required" }, { status: 400 });
   }
 
-  const { data: room } = await supabaseAdmin
+  const { data: room, error: roomErr } = await supabaseAdmin
     .from("rooms")
-    .select("code, host_id, state")
+    .select("*")
     .eq("code", code)
     .maybeSingle();
 
+  if (roomErr) {
+    return NextResponse.json({ error: roomErr.message }, { status: 500 });
+  }
   if (!room) {
     return NextResponse.json({ error: "room not found" }, { status: 404 });
   }
@@ -37,21 +40,32 @@ export async function POST(
     supabaseAdmin.from("votes").delete().eq("room_code", code),
   ]);
 
-  await supabaseAdmin
+  const update: Record<string, unknown> = {
+    state: "lobby",
+    category: null,
+    secret_word: null,
+    imposter_id: null,
+    round: 0,
+    turn_index: 0,
+    turn_order: [],
+    updated_at: new Date().toISOString(),
+  };
+  if ("imposter_guess" in room) update.imposter_guess = null;
+  if ("guess_outcome" in room) update.guess_outcome = null;
+  if ("prewarm_word" in room) {
+    update.prewarm_word = null;
+    update.prewarm_category = null;
+    update.prewarm_started_at = null;
+  }
+
+  const { error: updErr } = await supabaseAdmin
     .from("rooms")
-    .update({
-      state: "lobby",
-      category: null,
-      secret_word: null,
-      imposter_id: null,
-      round: 0,
-      turn_index: 0,
-      turn_order: [],
-      imposter_guess: null,
-      guess_outcome: null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq("code", code);
+
+  if (updErr) {
+    return NextResponse.json({ error: updErr.message }, { status: 500 });
+  }
 
   await notifyRoom(code, "restarted");
 

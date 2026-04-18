@@ -68,10 +68,21 @@ export async function POST(
     ? (room.recent_categories ?? [])
     : [];
 
-  const { category, word } = await generateWordPrompt({
-    words: recentWords,
-    categories: recentCategories,
-  });
+  // Consume a pre-warmed word if the lobby prewarm finished while we waited.
+  const hasPrewarm = "prewarm_word" in room;
+  let category: string;
+  let word: string;
+  if (hasPrewarm && room.prewarm_word && room.prewarm_category) {
+    word = room.prewarm_word;
+    category = room.prewarm_category;
+  } else {
+    const fresh = await generateWordPrompt({
+      words: recentWords,
+      categories: recentCategories,
+    });
+    category = fresh.category;
+    word = fresh.word;
+  }
 
   const update: Record<string, unknown> = {
     state: "playing",
@@ -88,6 +99,12 @@ export async function POST(
   }
   if (hasRecentCategories) {
     update.recent_categories = [...recentCategories, category].slice(-20);
+  }
+  if (hasPrewarm) {
+    // Clear so the next round's prewarm isn't served again.
+    update.prewarm_word = null;
+    update.prewarm_category = null;
+    update.prewarm_started_at = null;
   }
 
   const { error } = await supabaseAdmin

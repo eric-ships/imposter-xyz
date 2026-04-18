@@ -2,6 +2,7 @@
 
 import { use, useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AnimatePresence, motion } from "motion/react";
 import { supabase } from "@/lib/supabase/browser";
 import type { PublicRoomView } from "@/lib/game";
 
@@ -220,30 +221,41 @@ function RoomPlay({
         </span>
       </header>
 
-      {view.state === "lobby" && (
-        <LobbyPhase
-          view={view}
-          playerId={playerId}
-          code={code}
-          onRefetch={onRefetch}
-        />
-      )}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={view.state}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          className="flex flex-col gap-7"
+        >
+          {view.state === "lobby" && (
+            <LobbyPhase
+              view={view}
+              playerId={playerId}
+              code={code}
+              onRefetch={onRefetch}
+            />
+          )}
 
-      {view.state === "playing" && (
-        <PlayingPhase view={view} playerId={playerId} code={code} />
-      )}
+          {view.state === "playing" && (
+            <PlayingPhase view={view} playerId={playerId} code={code} />
+          )}
 
-      {view.state === "voting" && (
-        <VotingPhase view={view} playerId={playerId} code={code} />
-      )}
+          {view.state === "voting" && (
+            <VotingPhase view={view} playerId={playerId} code={code} />
+          )}
 
-      {view.state === "guessing" && (
-        <GuessPhase view={view} playerId={playerId} code={code} />
-      )}
+          {view.state === "guessing" && (
+            <GuessPhase view={view} playerId={playerId} code={code} />
+          )}
 
-      {view.state === "reveal" && (
-        <RevealPhase view={view} playerId={playerId} code={code} />
-      )}
+          {view.state === "reveal" && (
+            <RevealPhase view={view} playerId={playerId} code={code} />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </main>
   );
 }
@@ -313,6 +325,13 @@ function LobbyPhase({
   const isHost = playerId === view.hostId;
   const canStart = view.players.length >= 3;
   const anyScore = view.players.some((p) => p.score > 0);
+
+  // Pre-warm the Claude word the moment the lobby is ready, so clicking
+  // "Begin" skips the ~1-3s generation latency. Endpoint is idempotent.
+  useEffect(() => {
+    if (!canStart) return;
+    fetch(`/api/rooms/${code}/prewarm`, { method: "POST" }).catch(() => {});
+  }, [canStart, code]);
 
   async function start() {
     setError(null);
@@ -414,31 +433,77 @@ function PlayingPhase({
   const [word, setWord] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
-  const currentPlayerId = view.turnOrder[view.turnIndex];
-  const isMyTurn = currentPlayerId === playerId;
+  const [optimisticClue, setOptimisticClue] = useState<{
+    playerId: string;
+    round: number;
+    word: string;
+  } | null>(null);
+
+  // Clear the optimistic clue once the server echoes it back in view.clues.
+  useEffect(() => {
+    if (!optimisticClue) return;
+    const landed = view.clues.some(
+      (c) =>
+        c.player_id === optimisticClue.playerId &&
+        c.round === optimisticClue.round &&
+        c.word === optimisticClue.word
+    );
+    if (landed) setOptimisticClue(null);
+  }, [view.clues, optimisticClue]);
+
   const nextTurnIndex =
     view.turnOrder.length > 0
       ? (view.turnIndex + 1) % view.turnOrder.length
       : 0;
+
+  // Merge the optimistic clue into a local view so ClueLog + TurnStrip
+  // reflect the pending state immediately. Advance turn_index locally too,
+  // so the ring glides to the next player right away.
+  const displayView: PublicRoomView = optimisticClue
+    ? {
+        ...view,
+        clues: [
+          ...view.clues,
+          {
+            id: -Date.now(),
+            player_id: optimisticClue.playerId,
+            round: optimisticClue.round,
+            word: optimisticClue.word,
+          },
+        ],
+        turnIndex: nextTurnIndex,
+      }
+    : view;
+
+  const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
+  const currentPlayerId = view.turnOrder[view.turnIndex];
+  const isMyTurn = currentPlayerId === playerId && !optimisticClue;
   const iAmNext =
-    !isMyTurn && view.turnOrder[nextTurnIndex] === playerId;
+    !isMyTurn && view.turnOrder[nextTurnIndex] === playerId && !optimisticClue;
   const you = view.you!;
+  const waitingFor = optimisticClue
+    ? view.turnOrder[nextTurnIndex]
+    : currentPlayerId;
 
   async function submit() {
+    const trimmed = word.trim();
+    if (!trimmed) return;
     setError(null);
     setSubmitting(true);
+    setOptimisticClue({ playerId, round: view.round, word: trimmed });
+    setWord("");
     try {
       const res = await fetch(`/api/rooms/${code}/clue`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId, word: word.trim() }),
+        body: JSON.stringify({ playerId, word: trimmed }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
-      setWord("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
+      setOptimisticClue(null);
+      setWord(trimmed);
     } finally {
       setSubmitting(false);
     }
@@ -472,7 +537,7 @@ function PlayingPhase({
         )}
       </section>
 
-      <TurnStrip view={view} playerId={playerId} />
+      <TurnStrip view={displayView} playerId={playerId} />
 
       {isMyTurn ? (
         <div className="space-y-3">
@@ -510,18 +575,18 @@ function PlayingPhase({
               <span className="text-accent">You&apos;re up next</span>
               <span className="text-ink-faint">
                 {" "}
-                · Awaiting {nicknameById.get(currentPlayerId)}
+                · Awaiting {nicknameById.get(waitingFor)}
               </span>
             </>
           ) : (
             <span className="text-ink-faint">
-              Awaiting {nicknameById.get(currentPlayerId)}
+              Awaiting {nicknameById.get(waitingFor)}
             </span>
           )}
         </p>
       )}
 
-      <ClueLog view={view} />
+      <ClueLog view={displayView} />
     </>
   );
 }
@@ -584,25 +649,33 @@ function TurnStrip({
             className="flex min-w-[64px] flex-col items-center gap-2"
           >
             <div className="relative">
-              <div
-                className={`flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold text-white transition ${color} ${
-                  isCurrent
-                    ? "ring-2 ring-accent ring-offset-4 ring-offset-page"
-                    : isDone
-                      ? "opacity-30"
-                      : ""
-                }`}
+              {isCurrent && (
+                <motion.span
+                  layoutId="turn-ring"
+                  className="pointer-events-none absolute -inset-1.5 rounded-full ring-2 ring-accent"
+                  transition={{ type: "spring", stiffness: 500, damping: 36 }}
+                />
+              )}
+              <motion.div
+                animate={{ opacity: isDone ? 0.3 : 1, scale: isCurrent ? 1.05 : 1 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className={`relative flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold text-white ${color}`}
               >
                 {initial}
-              </div>
+              </motion.div>
               {isDone && (
-                <span className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-leaf text-[10px] text-white">
+                <motion.span
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 28 }}
+                  className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-leaf text-[10px] text-white"
+                >
                   ✓
-                </span>
+                </motion.span>
               )}
             </div>
             <span
-              className={`max-w-[72px] truncate text-[10px] uppercase tracking-[0.15em] ${
+              className={`max-w-[72px] truncate text-[10px] uppercase tracking-[0.15em] transition-colors ${
                 isCurrent ? "font-semibold text-accent" : "text-ink-faint"
               }`}
               title={p.nickname}
@@ -647,31 +720,38 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                   {isActive && <span>In progress</span>}
                 </div>
                 <ul className="divide-y divide-line-soft border-y border-line-soft">
-                  {[...clues].reverse().map((c) => {
-                    const nickname = nicknameById.get(c.player_id) ?? "";
-                    const { color, initial } = avatarFor(
-                      c.player_id,
-                      nickname
-                    );
-                    return (
-                      <li
-                        key={c.id}
-                        className="flex items-center gap-4 py-3"
-                      >
-                        <div
-                          className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ${color}`}
+                  <AnimatePresence initial={false}>
+                    {[...clues].reverse().map((c) => {
+                      const nickname = nicknameById.get(c.player_id) ?? "";
+                      const { color, initial } = avatarFor(
+                        c.player_id,
+                        nickname
+                      );
+                      return (
+                        <motion.li
+                          key={c.id}
+                          layout
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
+                          className="flex items-center gap-4 py-3"
                         >
-                          {initial}
-                        </div>
-                        <span className="flex-1 text-xs uppercase tracking-[0.15em] text-ink-faint">
-                          {nickname}
-                        </span>
-                        <span className="font-serif text-xl italic text-ink">
-                          {c.word}
-                        </span>
-                      </li>
-                    );
-                  })}
+                          <div
+                            className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ${color}`}
+                          >
+                            {initial}
+                          </div>
+                          <span className="flex-1 text-xs uppercase tracking-[0.15em] text-ink-faint">
+                            {nickname}
+                          </span>
+                          <span className="font-serif text-xl italic text-ink">
+                            {c.word}
+                          </span>
+                        </motion.li>
+                      );
+                    })}
+                  </AnimatePresence>
                 </ul>
               </div>
             );
@@ -693,13 +773,29 @@ function VotingPhase({
   const [target, setTarget] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const myVote = view.votes.find((v) => v.voter_id === playerId);
+  const [optimisticVoteTarget, setOptimisticVoteTarget] = useState<
+    string | null
+  >(null);
+
+  const serverVote = view.votes.find((v) => v.voter_id === playerId);
+
+  useEffect(() => {
+    if (optimisticVoteTarget && serverVote) {
+      setOptimisticVoteTarget(null);
+    }
+  }, [optimisticVoteTarget, serverVote]);
+
+  const myVote = serverVote ??
+    (optimisticVoteTarget
+      ? { voter_id: playerId, target_id: optimisticVoteTarget }
+      : undefined);
   const alreadyVoted = !!myVote;
 
   async function submit() {
     if (!target) return;
     setError(null);
     setSubmitting(true);
+    setOptimisticVoteTarget(target);
     try {
       const res = await fetch(`/api/rooms/${code}/vote`, {
         method: "POST",
@@ -710,12 +806,16 @@ function VotingPhase({
       if (!res.ok) throw new Error(data.error ?? "failed");
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
+      setOptimisticVoteTarget(null);
     } finally {
       setSubmitting(false);
     }
   }
 
-  const votesReceived = view.votes.length;
+  const mergedVotes = optimisticVoteTarget && !serverVote
+    ? [...view.votes, { voter_id: playerId, target_id: optimisticVoteTarget }]
+    : view.votes;
+  const votesReceived = mergedVotes.length;
   const totalPlayers = view.players.length;
   const you = view.you!;
 
