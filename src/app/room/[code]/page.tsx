@@ -729,22 +729,38 @@ function VotingPhase({
 
   const votesReceived = view.votes.length;
   const totalPlayers = view.players.length;
+  const you = view.you!;
 
   return (
     <>
-      <section className="border border-line bg-surface p-8 text-center">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-          The category was
-        </div>
-        <div className="mt-3 font-serif text-2xl italic text-ink">
+      <section className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+        <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
           {view.category}
-        </div>
+        </span>
+        {!you.isImposter && you.secretWord && (
+          <span>
+            Word
+            <span className="ml-2 font-serif text-sm italic text-ink normal-case tracking-normal">
+              {you.secretWord}
+            </span>
+          </span>
+        )}
+        {you.isImposter && (
+          <span className="text-oxblood">You are the imposter</span>
+        )}
       </section>
 
-      <ClueLog view={view} />
-
       <section className="space-y-4">
-        <SectionLabel>Who is the imposter?</SectionLabel>
+        <div className="text-center">
+          <div className="font-serif text-3xl italic text-ink">
+            Who is the imposter?
+          </div>
+          <div className="mt-1 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            {alreadyVoted
+              ? `Vote locked · ${votesReceived} of ${totalPlayers}`
+              : `Cast your vote · ${votesReceived} of ${totalPlayers} in`}
+          </div>
+        </div>
         <div className="divide-y divide-line-soft border-y border-line-soft">
           {view.players.map((p) => {
             const isYou = p.id === playerId;
@@ -755,19 +771,19 @@ function VotingPhase({
                 key={p.id}
                 onClick={() => !alreadyVoted && !isYou && setTarget(p.id)}
                 disabled={alreadyVoted || isYou}
-                className={`flex w-full items-center gap-4 py-4 text-left transition ${
-                  selected ? "bg-accent/10" : ""
+                className={`flex w-full items-center gap-4 px-3 py-5 text-left transition ${
+                  selected ? "bg-accent/10 ring-1 ring-accent/40" : ""
                 } ${isYou || alreadyVoted ? "opacity-40" : "hover:bg-cream/40"}`}
               >
                 <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white ${color}`}
+                  className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold text-white ${color}`}
                 >
                   {initial}
                 </div>
-                <div className="flex-1 text-sm text-ink">
+                <div className="flex-1 font-serif text-xl text-ink">
                   {p.nickname}
                   {isYou && (
-                    <span className="ml-2 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+                    <span className="ml-2 font-sans text-[10px] uppercase tracking-[0.3em] text-ink-faint">
                       (you)
                     </span>
                   )}
@@ -786,7 +802,7 @@ function VotingPhase({
             );
           })}
         </div>
-        {!alreadyVoted ? (
+        {!alreadyVoted && (
           <button
             onClick={submit}
             disabled={!target || submitting}
@@ -794,10 +810,6 @@ function VotingPhase({
           >
             {submitting ? "Submitting" : "Lock in vote"}
           </button>
-        ) : (
-          <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
-            Vote locked · {votesReceived} of {totalPlayers}
-          </p>
         )}
         {error && (
           <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
@@ -805,6 +817,8 @@ function VotingPhase({
           </p>
         )}
       </section>
+
+      <ClueLog view={view} />
     </>
   );
 }
