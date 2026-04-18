@@ -10,7 +10,11 @@
  * prints its address, and — if under 0.01 ETH on Base Sepolia — asks
  * the CDP faucet to top it up so the resolver can pay gas.
  */
-import "dotenv/config";
+import * as dotenv from "dotenv";
+// Next.js convention: prefer .env.local, fall back to .env
+dotenv.config({ path: ".env.local" });
+dotenv.config();
+
 import { CdpClient } from "@coinbase/cdp-sdk";
 import { createPublicClient, http, formatEther } from "viem";
 import { baseSepolia } from "viem/chains";
