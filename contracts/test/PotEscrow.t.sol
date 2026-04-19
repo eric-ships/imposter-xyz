@@ -4,7 +4,7 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {PotEscrow} from "../src/PotEscrow.sol";
+import {PotEscrow, ISpendPermissionManager} from "../src/PotEscrow.sol";
 
 contract MockUSDC is ERC20 {
     constructor() ERC20("Mock USDC", "mUSDC") {}
@@ -18,8 +18,54 @@ contract MockUSDC is ERC20 {
     }
 }
 
+/// @notice Minimal mock of Base's SpendPermissionManager. The only
+/// behaviour the contract relies on is spend() pulling tokens from
+/// `permission.account` and sending them to msg.sender, gated on the
+/// permission having been "approved".
+contract MockSpendPermissionManager is ISpendPermissionManager {
+    mapping(bytes32 => bool) public approved;
+    mapping(bytes32 => uint160) public spent;
+
+    function _hash(SpendPermission calldata p) internal pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                p.account,
+                p.spender,
+                p.token,
+                p.allowance,
+                p.period,
+                p.start,
+                p.end,
+                p.salt,
+                p.extraData
+            )
+        );
+    }
+
+    function approveWithSignature(
+        SpendPermission calldata permission,
+        bytes calldata /*signature*/
+    ) external {
+        approved[_hash(permission)] = true;
+    }
+
+    function approveDirect(SpendPermission calldata permission) external {
+        approved[_hash(permission)] = true;
+    }
+
+    function spend(SpendPermission calldata permission, uint160 value) external {
+        require(msg.sender == permission.spender, "not-spender");
+        bytes32 h = _hash(permission);
+        require(approved[h], "not-approved");
+        require(spent[h] + value <= permission.allowance, "over-allowance");
+        spent[h] += value;
+        IERC20(permission.token).transferFrom(permission.account, msg.sender, value);
+    }
+}
+
 contract PotEscrowTest is Test {
     MockUSDC internal usdc;
+    MockSpendPermissionManager internal spm;
     PotEscrow internal escrow;
 
     address internal owner = address(0xA110);
@@ -33,21 +79,50 @@ contract PotEscrowTest is Test {
 
     function setUp() public {
         usdc = new MockUSDC();
+        spm = new MockSpendPermissionManager();
 
         vm.prank(owner);
-        escrow = new PotEscrow(IERC20(address(usdc)), resolver);
+        escrow = new PotEscrow(IERC20(address(usdc)), spm, resolver);
 
         // Seed all three players with 100 USDC.
         usdc.mint(alice, 100 * ANTE);
         usdc.mint(bob, 100 * ANTE);
         usdc.mint(carol, 100 * ANTE);
 
+        // For the traditional `ante()` path the player approves PotEscrow.
+        // For `anteFor()` the player instead approves the SpendPermissionManager
+        // (which is how USDC gets pulled on Base via a SpendPermission).
         vm.prank(alice);
         usdc.approve(address(escrow), type(uint256).max);
         vm.prank(bob);
         usdc.approve(address(escrow), type(uint256).max);
         vm.prank(carol);
         usdc.approve(address(escrow), type(uint256).max);
+
+        vm.prank(alice);
+        usdc.approve(address(spm), type(uint256).max);
+        vm.prank(bob);
+        usdc.approve(address(spm), type(uint256).max);
+        vm.prank(carol);
+        usdc.approve(address(spm), type(uint256).max);
+    }
+
+    function _makePermission(address account)
+        internal
+        view
+        returns (ISpendPermissionManager.SpendPermission memory p)
+    {
+        p = ISpendPermissionManager.SpendPermission({
+            account: account,
+            spender: address(escrow),
+            token: address(usdc),
+            allowance: uint160(10 * ANTE),
+            period: 7 days,
+            start: 0,
+            end: uint48(block.timestamp + 30 days),
+            salt: uint256(keccak256(abi.encodePacked(account))),
+            extraData: ""
+        });
     }
 
     // --- constructor / admin ---
@@ -60,12 +135,21 @@ contract PotEscrowTest is Test {
 
     function test_constructor_rejectsZeroToken() public {
         vm.expectRevert(PotEscrow.ZeroAddress.selector);
-        new PotEscrow(IERC20(address(0)), resolver);
+        new PotEscrow(IERC20(address(0)), spm, resolver);
+    }
+
+    function test_constructor_rejectsZeroSpm() public {
+        vm.expectRevert(PotEscrow.ZeroAddress.selector);
+        new PotEscrow(
+            IERC20(address(usdc)),
+            ISpendPermissionManager(address(0)),
+            resolver
+        );
     }
 
     function test_constructor_rejectsZeroResolver() public {
         vm.expectRevert(PotEscrow.ZeroAddress.selector);
-        new PotEscrow(IERC20(address(usdc)), address(0));
+        new PotEscrow(IERC20(address(usdc)), spm, address(0));
     }
 
     function test_setResolver_onlyOwner() public {
@@ -351,6 +435,98 @@ contract PotEscrowTest is Test {
         vm.prank(address(0xDEAD));
         vm.expectRevert(PotEscrow.UnpaidPlayer.selector);
         escrow.selfRefund(GAME);
+    }
+
+    // --- anteFor (via SpendPermission) ---
+
+    function test_anteFor_pullsViaPermission() public {
+        vm.prank(resolver);
+        escrow.createGame(GAME, ANTE);
+
+        ISpendPermissionManager.SpendPermission memory p = _makePermission(alice);
+        spm.approveDirect(p);
+
+        uint256 aliceBefore = usdc.balanceOf(alice);
+
+        vm.prank(resolver);
+        escrow.anteFor(GAME, p);
+
+        assertEq(usdc.balanceOf(alice), aliceBefore - ANTE);
+        assertEq(usdc.balanceOf(address(escrow)), ANTE);
+        assertTrue(escrow.paid(GAME, alice));
+        (, uint256 pot,,) = escrow.gameInfo(GAME);
+        assertEq(pot, ANTE);
+    }
+
+    function test_anteFor_onlyResolver() public {
+        vm.prank(resolver);
+        escrow.createGame(GAME, ANTE);
+        ISpendPermissionManager.SpendPermission memory p = _makePermission(alice);
+
+        vm.prank(alice);
+        vm.expectRevert(PotEscrow.NotResolver.selector);
+        escrow.anteFor(GAME, p);
+    }
+
+    function test_anteFor_rejectsWrongToken() public {
+        vm.prank(resolver);
+        escrow.createGame(GAME, ANTE);
+        ISpendPermissionManager.SpendPermission memory p = _makePermission(alice);
+        p.token = address(0xDEAD);
+
+        vm.prank(resolver);
+        vm.expectRevert(PotEscrow.WrongPermissionToken.selector);
+        escrow.anteFor(GAME, p);
+    }
+
+    function test_anteFor_rejectsWrongSpender() public {
+        vm.prank(resolver);
+        escrow.createGame(GAME, ANTE);
+        ISpendPermissionManager.SpendPermission memory p = _makePermission(alice);
+        p.spender = address(0xBEEF);
+
+        vm.prank(resolver);
+        vm.expectRevert(PotEscrow.WrongPermissionSpender.selector);
+        escrow.anteFor(GAME, p);
+    }
+
+    function test_anteFor_rejectsDoublePay() public {
+        vm.prank(resolver);
+        escrow.createGame(GAME, ANTE);
+        ISpendPermissionManager.SpendPermission memory p = _makePermission(alice);
+        spm.approveDirect(p);
+
+        vm.prank(resolver);
+        escrow.anteFor(GAME, p);
+
+        vm.prank(resolver);
+        vm.expectRevert(PotEscrow.AlreadyPaid.selector);
+        escrow.anteFor(GAME, p);
+    }
+
+    function test_anteFor_mixedWithTraditionalAnte() public {
+        // Alice traditionally antes; Bob/Carol via permission. Pot lines up.
+        vm.prank(resolver);
+        escrow.createGame(GAME, ANTE);
+
+        vm.prank(alice);
+        escrow.ante(GAME);
+
+        ISpendPermissionManager.SpendPermission memory pb = _makePermission(bob);
+        ISpendPermissionManager.SpendPermission memory pc = _makePermission(carol);
+        spm.approveDirect(pb);
+        spm.approveDirect(pc);
+
+        vm.prank(resolver);
+        escrow.anteFor(GAME, pb);
+        vm.prank(resolver);
+        escrow.anteFor(GAME, pc);
+
+        (, uint256 pot,,) = escrow.gameInfo(GAME);
+        assertEq(pot, 3 * ANTE);
+        assertTrue(escrow.paid(GAME, alice));
+        assertTrue(escrow.paid(GAME, bob));
+        assertTrue(escrow.paid(GAME, carol));
     }
 
     // --- helpers ---

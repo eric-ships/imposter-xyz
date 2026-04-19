@@ -5,6 +5,24 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+/// @dev Minimal interface for Base's canonical SpendPermissionManager.
+/// Deployed at 0xf85210B21cC50302F477BA56686d2019dC9b67Ad on Base + Base Sepolia.
+interface ISpendPermissionManager {
+    struct SpendPermission {
+        address account;
+        address spender;
+        address token;
+        uint160 allowance;
+        uint48 period;
+        uint48 start;
+        uint48 end;
+        uint256 salt;
+        bytes extraData;
+    }
+    function spend(SpendPermission calldata permission, uint160 value) external;
+    function approveWithSignature(SpendPermission calldata permission, bytes calldata signature) external;
+}
+
 /// @title PotEscrow
 /// @notice Generic per-game pot escrow for multi-player wager games. One
 ///         resolver (the game server) creates games, records antes as
@@ -15,6 +33,7 @@ contract PotEscrow is ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     IERC20 public immutable token;
+    ISpendPermissionManager public immutable spendPermissionManager;
     address public owner;
     address public resolver;
 
@@ -51,11 +70,19 @@ contract PotEscrow is ReentrancyGuard {
     error LengthMismatch();
     error ZeroAnte();
     error ZeroAddress();
+    error WrongPermissionToken();
+    error WrongPermissionSpender();
 
-    constructor(IERC20 token_, address resolver_) {
+    constructor(
+        IERC20 token_,
+        ISpendPermissionManager spendPermissionManager_,
+        address resolver_
+    ) {
         if (address(token_) == address(0)) revert ZeroAddress();
+        if (address(spendPermissionManager_) == address(0)) revert ZeroAddress();
         if (resolver_ == address(0)) revert ZeroAddress();
         token = token_;
+        spendPermissionManager = spendPermissionManager_;
         resolver = resolver_;
         owner = msg.sender;
     }
@@ -106,6 +133,30 @@ contract PotEscrow is ReentrancyGuard {
         g.potBalance += g.ante;
         token.safeTransferFrom(msg.sender, address(this), g.ante);
         emit Anted(gameId, msg.sender, g.ante);
+    }
+
+    /// @notice Resolver-only: ante on behalf of a player using a
+    ///         pre-approved Base Account Spend Permission. The permission
+    ///         must name this contract as its spender and the game's
+    ///         token as its token. SpendPermissionManager.spend pulls the
+    ///         ante directly into this contract.
+    function anteFor(
+        bytes32 gameId,
+        ISpendPermissionManager.SpendPermission calldata permission
+    ) external onlyResolver nonReentrant {
+        Game storage g = games[gameId];
+        if (g.createdAt == 0) revert GameMissing();
+        if (g.resolved) revert GameAlreadyResolved();
+        if (paid[gameId][permission.account]) revert AlreadyPaid();
+        if (permission.token != address(token)) revert WrongPermissionToken();
+        if (permission.spender != address(this)) revert WrongPermissionSpender();
+
+        paid[gameId][permission.account] = true;
+        g.potBalance += g.ante;
+
+        spendPermissionManager.spend(permission, uint160(g.ante));
+
+        emit Anted(gameId, permission.account, g.ante);
     }
 
     /// @notice Distribute the pot to winners. Sum(amounts) must equal
