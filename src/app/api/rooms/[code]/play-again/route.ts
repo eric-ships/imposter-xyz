@@ -38,6 +38,12 @@ export async function POST(
   await Promise.all([
     supabaseAdmin.from("clues").delete().eq("room_code", code),
     supabaseAdmin.from("votes").delete().eq("room_code", code),
+    // Pot was already settled on chain during reveal; clear the per-player
+    // ante state so the next round can be re-anted.
+    supabaseAdmin
+      .from("players")
+      .update({ ante_tx: null })
+      .eq("room_code", code),
   ]);
 
   const update: Record<string, unknown> = {
@@ -56,6 +62,15 @@ export async function POST(
     update.prewarm_word = null;
     update.prewarm_category = null;
     update.prewarm_started_at = null;
+  }
+  // Pot toggle resets each match; host has to explicitly re-enable for
+  // the next round so nobody gets charged by surprise.
+  if ("pot_enabled" in room) {
+    update.pot_enabled = false;
+    update.ante_amount = null;
+    update.chain_game_id = null;
+    update.chain_create_tx = null;
+    update.chain_resolve_tx = null;
   }
 
   const { error: updErr } = await supabaseAdmin

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
 import { judgeGuess, normalizeWord } from "@/lib/anthropic";
+import { settlePot } from "@/lib/settle";
 import type { GuessOutcome } from "@/lib/game";
 
 export async function POST(
@@ -96,6 +97,17 @@ export async function POST(
         .eq("id", c.id);
     }
   }
+
+  // Settle the pot on chain before flipping to reveal.
+  await settlePot(
+    { code, ...room },
+    {
+      imposterId: room.imposter_id,
+      caught: true,
+      tied: false,
+      guessOutcome: outcome,
+    }
+  );
 
   await supabaseAdmin
     .from("rooms")

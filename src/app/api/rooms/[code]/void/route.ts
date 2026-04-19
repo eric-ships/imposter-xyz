@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
+import { refundPot } from "@/lib/settle";
 
 export async function POST(
   request: Request,
@@ -35,10 +36,17 @@ export async function POST(
     return NextResponse.json({ error: "nothing to void" }, { status: 400 });
   }
 
+  // Refund any antes that were paid before we wipe round state.
+  await refundPot({ code, ...room });
+
   // Wipe round artifacts but keep player scores intact.
   await Promise.all([
     supabaseAdmin.from("clues").delete().eq("room_code", code),
     supabaseAdmin.from("votes").delete().eq("room_code", code),
+    supabaseAdmin
+      .from("players")
+      .update({ ante_tx: null })
+      .eq("room_code", code),
   ]);
 
   const update: Record<string, unknown> = {
@@ -57,6 +65,13 @@ export async function POST(
     update.prewarm_word = null;
     update.prewarm_category = null;
     update.prewarm_started_at = null;
+  }
+  if ("pot_enabled" in room) {
+    update.pot_enabled = false;
+    update.ante_amount = null;
+    update.chain_game_id = null;
+    update.chain_create_tx = null;
+    update.chain_resolve_tx = null;
   }
 
   const { error: updErr } = await supabaseAdmin

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom, tallyVotes } from "@/lib/room-state";
+import { settlePot } from "@/lib/settle";
 
 export async function POST(
   request: Request,
@@ -77,6 +78,17 @@ export async function POST(
       .from("players")
       .update({ score: (current?.score ?? 0) + 2 })
       .eq("id", room.imposter_id);
+
+    // Settle the pot on chain before flipping state. Imposter takes all.
+    await settlePot(
+      { code, ...room },
+      {
+        imposterId: room.imposter_id,
+        caught: false,
+        tied,
+        guessOutcome: null,
+      }
+    );
 
     await supabaseAdmin
       .from("rooms")

@@ -11,6 +11,25 @@ export type Player = {
   id: string;
   nickname: string;
   score: number;
+  walletAddress: string | null;
+  antePaid: boolean;
+  anteTx: string | null;
+};
+
+export type PotInfo = {
+  enabled: boolean;
+  anteAmount: string; // base units, e.g. "1000000" for 1 USDC
+  chainGameId: string | null;
+  chainCreateTx: string | null;
+  chainResolveTx: string | null;
+  paidCount: number;
+};
+
+export type Payout = {
+  wallet: string;
+  amount: string;
+  txHash: string;
+  kind: "payout" | "refund";
 };
 
 export type Clue = {
@@ -37,6 +56,8 @@ export type PublicRoomView = {
   players: Player[];
   clues: Clue[];
   votes: Vote[];
+  pot: PotInfo | null;
+  payouts: Payout[];
   // Only populated for the requesting player:
   you: {
     id: string;

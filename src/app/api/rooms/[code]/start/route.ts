@@ -44,7 +44,7 @@ export async function POST(
 
   const { data: players } = await supabaseAdmin
     .from("players")
-    .select("id")
+    .select("id, ante_tx, wallet_address")
     .eq("room_code", code)
     .order("joined_at", { ascending: true });
 
@@ -53,6 +53,19 @@ export async function POST(
       { error: "need at least 3 players" },
       { status: 400 }
     );
+  }
+
+  // Pot game: every player must have anted before the host can begin.
+  if (room.pot_enabled) {
+    const unpaid = players.filter((p) => !p.ante_tx);
+    if (unpaid.length > 0) {
+      return NextResponse.json(
+        {
+          error: `waiting on ${unpaid.length} player${unpaid.length === 1 ? "" : "s"} to ante`,
+        },
+        { status: 400 }
+      );
+    }
   }
 
   const ids = players.map((p) => p.id);
