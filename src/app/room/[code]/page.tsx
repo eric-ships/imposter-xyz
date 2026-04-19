@@ -6,7 +6,12 @@ import { AnimatePresence, motion } from "motion/react";
 import { supabase } from "@/lib/supabase/browser";
 import type { PublicRoomView } from "@/lib/game";
 import { blockExplorerUrl } from "@/lib/chain";
-import { anteWithBaseAccount, useBaseAccount } from "@/lib/wallet";
+import {
+  DEFAULT_ALLOWANCE,
+  DEFAULT_PERIOD_DAYS,
+  grantSpendPermissionForPot,
+  useBaseAccount,
+} from "@/lib/wallet";
 
 export default function RoomPage({
   params,
@@ -365,16 +370,18 @@ function PlayerList({
                 <div className="mt-0.5 text-[10px] uppercase tracking-[0.25em] text-ink-faint">
                   {p.antePaid
                     ? "anted"
-                    : p.walletAddress
-                      ? "wallet · waiting"
-                      : "no wallet"}
+                    : p.hasPermission
+                      ? "authorized"
+                      : p.walletAddress
+                        ? "wallet · awaiting auth"
+                        : "no wallet"}
                 </div>
               )}
             </div>
             {showAnte && (
               <div
                 className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] ${
-                  p.antePaid
+                  p.antePaid || p.hasPermission
                     ? "bg-leaf text-white"
                     : p.walletAddress
                       ? "border border-accent text-accent"
@@ -383,12 +390,14 @@ function PlayerList({
                 title={
                   p.antePaid
                     ? "ante paid"
-                    : p.walletAddress
-                      ? "wallet connected, awaiting ante"
-                      : "no wallet connected"
+                    : p.hasPermission
+                      ? "authorized, will ante on start"
+                      : p.walletAddress
+                        ? "wallet connected, awaiting authorization"
+                        : "no wallet connected"
                 }
               >
-                {p.antePaid ? "✓" : p.walletAddress ? "⋯" : "◯"}
+                {p.antePaid ? "✓" : p.hasPermission ? "✓" : p.walletAddress ? "⋯" : "◯"}
               </div>
             )}
             {showScores && (
@@ -431,7 +440,7 @@ function PotPanel({
   const { address, isConnecting, connect } = useBaseAccount();
 
   const [hostToggling, setHostToggling] = useState(false);
-  const [anteing, setAnteing] = useState(false);
+  const [granting, setGranting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function toggle(enable: boolean) {
@@ -452,41 +461,33 @@ function PotPanel({
     }
   }
 
-  async function doAnte() {
-    if (!pot || !pot.chainGameId) return;
+  async function doGrantPermission() {
     setError(null);
-    setAnteing(true);
+    setGranting(true);
     try {
       const addr = address ?? (await connect());
       if (!addr) throw new Error("wallet not connected");
 
-      const walletRes = await fetch(`/api/rooms/${code}/wallet`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId, walletAddress: addr }),
-      });
-      const walletData = await walletRes.json();
-      if (!walletRes.ok)
-        throw new Error(walletData.error ?? "wallet register failed");
-
-      const txHash = await anteWithBaseAccount({
-        from: addr,
-        gameId: pot.chainGameId as `0x${string}`,
-        ante: BigInt(pot.anteAmount),
+      const { permission, signature } = await grantSpendPermissionForPot({
+        account: addr,
       });
 
-      const confirmRes = await fetch(`/api/rooms/${code}/ante-confirm`, {
+      const res = await fetch(`/api/rooms/${code}/grant-permission`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId, txHash }),
+        body: JSON.stringify({
+          playerId,
+          walletAddress: addr,
+          permission,
+          signature,
+        }),
       });
-      const confirmData = await confirmRes.json();
-      if (!confirmRes.ok)
-        throw new Error(confirmData.error ?? "confirm failed");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "authorize failed");
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
     } finally {
-      setAnteing(false);
+      setGranting(false);
     }
   }
 
@@ -558,6 +559,16 @@ function PotPanel({
         <div className="rounded-sm border border-leaf/40 bg-leaf/10 px-4 py-3 text-sm text-leaf">
           ✓ You&apos;ve anted · pot locked until reveal
         </div>
+      ) : me?.hasPermission ? (
+        <div className="rounded-sm border border-leaf/40 bg-leaf/10 px-4 py-3 text-sm text-leaf">
+          ✓ Authorized · host can begin when everyone&apos;s in
+          {address && (
+            <div className="mt-1 text-[10px] uppercase tracking-[0.25em] text-leaf/80">
+              {shortAddress(address)} · {formatUsdc(DEFAULT_ALLOWANCE)} USDC
+              / {DEFAULT_PERIOD_DAYS} days
+            </div>
+          )}
+        </div>
       ) : (
         <div className="space-y-2">
           {address && (
@@ -566,18 +577,22 @@ function PotPanel({
             </div>
           )}
           <button
-            onClick={doAnte}
-            disabled={anteing || isConnecting}
+            onClick={doGrantPermission}
+            disabled={granting || isConnecting}
             className="w-full rounded-sm bg-ink px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:opacity-40"
           >
-            {anteing
-              ? "Confirming..."
+            {granting
+              ? "Authorizing..."
               : isConnecting
                 ? "Connecting..."
                 : address
-                  ? `Ante ${formatUsdc(pot.anteAmount)} USDC`
-                  : `Connect wallet & ante ${formatUsdc(pot.anteAmount)} USDC`}
+                  ? `Authorize ${formatUsdc(DEFAULT_ALLOWANCE)} USDC`
+                  : `Connect & authorize ${formatUsdc(DEFAULT_ALLOWANCE)} USDC`}
           </button>
+          <p className="text-[10px] uppercase tracking-[0.25em] text-ink-faint">
+            One sign · {formatUsdc(DEFAULT_ALLOWANCE)} USDC /
+            {" "}{DEFAULT_PERIOD_DAYS} days · revoke anytime
+          </p>
         </div>
       )}
 
@@ -640,14 +655,17 @@ function LobbyPhase({
       : "";
 
   const potEnabled = !!view.pot;
-  const potReady = !potEnabled || view.pot!.paidCount === view.players.length;
+  const authorizedCount = view.players.filter(
+    (p) => p.hasPermission || p.antePaid
+  ).length;
+  const potReady = !potEnabled || authorizedCount === view.players.length;
   const startReady = canStart && potReady;
   const startLabel = starting
     ? "Starting"
     : !canStart
       ? `Awaiting ${3 - view.players.length} more`
       : !potReady
-        ? `Awaiting ${view.players.length - view.pot!.paidCount} more antes`
+        ? `Awaiting ${view.players.length - authorizedCount} to authorize`
         : "Begin the game";
 
   return (

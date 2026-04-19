@@ -37,7 +37,9 @@ export async function fetchRoomView(
     await Promise.all([
       supabaseAdmin
         .from("players")
-        .select("id, nickname, score, wallet_address, ante_tx")
+        .select(
+          "id, nickname, score, wallet_address, ante_tx, spend_permission"
+        )
         .eq("room_code", code)
         .order("joined_at", { ascending: true }),
       supabaseAdmin
@@ -88,6 +90,7 @@ export async function fetchRoomView(
     nickname: p.nickname as string,
     score: p.score as number,
     walletAddress: (p.wallet_address as string | null) ?? null,
+    hasPermission: !!(p.spend_permission as unknown),
     antePaid: !!(p.ante_tx as string | null),
     anteTx: (p.ante_tx as string | null) ?? null,
   }));

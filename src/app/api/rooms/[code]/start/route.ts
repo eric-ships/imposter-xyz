@@ -2,6 +2,11 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
 import { generateWordPrompt } from "@/lib/anthropic";
+import {
+  anteForOnChain,
+  waitForTx,
+  type SpendPermission,
+} from "@/lib/escrow";
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr];
@@ -44,7 +49,7 @@ export async function POST(
 
   const { data: players } = await supabaseAdmin
     .from("players")
-    .select("id, ante_tx, wallet_address")
+    .select("id, ante_tx, wallet_address, spend_permission")
     .eq("room_code", code)
     .order("joined_at", { ascending: true });
 
@@ -55,16 +60,51 @@ export async function POST(
     );
   }
 
-  // Pot game: every player must have anted before the host can begin.
+  // Pot game: every player must have a Spend Permission registered so the
+  // resolver can auto-ante them. Pull each one via anteFor before we flip
+  // state to 'playing' — if any pull fails we bail so the host can void.
   if (room.pot_enabled) {
-    const unpaid = players.filter((p) => !p.ante_tx);
+    const chainGameId = room.chain_game_id as `0x${string}` | null;
+    if (!chainGameId) {
+      return NextResponse.json(
+        { error: "pot enabled but no chain game id" },
+        { status: 500 }
+      );
+    }
+    const unpaid = players.filter(
+      (p) => !p.ante_tx && !p.spend_permission
+    );
     if (unpaid.length > 0) {
       return NextResponse.json(
         {
-          error: `waiting on ${unpaid.length} player${unpaid.length === 1 ? "" : "s"} to ante`,
+          error: `waiting on ${unpaid.length} player${unpaid.length === 1 ? "" : "s"} to authorize`,
         },
         { status: 400 }
       );
+    }
+
+    for (const p of players) {
+      if (p.ante_tx) continue; // already anted this round
+      const permission = p.spend_permission as SpendPermission | null;
+      if (!permission) continue; // defensive, should be caught above
+      try {
+        const hash = await anteForOnChain(chainGameId, permission);
+        await waitForTx(hash);
+        await supabaseAdmin
+          .from("players")
+          .update({ ante_tx: hash })
+          .eq("id", p.id);
+      } catch (e) {
+        return NextResponse.json(
+          {
+            error:
+              e instanceof Error
+                ? `ante failed for a player: ${e.message}`
+                : "ante failed",
+          },
+          { status: 500 }
+        );
+      }
     }
   }
 

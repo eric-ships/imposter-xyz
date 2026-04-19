@@ -1,12 +1,39 @@
 import "server-only";
 import { CdpClient } from "@coinbase/cdp-sdk";
 import { encodeFunctionData } from "viem";
-import { POT_ESCROW_ABI } from "@/lib/abi";
+import { POT_ESCROW_ABI, SPEND_PERMISSION_MANAGER_ABI } from "@/lib/abi";
 import {
   CDP_NETWORK_NAME,
   POT_ESCROW_ADDRESS,
+  SPEND_PERMISSION_MANAGER_ADDRESS,
   publicClient,
 } from "@/lib/chain";
+
+export type SpendPermission = {
+  account: `0x${string}`;
+  spender: `0x${string}`;
+  token: `0x${string}`;
+  allowance: string; // uint160 as decimal string
+  period: number;
+  start: number;
+  end: number;
+  salt: string; // uint256 as decimal string
+  extraData: `0x${string}`;
+};
+
+function permissionForAbi(p: SpendPermission) {
+  return {
+    account: p.account,
+    spender: p.spender,
+    token: p.token,
+    allowance: BigInt(p.allowance),
+    period: p.period,
+    start: p.start,
+    end: p.end,
+    salt: BigInt(p.salt),
+    extraData: p.extraData,
+  };
+}
 
 const RESOLVER_ACCOUNT_NAME =
   process.env.CDP_RESOLVER_ACCOUNT_NAME ?? "ImposterXYZ";
@@ -28,14 +55,18 @@ async function resolverAddress(): Promise<`0x${string}`> {
 }
 
 async function send(data: `0x${string}`): Promise<`0x${string}`> {
+  return sendTo(POT_ESCROW_ADDRESS, data);
+}
+
+async function sendTo(
+  to: `0x${string}`,
+  data: `0x${string}`
+): Promise<`0x${string}`> {
   const from = await resolverAddress();
   const { transactionHash } = await cdp().evm.sendTransaction({
     address: from,
     network: CDP_NETWORK_NAME,
-    transaction: {
-      to: POT_ESCROW_ADDRESS,
-      data,
-    },
+    transaction: { to, data },
   });
   return transactionHash as `0x${string}`;
 }
@@ -112,6 +143,51 @@ export async function hasPaidOnChain(
 
 export async function waitForTx(hash: `0x${string}`) {
   await publicClient().waitForTransactionReceipt({ hash });
+}
+
+/**
+ * Register a player's signed Spend Permission on the canonical
+ * SpendPermissionManager. After this lands, PotEscrow.anteFor can pull
+ * from the player's account within the permission budget.
+ */
+export async function approvePermissionOnChain(
+  permission: SpendPermission,
+  signature: `0x${string}`
+): Promise<`0x${string}`> {
+  const data = encodeFunctionData({
+    abi: SPEND_PERMISSION_MANAGER_ABI,
+    functionName: "approveWithSignature",
+    args: [permissionForAbi(permission), signature],
+  });
+  return sendTo(SPEND_PERMISSION_MANAGER_ADDRESS, data);
+}
+
+export async function isPermissionApprovedOnChain(
+  permission: SpendPermission
+): Promise<boolean> {
+  const ok = (await publicClient().readContract({
+    address: SPEND_PERMISSION_MANAGER_ADDRESS,
+    abi: SPEND_PERMISSION_MANAGER_ABI,
+    functionName: "isApproved",
+    args: [permissionForAbi(permission)],
+  })) as boolean;
+  return ok;
+}
+
+/**
+ * Resolver-only PotEscrow.anteFor: pulls the game's ante from
+ * permission.account via SpendPermissionManager.spend. Returns the tx hash.
+ */
+export async function anteForOnChain(
+  gameId: `0x${string}`,
+  permission: SpendPermission
+): Promise<`0x${string}`> {
+  const data = encodeFunctionData({
+    abi: POT_ESCROW_ABI,
+    functionName: "anteFor",
+    args: [gameId, permissionForAbi(permission)],
+  });
+  return send(data);
 }
 
 /**
