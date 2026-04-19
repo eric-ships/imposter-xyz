@@ -4,3 +4,4 @@ broadcast/
 lib/
 .env
 .env.local
+.next/
