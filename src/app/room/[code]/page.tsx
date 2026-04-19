@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "motion/react";
 import { supabase } from "@/lib/supabase/browser";
 import type { PublicRoomView } from "@/lib/game";
+import { blockExplorerUrl } from "@/lib/chain";
+import { anteWithBaseAccount, useBaseAccount } from "@/lib/wallet";
 
 export default function RoomPage({
   params,
@@ -333,9 +335,11 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function PlayerList({
   view,
   showScores = true,
+  showAnte = false,
 }: {
   view: PublicRoomView;
   showScores?: boolean;
+  showAnte?: boolean;
 }) {
   return (
     <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -357,7 +361,36 @@ function PlayerList({
                   </span>
                 )}
               </div>
+              {showAnte && (
+                <div className="mt-0.5 text-[10px] uppercase tracking-[0.25em] text-ink-faint">
+                  {p.antePaid
+                    ? "anted"
+                    : p.walletAddress
+                      ? "wallet · waiting"
+                      : "no wallet"}
+                </div>
+              )}
             </div>
+            {showAnte && (
+              <div
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] ${
+                  p.antePaid
+                    ? "bg-leaf text-white"
+                    : p.walletAddress
+                      ? "border border-accent text-accent"
+                      : "border border-line text-ink-faint"
+                }`}
+                title={
+                  p.antePaid
+                    ? "ante paid"
+                    : p.walletAddress
+                      ? "wallet connected, awaiting ante"
+                      : "no wallet connected"
+                }
+              >
+                {p.antePaid ? "✓" : p.walletAddress ? "⋯" : "◯"}
+              </div>
+            )}
             {showScores && (
               <div className="font-serif text-lg italic text-ink-soft">
                 {p.score}
@@ -367,6 +400,193 @@ function PlayerList({
         );
       })}
     </ul>
+  );
+}
+
+function shortAddress(addr: string): string {
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
+}
+
+function formatUsdc(baseUnits: string | bigint): string {
+  const n = typeof baseUnits === "bigint" ? baseUnits : BigInt(baseUnits);
+  const whole = n / 1_000_000n;
+  const frac = n % 1_000_000n;
+  if (frac === 0n) return `${whole}`;
+  const fracStr = frac.toString().padStart(6, "0").replace(/0+$/, "");
+  return `${whole}.${fracStr}`;
+}
+
+function PotPanel({
+  view,
+  playerId,
+  code,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+}) {
+  const pot = view.pot;
+  const isHost = playerId === view.hostId;
+  const me = view.players.find((p) => p.id === playerId);
+  const { address, isConnecting, connect } = useBaseAccount();
+
+  const [hostToggling, setHostToggling] = useState(false);
+  const [anteing, setAnteing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function toggle(enable: boolean) {
+    setError(null);
+    setHostToggling(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/pot`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, enabled: enable }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setHostToggling(false);
+    }
+  }
+
+  async function doAnte() {
+    if (!pot || !pot.chainGameId) return;
+    setError(null);
+    setAnteing(true);
+    try {
+      const addr = address ?? (await connect());
+      if (!addr) throw new Error("wallet not connected");
+
+      const walletRes = await fetch(`/api/rooms/${code}/wallet`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, walletAddress: addr }),
+      });
+      const walletData = await walletRes.json();
+      if (!walletRes.ok)
+        throw new Error(walletData.error ?? "wallet register failed");
+
+      const txHash = await anteWithBaseAccount({
+        from: addr,
+        gameId: pot.chainGameId as `0x${string}`,
+        ante: BigInt(pot.anteAmount),
+      });
+
+      const confirmRes = await fetch(`/api/rooms/${code}/ante-confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, txHash }),
+      });
+      const confirmData = await confirmRes.json();
+      if (!confirmRes.ok)
+        throw new Error(confirmData.error ?? "confirm failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setAnteing(false);
+    }
+  }
+
+  // Host, pot disabled
+  if (!pot) {
+    if (!isHost) return null;
+    return (
+      <section className="space-y-3">
+        <SectionLabel>Pot mode</SectionLabel>
+        <button
+          onClick={() => toggle(true)}
+          disabled={hostToggling}
+          className="w-full rounded-sm border border-ink px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page disabled:opacity-40"
+        >
+          {hostToggling ? "Enabling..." : "Enable 1 USDC pot"}
+        </button>
+        <p className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+          Base Sepolia · testnet USDC · winner takes the pot
+        </p>
+        {error && (
+          <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+            {error}
+          </p>
+        )}
+      </section>
+    );
+  }
+
+  // Pot active
+  const totalPot = BigInt(pot.anteAmount) * BigInt(pot.paidCount);
+  const playerCount = view.players.length;
+
+  return (
+    <section className="space-y-3 border border-accent/30 bg-accent/5 p-5">
+      <div className="flex items-baseline justify-between">
+        <SectionLabel>Pot</SectionLabel>
+        {isHost && pot.paidCount === 0 && (
+          <button
+            onClick={() => toggle(false)}
+            disabled={hostToggling}
+            className="text-[10px] uppercase tracking-[0.3em] text-ink-faint hover:text-oxblood"
+          >
+            disable
+          </button>
+        )}
+      </div>
+      <div className="flex items-baseline justify-between">
+        <div>
+          <div className="font-serif text-3xl text-ink">
+            {formatUsdc(totalPot)} USDC
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            {pot.paidCount} of {playerCount} anted · {formatUsdc(pot.anteAmount)} each
+          </div>
+        </div>
+        {pot.chainCreateTx && (
+          <a
+            href={blockExplorerUrl(pot.chainCreateTx)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[10px] uppercase tracking-[0.3em] text-accent hover:text-ink"
+          >
+            tx ↗
+          </a>
+        )}
+      </div>
+
+      {me?.antePaid ? (
+        <div className="rounded-sm border border-leaf/40 bg-leaf/10 px-4 py-3 text-sm text-leaf">
+          ✓ You&apos;ve anted · pot locked until reveal
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {address && (
+            <div className="text-[10px] uppercase tracking-[0.25em] text-ink-faint">
+              Wallet: {shortAddress(address)}
+            </div>
+          )}
+          <button
+            onClick={doAnte}
+            disabled={anteing || isConnecting}
+            className="w-full rounded-sm bg-ink px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:opacity-40"
+          >
+            {anteing
+              ? "Confirming..."
+              : isConnecting
+                ? "Connecting..."
+                : address
+                  ? `Ante ${formatUsdc(pot.anteAmount)} USDC`
+                  : `Connect wallet & ante ${formatUsdc(pot.anteAmount)} USDC`}
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </section>
   );
 }
 
@@ -419,6 +639,17 @@ function LobbyPhase({
       ? `${window.location.origin}/room/${code}`
       : "";
 
+  const potEnabled = !!view.pot;
+  const potReady = !potEnabled || view.pot!.paidCount === view.players.length;
+  const startReady = canStart && potReady;
+  const startLabel = starting
+    ? "Starting"
+    : !canStart
+      ? `Awaiting ${3 - view.players.length} more`
+      : !potReady
+        ? `Awaiting ${view.players.length - view.pot!.paidCount} more antes`
+        : "Begin the game";
+
   return (
     <>
       <section className="space-y-4">
@@ -432,8 +663,10 @@ function LobbyPhase({
             </span>
           )}
         </div>
-        <PlayerList view={view} showScores={anyScore} />
+        <PlayerList view={view} showScores={anyScore} showAnte={potEnabled} />
       </section>
+
+      <PotPanel view={view} playerId={playerId} code={code} />
 
       <section className="space-y-3">
         <SectionLabel>Invite</SectionLabel>
@@ -459,14 +692,10 @@ function LobbyPhase({
       {isHost ? (
         <button
           onClick={start}
-          disabled={!canStart || starting}
+          disabled={!startReady || starting}
           className="rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
         >
-          {starting
-            ? "Starting"
-            : canStart
-              ? "Begin the game"
-              : `Awaiting ${3 - view.players.length} more`}
+          {startLabel}
         </button>
       ) : (
         <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
@@ -1278,6 +1507,46 @@ function RevealPhase({
           ))}
         </ul>
       </section>
+
+      {view.payouts.length > 0 && (
+        <section className="space-y-3 border border-accent/30 bg-accent/5 p-5">
+          <div className="flex items-baseline justify-between">
+            <SectionLabel>Pot payout</SectionLabel>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+              {view.payouts[0].kind === "refund" ? "refunded" : "settled"}
+            </span>
+          </div>
+          <ul className="divide-y divide-line-soft">
+            {view.payouts.map((p, i) => {
+              const player = view.players.find(
+                (pl) => pl.walletAddress === p.wallet
+              );
+              const label = player?.nickname ?? shortAddress(p.wallet);
+              return (
+                <li
+                  key={i}
+                  className="flex items-baseline justify-between py-2 text-sm"
+                >
+                  <span className="text-ink-soft">{label}</span>
+                  <span className="flex items-baseline gap-3">
+                    <span className="font-serif italic text-ink">
+                      {formatUsdc(p.amount)} USDC
+                    </span>
+                    <a
+                      href={blockExplorerUrl(p.txHash)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[10px] uppercase tracking-[0.3em] text-accent hover:text-ink"
+                    >
+                      tx ↗
+                    </a>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <section className="space-y-4">
         <SectionLabel>Scoreboard</SectionLabel>

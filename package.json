@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.90.0",
+    "@base-org/account": "^2.5.4",
     "@coinbase/cdp-sdk": "^1.48.0",
     "@supabase/supabase-js": "^2.103.3",
     "bs58": "^6.0.0",
