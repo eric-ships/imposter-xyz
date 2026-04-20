@@ -124,7 +124,11 @@ export async function POST(
   }
 
   const ids = players.map((p) => p.id);
-  const imposterId = ids[Math.floor(Math.random() * ids.length)];
+  // 5-player rooms seat 2 imposters; 3-4 seat 1. Imposters don't know
+  // about each other — their client view just shows "isImposter = true".
+  const imposterCount = ids.length >= 5 ? 2 : 1;
+  const imposterIds = shuffle(ids).slice(0, imposterCount);
+  const imposterId = imposterIds[0]; // legacy singleton field
   const turnOrder = shuffle(ids);
 
   // Tolerate older rooms that haven't been migrated yet: only track recent
@@ -162,6 +166,12 @@ export async function POST(
     turn_order: turnOrder,
     updated_at: new Date().toISOString(),
   };
+  if ("imposter_ids" in room) {
+    update.imposter_ids = imposterIds;
+  }
+  if ("caught_imposter_id" in room) {
+    update.caught_imposter_id = null;
+  }
   if (hasRecentWords) {
     update.recent_words = [...recentWords, word].slice(-20);
   }

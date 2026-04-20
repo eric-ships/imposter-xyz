@@ -39,6 +39,14 @@ alter table rooms
 -- /expire route's forfeit logic.
 alter table rooms add column if not exists phase_deadline timestamptz;
 
+-- Multi-imposter support. For 5-player rooms we seat 2 imposters; 3-4
+-- stays at 1. imposter_id (singular, older column) stays populated with
+-- the *first* imposter so legacy reads still work. caught_imposter_id
+-- is the specific imposter the crew caught in the vote — that person
+-- takes the guess.
+alter table rooms add column if not exists imposter_ids uuid[] not null default '{}';
+alter table rooms add column if not exists caught_imposter_id uuid;
+
 -- Pot / escrow fields.
 alter table rooms add column if not exists pot_enabled boolean not null default false;
 -- Ante stored as the exact integer string in token base units (USDC: 6 decimals),

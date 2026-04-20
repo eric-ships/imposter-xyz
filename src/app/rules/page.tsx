@@ -24,8 +24,10 @@ export default function RulesPage() {
           starts the round once at least three are in.
         </p>
         <p>
-          When the round begins, one player is secretly chosen as the{" "}
-          <em>imposter</em>. Everyone else is a <em>crewmate</em>.
+          When the round begins, a player is secretly chosen as the{" "}
+          <em>imposter</em>. With five at the table, two imposters are
+          seated instead of one — and they don&apos;t know about each
+          other. Everyone else is a <em>crewmate</em>.
         </p>
       </Section>
 
@@ -65,23 +67,26 @@ export default function RulesPage() {
           You can&apos;t vote for yourself. Votes are locked in once cast.
         </p>
         <p>
-          If one person has a clear plurality and they were the imposter,{" "}
-          <span className="text-ink">the imposter is caught</span> and gets one
-          last chance to guess the word.
+          If one player has a clear plurality and they were an imposter,{" "}
+          <span className="text-ink">that imposter is caught</span> and gets
+          one last chance to guess the word. In five-player rooms the other
+          imposter stays hidden — their fate is tied to the caught
+          imposter&apos;s guess.
         </p>
         <p>
           If the vote is tied, nobody has a plurality, or the crowd fingered a
           crewmate,{" "}
-          <span className="text-oxblood">the imposter escapes</span> and wins
-          the round outright.
+          <span className="text-oxblood">the imposter team escapes</span> and
+          wins the round outright.
         </p>
       </Section>
 
       <Section label="The final guess">
         <p>
-          A caught imposter sees the category and every clue that was given,
+          The caught imposter sees the category and every clue that was given,
           and submits one guess at the secret word. The system judges exact
-          vs. close matches.
+          vs. close matches. If there&apos;s a second imposter at the table,
+          they can only watch.
         </p>
       </Section>
 
@@ -89,19 +94,19 @@ export default function RulesPage() {
         <ul className="space-y-2">
           <Outcome
             label="Imposter escapes"
-            detail="+2 imposter · 0 crewmates"
+            detail="+2 each imposter · 0 crewmates"
           />
           <Outcome
             label="Caught, guessed exactly"
-            detail="+2 imposter · 0 crewmates"
+            detail="+2 each imposter · 0 crewmates"
           />
           <Outcome
             label="Caught, close guess"
-            detail="+1 imposter · +1 each crewmate"
+            detail="+1 each imposter · +1 each crewmate"
           />
           <Outcome
             label="Caught, wrong guess"
-            detail="0 imposter · +1 each crewmate"
+            detail="0 imposters · +1 each crewmate"
           />
         </ul>
       </Section>

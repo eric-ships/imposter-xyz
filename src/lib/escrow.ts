@@ -208,27 +208,30 @@ export function computePayout(opts: {
   caught: boolean;
   tied: boolean;
   guessOutcome: "exact" | "close" | "wrong" | null;
-  imposter: `0x${string}`;
+  imposters: `0x${string}`[];
   crewmates: `0x${string}`[];
 }): { winners: `0x${string}`[]; amounts: bigint[] } {
-  const { pot, caught, tied, guessOutcome, imposter, crewmates } = opts;
+  const { pot, caught, tied, guessOutcome, imposters, crewmates } = opts;
 
-  // Imposter escaped (either un-caught or caught-but-nailed-the-word).
+  // Imposter team won (uncaught, tied, or caught-but-nailed-the-word) →
+  // they split the full pot.
   if (!caught || tied || guessOutcome === "exact") {
-    return { winners: [imposter], amounts: [pot] };
+    const splits = splitEvenly(pot, imposters.length);
+    return { winners: [...imposters], amounts: splits };
   }
 
   if (guessOutcome === "close") {
     const imposterCut = pot / 2n;
     const crewPool = pot - imposterCut;
+    const imposterSplits = splitEvenly(imposterCut, imposters.length);
     const crewSplits = splitEvenly(crewPool, crewmates.length);
     return {
-      winners: [imposter, ...crewmates],
-      amounts: [imposterCut, ...crewSplits],
+      winners: [...imposters, ...crewmates],
+      amounts: [...imposterSplits, ...crewSplits],
     };
   }
 
-  // caught + wrong (or null guess treated as wrong)
+  // caught + wrong (or null guess treated as wrong) → crew splits the pot.
   const crewSplits = splitEvenly(pot, crewmates.length);
   return { winners: [...crewmates], amounts: crewSplits };
 }

@@ -60,6 +60,8 @@ export async function POST(
     updated_at: new Date().toISOString(),
   };
   if ("phase_deadline" in room) update.phase_deadline = null;
+  if ("imposter_ids" in room) update.imposter_ids = [];
+  if ("caught_imposter_id" in room) update.caught_imposter_id = null;
   if ("imposter_guess" in room) update.imposter_guess = null;
   if ("guess_outcome" in room) update.guess_outcome = null;
   if ("prewarm_word" in room) {

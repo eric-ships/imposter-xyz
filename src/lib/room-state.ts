@@ -75,27 +75,48 @@ export async function fetchRoomView(
   }
 
   const state = room.state as RoomState;
-  const isImposter = !!playerId && playerId === room.imposter_id;
+
+  // imposter_ids is the source of truth for multi-imposter rooms; fall back
+  // to [imposter_id] for legacy rows / un-migrated DBs.
+  const imposterIds: string[] = Array.isArray(room.imposter_ids)
+    ? (room.imposter_ids as string[]).filter(Boolean)
+    : room.imposter_id
+      ? [room.imposter_id as string]
+      : [];
+  const caughtImposterId =
+    ("caught_imposter_id" in room
+      ? (room.caught_imposter_id as string | null)
+      : null) ?? null;
+
+  const isImposter = !!playerId && imposterIds.includes(playerId);
   const isHost = !!playerId && playerId === room.host_id;
+  const isCaughtImposter =
+    !!playerId &&
+    caughtImposterId === playerId &&
+    // Legacy rooms without caught_imposter_id fall back to imposter_id
+    // during the guessing phase.
+    (state === "guessing" || state === "reveal");
 
   const you = playerId
     ? {
         id: playerId,
         isHost,
         isImposter,
+        isCaughtImposter,
         secretWord: isImposter ? null : room.secret_word,
       }
     : null;
 
-  // "caught" is derived from guess_outcome: the imposter only reaches the
-  // guess phase if the crewmates caught them. If guess_outcome is null at
-  // reveal time, the imposter escaped the vote.
+  // "caught" is derived from guess_outcome: the caught imposter only
+  // reaches the guess phase if the crewmates caught them. If guess_outcome
+  // is null at reveal time, the imposters escaped the vote.
   const reveal =
-    state === "reveal" && room.imposter_id && room.secret_word
+    state === "reveal" && imposterIds.length > 0 && room.secret_word
       ? {
-          imposterId: room.imposter_id,
+          imposterIds,
           secretWord: room.secret_word,
           caught: !!room.guess_outcome,
+          caughtImposterId,
           guess: room.imposter_guess ?? null,
           guessOutcome: (room.guess_outcome ?? null) as GuessOutcome | null,
         }
@@ -144,6 +165,7 @@ export async function fetchRoomView(
       ("phase_deadline" in room
         ? (room.phase_deadline as string | null)
         : null) ?? null,
+    caughtImposterId,
     players: decoratedPlayers,
     clues: (clues ?? []) as PublicRoomView["clues"],
     votes: (votes ?? []) as PublicRoomView["votes"],
