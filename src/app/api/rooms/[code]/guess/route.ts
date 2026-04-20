@@ -109,16 +109,14 @@ export async function POST(
     }
   );
 
-  await supabaseAdmin
-    .from("rooms")
-    .update({
-      state: "reveal",
-      imposter_guess: trimmed,
-      guess_outcome: outcome,
-      phase_deadline: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("code", code);
+  const revealUpdate: Record<string, unknown> = {
+    state: "reveal",
+    imposter_guess: trimmed,
+    guess_outcome: outcome,
+    updated_at: new Date().toISOString(),
+  };
+  if ("phase_deadline" in room) revealUpdate.phase_deadline = null;
+  await supabaseAdmin.from("rooms").update(revealUpdate).eq("code", code);
 
   await notifyRoom(code, "revealed");
 
