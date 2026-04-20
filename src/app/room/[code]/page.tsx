@@ -15,6 +15,7 @@ import {
 } from "@/lib/wallet";
 import {
   isMuted as audioIsMuted,
+  playTimerTick,
   playTurnChime,
   primeAudio,
   setMuted as audioSetMuted,
@@ -333,6 +334,7 @@ function PhaseCountdown({
 }) {
   const [now, setNow] = useState(() => Date.now());
   const firedForRef = useRef<string | null>(null);
+  const lastTickSecondRef = useRef<number | null>(null);
 
   useEffect(() => {
     const iv = setInterval(() => setNow(Date.now()), 250);
@@ -357,6 +359,21 @@ function PhaseCountdown({
   const warn = remainingMs <= 10_000;
   const critical = remainingMs <= 5_000;
   const pct = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
+
+  // Reset the tick-tracking ref whenever the deadline changes (new phase,
+  // new round) so the next countdown's final 10s gets its own tick series.
+  useEffect(() => {
+    lastTickSecondRef.current = null;
+  }, [deadline]);
+
+  // Tick once per whole second during the final 10. `critical` bumps the
+  // pitch on the last 5 to escalate the tension.
+  useEffect(() => {
+    if (seconds <= 0 || seconds > 10) return;
+    if (lastTickSecondRef.current === seconds) return;
+    lastTickSecondRef.current = seconds;
+    playTimerTick(critical);
+  }, [seconds, critical]);
 
   const label =
     state === "playing"
