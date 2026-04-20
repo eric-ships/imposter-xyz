@@ -57,6 +57,7 @@ export async function POST(
     round: 0,
     turn_index: 0,
     turn_order: [],
+    phase_deadline: null,
     updated_at: new Date().toISOString(),
   };
   if ("imposter_guess" in room) update.imposter_guess = null;

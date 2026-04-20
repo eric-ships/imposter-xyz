@@ -34,6 +34,11 @@ alter table rooms add column if not exists prewarm_category text;
 alter table rooms
   add column if not exists prewarm_started_at timestamptz;
 
+-- Per-phase deadline. Set whenever state advances into playing / voting /
+-- guessing; cleared on reveal/lobby. Drives the client countdown and the
+-- /expire route's forfeit logic.
+alter table rooms add column if not exists phase_deadline timestamptz;
+
 -- Pot / escrow fields.
 alter table rooms add column if not exists pot_enabled boolean not null default false;
 -- Ante stored as the exact integer string in token base units (USDC: 6 decimals),

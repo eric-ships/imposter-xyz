@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function HomePage() {
   const router = useRouter();
@@ -65,13 +66,19 @@ export default function HomePage() {
           imposter
         </h1>
         <div className="mt-2 text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-          A parlor game
+          A parlor game · 3 or 4 players
         </div>
         <p className="mt-6 text-sm leading-relaxed text-ink-soft">
           Everyone sees the category.
           <br />
           One person is the imposter.
         </p>
+        <Link
+          href="/rules"
+          className="mt-5 inline-block border-b border-ink-faint pb-0.5 text-[10px] uppercase tracking-[0.3em] text-ink-soft transition hover:border-ink hover:text-ink"
+        >
+          How to play
+        </Link>
       </header>
 
       <div className="w-full space-y-8">

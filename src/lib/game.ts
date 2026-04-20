@@ -54,6 +54,7 @@ export type PublicRoomView = {
   totalRounds: number;
   turnIndex: number;
   turnOrder: string[];
+  phaseDeadline: string | null;
   players: Player[];
   clues: Clue[];
   votes: Vote[];
