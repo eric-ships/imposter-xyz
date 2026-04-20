@@ -91,28 +91,26 @@ export async function POST(
       }
     );
 
-    await supabaseAdmin
-      .from("rooms")
-      .update({
-        state: "reveal",
-        phase_deadline: null,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("code", code);
+    const revealUpdate: Record<string, unknown> = {
+      state: "reveal",
+      updated_at: new Date().toISOString(),
+    };
+    if ("phase_deadline" in room) revealUpdate.phase_deadline = null;
+    await supabaseAdmin.from("rooms").update(revealUpdate).eq("code", code);
 
     await notifyRoom(code, "revealed");
     return NextResponse.json({ ok: true });
   }
 
   // Imposter was caught. Give them one chance to guess the word.
-  await supabaseAdmin
-    .from("rooms")
-    .update({
-      state: "guessing",
-      phase_deadline: deadlineFor("guessing"),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("code", code);
+  const guessUpdate: Record<string, unknown> = {
+    state: "guessing",
+    updated_at: new Date().toISOString(),
+  };
+  if ("phase_deadline" in room) {
+    guessUpdate.phase_deadline = deadlineFor("guessing");
+  }
+  await supabaseAdmin.from("rooms").update(guessUpdate).eq("code", code);
 
   await notifyRoom(code, "guessing_started");
   return NextResponse.json({ ok: true });

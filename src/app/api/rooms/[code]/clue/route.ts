@@ -67,15 +67,18 @@ export async function POST(
     }
   }
 
+  const clueUpdate: Record<string, unknown> = {
+    turn_index: nextTurnIndex,
+    round: nextRound,
+    state: nextState,
+    updated_at: new Date().toISOString(),
+  };
+  if ("phase_deadline" in room) {
+    clueUpdate.phase_deadline = deadlineFor(nextState);
+  }
   const { error: updateErr } = await supabaseAdmin
     .from("rooms")
-    .update({
-      turn_index: nextTurnIndex,
-      round: nextRound,
-      state: nextState,
-      phase_deadline: deadlineFor(nextState),
-      updated_at: new Date().toISOString(),
-    })
+    .update(clueUpdate)
     .eq("code", code);
 
   if (updateErr) {

@@ -160,7 +160,6 @@ export async function POST(
     round: 1,
     turn_index: 0,
     turn_order: turnOrder,
-    phase_deadline: deadlineFor("playing"),
     updated_at: new Date().toISOString(),
   };
   if (hasRecentWords) {
@@ -174,6 +173,11 @@ export async function POST(
     update.prewarm_word = null;
     update.prewarm_category = null;
     update.prewarm_started_at = null;
+  }
+  // Only write phase_deadline if the column is migrated. Without it, the
+  // timer quietly no-ops but the game still works end-to-end.
+  if ("phase_deadline" in room) {
+    update.phase_deadline = deadlineFor("playing");
   }
 
   const { error } = await supabaseAdmin

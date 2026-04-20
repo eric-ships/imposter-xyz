@@ -57,9 +57,9 @@ export async function POST(
     round: 0,
     turn_index: 0,
     turn_order: [],
-    phase_deadline: null,
     updated_at: new Date().toISOString(),
   };
+  if ("phase_deadline" in room) update.phase_deadline = null;
   if ("imposter_guess" in room) update.imposter_guess = null;
   if ("guess_outcome" in room) update.guess_outcome = null;
   if ("prewarm_word" in room) {
