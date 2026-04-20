@@ -33,30 +33,46 @@ export async function fetchRoomView(
 
   if (!room) return null;
 
-  const [{ data: players }, { data: clues }, { data: votes }, { data: payouts }] =
-    await Promise.all([
-      supabaseAdmin
-        .from("players")
-        .select(
-          "id, nickname, score, wallet_address, ante_tx, spend_permission"
-        )
-        .eq("room_code", code)
-        .order("joined_at", { ascending: true }),
-      supabaseAdmin
-        .from("clues")
-        .select("id, player_id, round, word")
-        .eq("room_code", code)
-        .order("id", { ascending: true }),
-      supabaseAdmin
-        .from("votes")
-        .select("voter_id, target_id")
-        .eq("room_code", code),
-      supabaseAdmin
-        .from("payouts")
-        .select("wallet, amount, tx_hash, kind")
-        .eq("room_code", code)
-        .order("created_at", { ascending: true }),
-    ]);
+  // Select `*` so a missing column on an un-migrated DB doesn't nuke the
+  // whole query (e.g. spend_permission). Individual fields are picked off
+  // defensively below. Log any error so silent "0 of 4" bugs surface in
+  // Vercel logs instead of showing up only to end users.
+  const [
+    { data: players, error: playersErr },
+    { data: clues, error: cluesErr },
+    { data: votes, error: votesErr },
+    { data: payouts, error: payoutsErr },
+  ] = await Promise.all([
+    supabaseAdmin
+      .from("players")
+      .select("*")
+      .eq("room_code", code)
+      .order("joined_at", { ascending: true }),
+    supabaseAdmin
+      .from("clues")
+      .select("id, player_id, round, word")
+      .eq("room_code", code)
+      .order("id", { ascending: true }),
+    supabaseAdmin
+      .from("votes")
+      .select("voter_id, target_id")
+      .eq("room_code", code),
+    supabaseAdmin
+      .from("payouts")
+      .select("wallet, amount, tx_hash, kind")
+      .eq("room_code", code)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  if (playersErr || cluesErr || votesErr || payoutsErr) {
+    console.error("[fetchRoomView] query error(s)", {
+      code,
+      players: playersErr?.message,
+      clues: cluesErr?.message,
+      votes: votesErr?.message,
+      payouts: payoutsErr?.message,
+    });
+  }
 
   const state = room.state as RoomState;
   const isImposter = !!playerId && playerId === room.imposter_id;
