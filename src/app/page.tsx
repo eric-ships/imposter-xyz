@@ -66,7 +66,7 @@ export default function HomePage() {
           imposter
         </h1>
         <div className="mt-2 text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-          A parlor game · 3 or 4 players
+          A parlor game · 3 to 5 players
         </div>
         <p className="mt-6 text-sm leading-relaxed text-ink-soft">
           Everyone sees the category.

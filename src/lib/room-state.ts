@@ -35,7 +35,7 @@ export async function fetchRoomView(
 
   // Select `*` so a missing column on an un-migrated DB doesn't nuke the
   // whole query (e.g. spend_permission). Individual fields are picked off
-  // defensively below. Log any error so silent "0 of 4" bugs surface in
+  // defensively below. Log any error so silent "0 players" bugs surface in
   // Vercel logs instead of showing up only to end users.
   const [
     { data: players, error: playersErr },
