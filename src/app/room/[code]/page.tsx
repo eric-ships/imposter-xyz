@@ -19,6 +19,7 @@ import {
   primeAudio,
   setMuted as audioSetMuted,
 } from "@/lib/audio";
+import { TIMER_DURATIONS_MS } from "@/lib/timer";
 
 export default function RoomPage({
   params,
@@ -227,10 +228,12 @@ function RoomPlay({
   useTurnChime(view, playerId);
   useAudioPriming();
 
-  const phaseHasTimer =
+  const timedState: "playing" | "voting" | "guessing" | null =
     view.state === "playing" ||
     view.state === "voting" ||
-    view.state === "guessing";
+    view.state === "guessing"
+      ? view.state
+      : null;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-7 px-8 py-8">
@@ -242,9 +245,6 @@ function RoomPlay({
           </span>
         </span>
         <span className="flex items-center gap-3">
-          {phaseHasTimer && view.phaseDeadline && (
-            <PhaseCountdown code={code} deadline={view.phaseDeadline} />
-          )}
           <Link
             href="/rules"
             target="_blank"
@@ -267,6 +267,14 @@ function RoomPlay({
           </span>
         </span>
       </header>
+
+      {timedState && view.phaseDeadline && (
+        <PhaseCountdown
+          code={code}
+          deadline={view.phaseDeadline}
+          state={timedState}
+        />
+      )}
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -317,9 +325,11 @@ function RoomPlay({
 function PhaseCountdown({
   code,
   deadline,
+  state,
 }: {
   code: string;
   deadline: string;
+  state: "playing" | "voting" | "guessing";
 }) {
   const [now, setNow] = useState(() => Date.now());
   const firedForRef = useRef<string | null>(null);
@@ -338,17 +348,63 @@ function PhaseCountdown({
   }, [code, deadline, now]);
 
   const remainingMs = Math.max(0, new Date(deadline).getTime() - now);
+  const totalMs = TIMER_DURATIONS_MS[state];
   const seconds = Math.ceil(remainingMs / 1000);
-  const warn = seconds <= 10;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  const display =
+    mins > 0 ? `${mins}:${secs.toString().padStart(2, "0")}` : `${secs}`;
+  const warn = remainingMs <= 10_000;
+  const critical = remainingMs <= 5_000;
+  const pct = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
+
+  const label =
+    state === "playing"
+      ? "Clue timer"
+      : state === "voting"
+        ? "Vote timer"
+        : "Guess timer";
 
   return (
-    <span
-      className={`font-serif text-base italic tabular-nums normal-case tracking-normal ${
-        warn ? "text-oxblood" : "text-ink-soft"
-      }`}
+    <section
+      aria-live="polite"
+      className="relative overflow-hidden border-y border-line bg-surface/60 px-5 py-4"
     >
-      {seconds}s
-    </span>
+      <div className="flex items-baseline justify-between">
+        <span className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          {label}
+        </span>
+        <motion.span
+          key={critical ? "crit" : warn ? "warn" : "ok"}
+          animate={
+            critical ? { scale: [1, 1.04, 1] } : { scale: 1 }
+          }
+          transition={
+            critical
+              ? { duration: 0.9, repeat: Infinity, ease: "easeInOut" }
+              : { duration: 0.18 }
+          }
+          className={`font-serif text-5xl italic tabular-nums leading-none transition-colors ${
+            critical
+              ? "text-oxblood"
+              : warn
+                ? "text-oxblood"
+                : "text-ink"
+          }`}
+        >
+          {display}
+          {mins === 0 && <span className="ml-0.5 text-2xl">s</span>}
+        </motion.span>
+      </div>
+      <div className="mt-3 h-0.5 overflow-hidden bg-line-soft">
+        <div
+          className={`h-full transition-[width] duration-[250ms] ease-linear ${
+            critical ? "bg-oxblood" : warn ? "bg-oxblood/70" : "bg-accent"
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </section>
   );
 }
 
