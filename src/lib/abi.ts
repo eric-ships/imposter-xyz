@@ -54,6 +54,30 @@ export const POT_ESCROW_ABI = [
   },
   {
     type: "function",
+    name: "anteFor",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "gameId", type: "bytes32" },
+      {
+        name: "permission",
+        type: "tuple",
+        components: [
+          { name: "account", type: "address" },
+          { name: "spender", type: "address" },
+          { name: "token", type: "address" },
+          { name: "allowance", type: "uint160" },
+          { name: "period", type: "uint48" },
+          { name: "start", type: "uint48" },
+          { name: "end", type: "uint48" },
+          { name: "salt", type: "uint256" },
+          { name: "extraData", type: "bytes" },
+        ],
+      },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
     name: "resolve",
     stateMutability: "nonpayable",
     inputs: [
@@ -134,6 +158,57 @@ export const POT_ESCROW_ABI = [
       { name: "player", type: "address", indexed: true },
       { name: "amount", type: "uint256", indexed: false },
     ],
+  },
+] as const;
+
+// Base's canonical SpendPermissionManager. Only the writes + reads we touch.
+export const SPEND_PERMISSION_MANAGER_ABI = [
+  {
+    type: "function",
+    name: "approveWithSignature",
+    stateMutability: "nonpayable",
+    inputs: [
+      {
+        name: "permission",
+        type: "tuple",
+        components: [
+          { name: "account", type: "address" },
+          { name: "spender", type: "address" },
+          { name: "token", type: "address" },
+          { name: "allowance", type: "uint160" },
+          { name: "period", type: "uint48" },
+          { name: "start", type: "uint48" },
+          { name: "end", type: "uint48" },
+          { name: "salt", type: "uint256" },
+          { name: "extraData", type: "bytes" },
+        ],
+      },
+      { name: "signature", type: "bytes" },
+    ],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "isApproved",
+    stateMutability: "view",
+    inputs: [
+      {
+        name: "permission",
+        type: "tuple",
+        components: [
+          { name: "account", type: "address" },
+          { name: "spender", type: "address" },
+          { name: "token", type: "address" },
+          { name: "allowance", type: "uint160" },
+          { name: "period", type: "uint48" },
+          { name: "start", type: "uint48" },
+          { name: "end", type: "uint48" },
+          { name: "salt", type: "uint256" },
+          { name: "extraData", type: "bytes" },
+        ],
+      },
+    ],
+    outputs: [{ name: "", type: "bool" }],
   },
 ] as const;
 

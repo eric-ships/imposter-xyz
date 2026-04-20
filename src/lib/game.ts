@@ -12,6 +12,7 @@ export type Player = {
   nickname: string;
   score: number;
   walletAddress: string | null;
+  hasPermission: boolean; // has a live Base Account Spend Permission on file
   antePaid: boolean;
   anteTx: string | null;
 };

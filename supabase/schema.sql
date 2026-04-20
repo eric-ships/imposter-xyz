@@ -50,6 +50,10 @@ alter table rooms add column if not exists chain_resolve_tx text;
 
 alter table players add column if not exists wallet_address text;
 alter table players add column if not exists ante_tx text;
+-- Base Account Spend Permission granted by the player (serialized JSON of
+-- the EIP-712 struct + signature + on-chain approve tx).
+alter table players add column if not exists spend_permission jsonb;
+alter table players add column if not exists spend_permission_tx text;
 
 create table if not exists payouts (
   id bigserial primary key,

@@ -15,6 +15,10 @@ export const POT_ESCROW_ADDRESS = (process.env.NEXT_PUBLIC_POT_ESCROW_ADDRESS ??
 export const USDC_ADDRESS = (process.env.NEXT_PUBLIC_USDC_ADDRESS ??
   "") as `0x${string}`;
 
+export const SPEND_PERMISSION_MANAGER_ADDRESS = (process.env
+  .NEXT_PUBLIC_SPEND_PERMISSION_MANAGER ??
+  "0xf85210B21cC50302F477BA56686d2019dC9b67Ad") as `0x${string}`;
+
 // Default $1 USDC ante in base units (6 decimals).
 export const DEFAULT_ANTE = "1000000";
 
