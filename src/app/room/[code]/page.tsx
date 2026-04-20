@@ -20,7 +20,7 @@ import {
   primeAudio,
   setMuted as audioSetMuted,
 } from "@/lib/audio";
-import { TIMER_DURATIONS_MS } from "@/lib/timer";
+import { TIMER_DURATIONS_MS, TIMER_GRACE_MS } from "@/lib/timer";
 
 export default function RoomPage({
   params,
@@ -349,16 +349,22 @@ function PhaseCountdown({
     fetch(`/api/rooms/${code}/expire`, { method: "POST" }).catch(() => {});
   }, [code, deadline, now]);
 
-  const remainingMs = Math.max(0, new Date(deadline).getTime() - now);
+  // Real ms left until the server-side deadline. The /expire POST is
+  // still driven off this — forfeit fires at real 0.
+  const realRemainingMs = Math.max(0, new Date(deadline).getTime() - now);
+  // What the player sees on the countdown: real minus the silent grace.
+  // They watch the number hit 0, and a last-second submission in the
+  // grace window still succeeds because the server hasn't expired yet.
+  const displayRemainingMs = Math.max(0, realRemainingMs - TIMER_GRACE_MS);
   const totalMs = TIMER_DURATIONS_MS[state];
-  const seconds = Math.ceil(remainingMs / 1000);
+  const seconds = Math.ceil(displayRemainingMs / 1000);
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   const display =
     mins > 0 ? `${mins}:${secs.toString().padStart(2, "0")}` : `${secs}`;
-  const warn = remainingMs <= 10_000;
-  const critical = remainingMs <= 5_000;
-  const pct = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
+  const warn = displayRemainingMs <= 10_000;
+  const critical = displayRemainingMs <= 5_000;
+  const pct = Math.max(0, Math.min(100, (displayRemainingMs / totalMs) * 100));
 
   // Reset the tick-tracking ref whenever the deadline changes (new phase,
   // new round) so the next countdown's final 10s gets its own tick series.
