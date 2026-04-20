@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   isMuted as audioIsMuted,
+  playTimerTick,
   playTurnChime,
   primeAudio,
   setMuted as audioSetMuted,
@@ -20,6 +21,19 @@ export default function SoundDebugPage() {
   function play() {
     primeAudio();
     playTurnChime();
+  }
+
+  function playTick(urgent: boolean) {
+    primeAudio();
+    playTimerTick(urgent);
+  }
+
+  async function playTickSeries() {
+    primeAudio();
+    for (let i = 10; i >= 1; i--) {
+      playTimerTick(i <= 5);
+      await new Promise((r) => setTimeout(r, 1000));
+    }
   }
 
   function toggleMute() {
@@ -50,6 +64,32 @@ export default function SoundDebugPage() {
       >
         Play chime
       </button>
+
+      <div className="w-full space-y-3">
+        <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          Timer ticks
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => playTick(false)}
+            className="rounded-sm border border-ink px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page"
+          >
+            One tick
+          </button>
+          <button
+            onClick={() => playTick(true)}
+            className="rounded-sm border border-oxblood px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-oxblood transition hover:bg-oxblood hover:text-page"
+          >
+            Urgent tick
+          </button>
+        </div>
+        <button
+          onClick={playTickSeries}
+          className="w-full rounded-sm border border-accent px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-accent transition hover:bg-accent hover:text-page"
+        >
+          Play full 10s countdown
+        </button>
+      </div>
 
       <div className="flex w-full items-center justify-between border-t border-line-soft pt-6 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
         <span>Muted</span>

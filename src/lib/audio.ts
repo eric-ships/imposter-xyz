@@ -50,6 +50,28 @@ export function playTurnChime() {
   playTone(c, 880, now + 0.12, 0.22);
 }
 
+// One tick per second of the final countdown. `urgent` raises the pitch
+// a little so the last few seconds read as extra pressure.
+export function playTimerTick(urgent: boolean) {
+  if (isMuted()) return;
+  const c = getCtx();
+  if (!c) return;
+  if (c.state === "suspended") c.resume().catch(() => {});
+
+  const now = c.currentTime;
+  const osc = c.createOscillator();
+  const gain = c.createGain();
+  // Triangle rings closer to a wood-block click than a pure sine.
+  osc.type = "triangle";
+  osc.frequency.value = urgent ? 1400 : 980;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(urgent ? 0.16 : 0.1, now + 0.005);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+  osc.connect(gain).connect(c.destination);
+  osc.start(now);
+  osc.stop(now + 0.12);
+}
+
 function playTone(
   c: AudioContext,
   freq: number,
