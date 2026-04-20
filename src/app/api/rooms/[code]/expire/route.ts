@@ -65,7 +65,16 @@ type Room = Record<string, unknown> & {
   round: number;
   total_rounds: number;
   imposter_id: string | null;
+  imposter_ids?: string[] | null;
 };
+
+function imposterIdsFrom(room: Room): string[] {
+  return Array.isArray(room.imposter_ids)
+    ? (room.imposter_ids as string[]).filter(Boolean)
+    : room.imposter_id
+      ? [room.imposter_id]
+      : [];
+}
 
 async function expirePlaying(code: string, room: Room) {
   const turnOrder: string[] = room.turn_order ?? [];
@@ -148,40 +157,44 @@ async function expireVoting(code: string, room: Room) {
     .eq("room_code", code);
 
   const { topTargets, tied, topCount } = tallyVotes(votes ?? []);
-  const imposterId = room.imposter_id;
-  const imposterCaught =
-    !tied && topCount > 0 && !!imposterId && topTargets[0] === imposterId;
+  const imposterIds = imposterIdsFrom(room);
+  const caughtId: string | null =
+    !tied && topCount > 0 && imposterIds.includes(topTargets[0])
+      ? topTargets[0]
+      : null;
 
-  if (imposterCaught && imposterId) {
-    await supabaseAdmin
-      .from("rooms")
-      .update({
-        state: "guessing",
-        phase_deadline: deadlineFor("guessing"),
-        updated_at: new Date().toISOString(),
-      })
-      .eq("code", code);
+  if (caughtId) {
+    const guessUpdate: Record<string, unknown> = {
+      state: "guessing",
+      phase_deadline: deadlineFor("guessing"),
+      updated_at: new Date().toISOString(),
+    };
+    if ("caught_imposter_id" in room) guessUpdate.caught_imposter_id = caughtId;
+    await supabaseAdmin.from("rooms").update(guessUpdate).eq("code", code);
 
     await notifyRoom(code, "guessing_started");
     return NextResponse.json({ ok: true, forfeited: "vote" });
   }
 
-  // Imposter escaped (or no votes / tied): award +2, settle, reveal.
-  if (imposterId) {
+  // Imposter team escaped (or no votes / tied): award each imposter +2,
+  // settle, reveal.
+  for (const impId of imposterIds) {
     const { data: current } = await supabaseAdmin
       .from("players")
       .select("score")
-      .eq("id", imposterId)
+      .eq("id", impId)
       .single();
     await supabaseAdmin
       .from("players")
       .update({ score: (current?.score ?? 0) + 2 })
-      .eq("id", imposterId);
+      .eq("id", impId);
+  }
 
+  if (imposterIds.length > 0) {
     await settlePot(
       { ...room, code },
       {
-        imposterId,
+        imposterIds,
         caught: false,
         tied,
         guessOutcome: null,
@@ -222,8 +235,8 @@ async function expireGuessing(code: string, room: Room) {
     return NextResponse.json({ ok: true, noop: true });
   }
 
-  const imposterId = room.imposter_id;
-  if (!imposterId) {
+  const imposterIds = imposterIdsFrom(room);
+  if (imposterIds.length === 0) {
     await notifyRoom(code, "revealed");
     return NextResponse.json({ ok: true, forfeited: "guess" });
   }
@@ -233,7 +246,8 @@ async function expireGuessing(code: string, room: Room) {
     .select("id, score")
     .eq("room_code", code);
 
-  const crewmates = players?.filter((p) => p.id !== imposterId) ?? [];
+  const imposterSet = new Set(imposterIds);
+  const crewmates = players?.filter((p) => !imposterSet.has(p.id)) ?? [];
   for (const c of crewmates) {
     await supabaseAdmin
       .from("players")
@@ -244,7 +258,7 @@ async function expireGuessing(code: string, room: Room) {
   await settlePot(
     { ...room, code },
     {
-      imposterId,
+      imposterIds,
       caught: true,
       tied: false,
       guessOutcome: "wrong",

@@ -17,7 +17,7 @@ type RoomLike = {
 export async function settlePot(
   room: RoomLike,
   outcome: {
-    imposterId: string;
+    imposterIds: string[];
     caught: boolean;
     tied: boolean;
     guessOutcome: "exact" | "close" | "wrong" | null;
@@ -35,12 +35,13 @@ export async function settlePot(
     players?.filter((p) => p.ante_tx && p.wallet_address) ?? [];
   if (anted.length === 0) return null;
 
-  const imposter = anted.find((p) => p.id === outcome.imposterId);
-  const crewmates = anted.filter((p) => p.id !== outcome.imposterId);
+  const imposterSet = new Set(outcome.imposterIds);
+  const imposters = anted.filter((p) => imposterSet.has(p.id));
+  const crewmates = anted.filter((p) => !imposterSet.has(p.id));
 
-  // If the imposter somehow didn't ante (shouldn't happen with the start
-  // gate in place), refund everyone and bail.
-  if (!imposter) {
+  // If no imposter anted (shouldn't happen with the start gate in
+  // place), refund everyone and bail.
+  if (imposters.length === 0) {
     const allWallets = anted.map(
       (p) => p.wallet_address as `0x${string}`
     );
@@ -58,7 +59,9 @@ export async function settlePot(
     caught: outcome.caught,
     tied: outcome.tied,
     guessOutcome: outcome.guessOutcome,
-    imposter: imposter.wallet_address as `0x${string}`,
+    imposters: imposters.map(
+      (i) => i.wallet_address as `0x${string}`
+    ),
     crewmates: crewmates.map(
       (c) => c.wallet_address as `0x${string}`
     ),

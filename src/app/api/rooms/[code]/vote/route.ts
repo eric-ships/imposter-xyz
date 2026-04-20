@@ -66,25 +66,36 @@ export async function POST(
 
   // Everyone has voted. Tally.
   const { topTargets, tied } = tallyVotes(votes ?? []);
-  const imposterCaught = !tied && topTargets[0] === room.imposter_id;
+  const imposterIds: string[] = Array.isArray(room.imposter_ids)
+    ? (room.imposter_ids as string[]).filter(Boolean)
+    : room.imposter_id
+      ? [room.imposter_id as string]
+      : [];
+  // Crew wins by catching at least one imposter as the plurality target.
+  // Other imposters stay hidden — their fate is tied to the caught one's
+  // guess result.
+  const caughtImposterId =
+    !tied && imposterIds.includes(topTargets[0]) ? topTargets[0] : null;
 
-  if (!imposterCaught) {
-    // Imposter escaped. Award +2 and jump to reveal.
-    const { data: current } = await supabaseAdmin
-      .from("players")
-      .select("score")
-      .eq("id", room.imposter_id)
-      .single();
-    await supabaseAdmin
-      .from("players")
-      .update({ score: (current?.score ?? 0) + 2 })
-      .eq("id", room.imposter_id);
+  if (!caughtImposterId) {
+    // Imposter team escaped. Each imposter gets +2.
+    for (const impId of imposterIds) {
+      const { data: current } = await supabaseAdmin
+        .from("players")
+        .select("score")
+        .eq("id", impId)
+        .single();
+      await supabaseAdmin
+        .from("players")
+        .update({ score: (current?.score ?? 0) + 2 })
+        .eq("id", impId);
+    }
 
-    // Settle the pot on chain before flipping state. Imposter takes all.
+    // Settle pot on chain. Imposter team takes everything (split evenly).
     await settlePot(
       { code, ...room },
       {
-        imposterId: room.imposter_id,
+        imposterIds,
         caught: false,
         tied,
         guessOutcome: null,
@@ -102,13 +113,16 @@ export async function POST(
     return NextResponse.json({ ok: true });
   }
 
-  // Imposter was caught. Give them one chance to guess the word.
+  // That imposter was caught. Only they go to guess phase.
   const guessUpdate: Record<string, unknown> = {
     state: "guessing",
     updated_at: new Date().toISOString(),
   };
   if ("phase_deadline" in room) {
     guessUpdate.phase_deadline = deadlineFor("guessing");
+  }
+  if ("caught_imposter_id" in room) {
+    guessUpdate.caught_imposter_id = caughtImposterId;
   }
   await supabaseAdmin.from("rooms").update(guessUpdate).eq("code", code);
 

@@ -71,7 +71,7 @@ export default function HomePage() {
         <p className="mt-6 text-sm leading-relaxed text-ink-soft">
           Everyone sees the category.
           <br />
-          One person is the imposter.
+          At least one of you is lying.
         </p>
         <Link
           href="/rules"

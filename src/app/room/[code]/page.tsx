@@ -483,7 +483,7 @@ function useTurnChime(view: PublicRoomView, playerId: string) {
     if (view.state !== prevState) {
       if (view.state === "voting") {
         playTurnChime();
-      } else if (view.state === "guessing" && view.you?.isImposter) {
+      } else if (view.state === "guessing" && view.you?.isCaughtImposter) {
         playTurnChime();
       }
     }
@@ -492,7 +492,7 @@ function useTurnChime(view: PublicRoomView, playerId: string) {
     view.state,
     view.turnIndex,
     view.turnOrder,
-    view.you?.isImposter,
+    view.you?.isCaughtImposter,
     playerId,
   ]);
 }
@@ -1518,7 +1518,13 @@ function GuessPhase({
     }
   }
 
-  if (!you.isImposter) {
+  // Only the imposter the crew actually caught gets the guess. In a
+  // 2-imposter room the uncaught imposter watches like everyone else.
+  if (!you.isCaughtImposter) {
+    const caughtNickname = view.caughtImposterId
+      ? (view.players.find((p) => p.id === view.caughtImposterId)?.nickname ??
+         "them")
+      : "the imposter";
     return (
       <>
         <section className="border border-line bg-surface p-8 text-center">
@@ -1529,14 +1535,14 @@ function GuessPhase({
             One last chance
           </div>
           <div className="mt-4 text-sm leading-relaxed text-ink-soft">
-            The imposter gets one guess at the secret word.
-            <br />
-            Exact match: they steal the win. Close: a point for both sides.
+            {you.isImposter
+              ? "Your partner got caught. Their guess decides the round."
+              : "The caught imposter gets one guess at the secret word. Exact match: they steal the win. Close: a point for both sides."}
           </div>
         </section>
 
         <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
-          Awaiting the imposter&apos;s guess
+          Awaiting {caughtNickname}&apos;s guess
         </p>
 
         <ClueLog view={view} />
@@ -1618,9 +1624,10 @@ function RevealPhase({
   const [restarting, setRestarting] = useState(false);
   const router = useRouter();
 
-  const youAreImposter = playerId === reveal.imposterId;
+  const youAreImposter = reveal.imposterIds.includes(playerId);
   const caught = reveal.caught;
   const outcome = reveal.guessOutcome;
+  const multiImposter = reveal.imposterIds.length > 1;
 
   type Side = "imposter" | "crewmates" | "draw";
   const winner: Side = !caught
@@ -1658,21 +1665,23 @@ function RevealPhase({
         ? "Split decision"
         : "Crewmates prevail";
 
+  const imposterWord = multiImposter ? "imposters" : "imposter";
+  const theyWord = multiImposter ? "them" : "them";
   const subtitle = youAreImposter
     ? !caught
       ? "You fooled them all."
       : outcome === "exact"
-        ? "You were caught, but you guessed the word."
+        ? "You were caught, but the word was guessed."
         : outcome === "close"
           ? "Close enough. The table splits the point."
-          : "Your guess missed. The crewmates take it."
+          : "The guess missed. The crewmates take it."
     : !caught
-      ? "The imposter slipped past you."
+      ? `The ${imposterWord} slipped past you.`
       : outcome === "exact"
-        ? "You caught them, but they named the word."
+        ? `You caught ${theyWord}, but the word was named.`
         : outcome === "close"
-          ? "Caught them, but their guess was nearly right."
-          : "You caught the imposter clean.";
+          ? `Caught, but the guess was nearly right.`
+          : `You caught the ${imposterWord} clean.`;
 
   async function playAgain() {
     setRestarting(true);
@@ -1714,10 +1723,22 @@ function RevealPhase({
 
       <section className="border border-line bg-surface p-8 text-center">
         <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-          The imposter was
+          {multiImposter ? "The imposters were" : "The imposter was"}
         </div>
-        <div className="mt-3 font-serif text-3xl italic text-oxblood">
-          {nicknameById.get(reveal.imposterId)}
+        <div className="mt-3 flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl italic text-oxblood">
+          {reveal.imposterIds.map((id, i) => (
+            <span key={id} className="inline-flex items-baseline gap-3">
+              {i > 0 && (
+                <span className="text-lg text-ink-faint">&</span>
+              )}
+              <span>{nicknameById.get(id) ?? "?"}</span>
+              {reveal.caughtImposterId === id && multiImposter && (
+                <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
+                  caught
+                </span>
+              )}
+            </span>
+          ))}
         </div>
         <div className="mt-6 border-t border-line-soft pt-6">
           <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">

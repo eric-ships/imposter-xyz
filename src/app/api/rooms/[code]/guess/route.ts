@@ -41,9 +41,20 @@ export async function POST(
       { status: 400 }
     );
   }
-  if (room.imposter_id !== playerId) {
+  // Imposter set: prefer imposter_ids array, fall back to [imposter_id].
+  const imposterIds: string[] = Array.isArray(room.imposter_ids)
+    ? (room.imposter_ids as string[]).filter(Boolean)
+    : room.imposter_id
+      ? [room.imposter_id as string]
+      : [];
+  // Only the imposter the crew actually caught in the vote takes the
+  // guess. Fall back to imposter_id for legacy (single-imposter) rooms.
+  const caughtImposterId: string | null =
+    (room.caught_imposter_id as string | null) ??
+    (room.imposter_id as string | null);
+  if (caughtImposterId !== playerId) {
     return NextResponse.json(
-      { error: "only the imposter can guess" },
+      { error: "only the caught imposter can guess" },
       { status: 403 }
     );
   }
@@ -57,30 +68,30 @@ export async function POST(
     outcome = judgement.close ? "close" : "wrong";
   }
 
-  // Score.
+  // Score. Both imposters share the team fate; crewmates are everyone
+  // not in the imposter set.
   const { data: players } = await supabaseAdmin
     .from("players")
     .select("id, score")
     .eq("room_code", code);
 
-  const imposter = players?.find((p) => p.id === room.imposter_id);
-  const crewmates = players?.filter((p) => p.id !== room.imposter_id) ?? [];
+  const imposterSet = new Set(imposterIds);
+  const imposters = players?.filter((p) => imposterSet.has(p.id)) ?? [];
+  const crewmates = players?.filter((p) => !imposterSet.has(p.id)) ?? [];
 
   if (outcome === "exact") {
-    // Imposter wins outright: +2, crewmates get nothing.
-    if (imposter) {
+    for (const imp of imposters) {
       await supabaseAdmin
         .from("players")
-        .update({ score: imposter.score + 2 })
-        .eq("id", imposter.id);
+        .update({ score: imp.score + 2 })
+        .eq("id", imp.id);
     }
   } else if (outcome === "close") {
-    // Split: imposter +1, each crewmate +1.
-    if (imposter) {
+    for (const imp of imposters) {
       await supabaseAdmin
         .from("players")
-        .update({ score: imposter.score + 1 })
-        .eq("id", imposter.id);
+        .update({ score: imp.score + 1 })
+        .eq("id", imp.id);
     }
     for (const c of crewmates) {
       await supabaseAdmin
@@ -89,7 +100,6 @@ export async function POST(
         .eq("id", c.id);
     }
   } else {
-    // Wrong: crewmates each +1.
     for (const c of crewmates) {
       await supabaseAdmin
         .from("players")
@@ -102,7 +112,7 @@ export async function POST(
   await settlePot(
     { code, ...room },
     {
-      imposterId: room.imposter_id,
+      imposterIds,
       caught: true,
       tied: false,
       guessOutcome: outcome,

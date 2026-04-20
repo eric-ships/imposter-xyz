@@ -55,6 +55,9 @@ export type PublicRoomView = {
   turnIndex: number;
   turnOrder: string[];
   phaseDeadline: string | null;
+  // Id of the imposter the crew caught in the vote (the one who goes to
+  // guess phase). Null until a plurality lands on an imposter.
+  caughtImposterId: string | null;
   players: Player[];
   clues: Clue[];
   votes: Vote[];
@@ -65,13 +68,17 @@ export type PublicRoomView = {
     id: string;
     isHost: boolean;
     isImposter: boolean;
+    // True if the crew caught you in the vote and you're on the hook for
+    // the final guess. Only meaningful during the guessing phase.
+    isCaughtImposter: boolean;
     secretWord: string | null; // null if imposter
   } | null;
   // Only populated during reveal:
   reveal: {
-    imposterId: string;
+    imposterIds: string[];
     secretWord: string;
     caught: boolean;
+    caughtImposterId: string | null;
     guess: string | null;
     guessOutcome: GuessOutcome | null;
   } | null;
