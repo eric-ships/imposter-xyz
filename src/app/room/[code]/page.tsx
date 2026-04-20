@@ -587,17 +587,24 @@ function PlayerList({
   view,
   showScores = true,
   showAnte = false,
+  showRank = false,
 }: {
   view: PublicRoomView;
   showScores?: boolean;
   showAnte?: boolean;
+  showRank?: boolean;
 }) {
   return (
     <ul className="divide-y divide-line-soft border-y border-line-soft">
-      {view.players.map((p) => {
+      {view.players.map((p, i) => {
         const { color, initial } = avatarFor(p.id, p.nickname);
         return (
           <li key={p.id} className="flex items-center gap-4 py-3">
+            {showRank && (
+              <div className="w-4 text-right font-serif text-sm italic text-ink-faint tabular-nums">
+                {i + 1}
+              </div>
+            )}
             <div
               className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white ${color}`}
             >
@@ -868,6 +875,9 @@ function LobbyPhase({
   const isHost = playerId === view.hostId;
   const canStart = view.players.length >= 3;
   const anyScore = view.players.some((p) => p.score > 0);
+  // Leaderboard ordering. Once any score is non-zero, winners bubble up;
+  // when everyone's at 0 the sort is stable so joined-order is preserved.
+  const rankedPlayers = [...view.players].sort((a, b) => b.score - a.score);
 
   // Pre-warm the Claude word the moment the lobby is ready, so clicking
   // "Begin" skips the ~1-3s generation latency. Endpoint is idempotent.
@@ -929,7 +939,12 @@ function LobbyPhase({
             </span>
           )}
         </div>
-        <PlayerList view={view} showScores={anyScore} showAnte={potEnabled} />
+        <PlayerList
+          view={{ ...view, players: rankedPlayers }}
+          showScores={anyScore}
+          showAnte={potEnabled}
+          showRank={anyScore}
+        />
       </section>
 
       <PotPanel view={view} playerId={playerId} code={code} />
