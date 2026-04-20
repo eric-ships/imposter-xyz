@@ -116,13 +116,18 @@ async function expirePlaying(code: string, room: Room) {
     return NextResponse.json({ ok: true, noop: true });
   }
 
-  // Record the forfeit as a blank clue so the UI shows the player was skipped.
-  await supabaseAdmin.from("clues").insert({
+  // Record the forfeit as a blank clue so the UI shows the player was
+  // skipped. If the real submission landed first (unique-violation), that
+  // clue wins — nothing to do here.
+  const { error: blankErr } = await supabaseAdmin.from("clues").insert({
     room_code: code,
     player_id: currentPlayerId,
     round: room.round,
     word: "—",
   });
+  if (blankErr && blankErr.code !== "23505") {
+    console.error("[expire] blank clue insert failed", blankErr);
+  }
 
   await notifyRoom(
     code,

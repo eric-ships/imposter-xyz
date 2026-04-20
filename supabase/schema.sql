@@ -97,6 +97,21 @@ create table if not exists clues (
 
 create index if not exists clues_room_round_idx on clues(room_code, round);
 
+-- Enforce one clue per player per round at the DB level. Prevents the
+-- clue/expire race where a slow player's submission lands while /expire
+-- is forfeiting the turn, leaving two rows for the same player + round.
+-- Cleanup first: if a room already accumulated duplicates (pre-fix
+-- data), keep only the earliest row per (room, round, player).
+delete from clues c1
+using clues c2
+where c1.id > c2.id
+  and c1.room_code = c2.room_code
+  and c1.round = c2.round
+  and c1.player_id = c2.player_id;
+
+create unique index if not exists clues_unique_player_round
+  on clues(room_code, round, player_id);
+
 create table if not exists votes (
   id bigserial primary key,
   room_code text not null references rooms(code) on delete cascade,
