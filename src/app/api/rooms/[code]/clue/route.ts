@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
+import { deadlineFor } from "@/lib/timer";
 
 export async function POST(
   request: Request,
@@ -72,6 +73,7 @@ export async function POST(
       turn_index: nextTurnIndex,
       round: nextRound,
       state: nextState,
+      phase_deadline: deadlineFor(nextState),
       updated_at: new Date().toISOString(),
     })
     .eq("code", code);

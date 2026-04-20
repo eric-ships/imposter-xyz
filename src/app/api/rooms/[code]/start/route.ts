@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
 import { generateWordPrompt } from "@/lib/anthropic";
+import { deadlineFor } from "@/lib/timer";
 
 function shuffle<T>(arr: T[]): T[] {
   const copy = [...arr];
@@ -105,6 +106,7 @@ export async function POST(
     round: 1,
     turn_index: 0,
     turn_order: turnOrder,
+    phase_deadline: deadlineFor("playing"),
     updated_at: new Date().toISOString(),
   };
   if (hasRecentWords) {

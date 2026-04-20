@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom, tallyVotes } from "@/lib/room-state";
 import { settlePot } from "@/lib/settle";
+import { deadlineFor } from "@/lib/timer";
 
 export async function POST(
   request: Request,
@@ -92,7 +93,11 @@ export async function POST(
 
     await supabaseAdmin
       .from("rooms")
-      .update({ state: "reveal", updated_at: new Date().toISOString() })
+      .update({
+        state: "reveal",
+        phase_deadline: null,
+        updated_at: new Date().toISOString(),
+      })
       .eq("code", code);
 
     await notifyRoom(code, "revealed");
@@ -102,7 +107,11 @@ export async function POST(
   // Imposter was caught. Give them one chance to guess the word.
   await supabaseAdmin
     .from("rooms")
-    .update({ state: "guessing", updated_at: new Date().toISOString() })
+    .update({
+      state: "guessing",
+      phase_deadline: deadlineFor("guessing"),
+      updated_at: new Date().toISOString(),
+    })
     .eq("code", code);
 
   await notifyRoom(code, "guessing_started");

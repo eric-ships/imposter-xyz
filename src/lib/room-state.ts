@@ -121,6 +121,10 @@ export async function fetchRoomView(
     totalRounds: room.total_rounds,
     turnIndex: room.turn_index,
     turnOrder: room.turn_order ?? [],
+    phaseDeadline:
+      ("phase_deadline" in room
+        ? (room.phase_deadline as string | null)
+        : null) ?? null,
     players: decoratedPlayers,
     clues: (clues ?? []) as PublicRoomView["clues"],
     votes: (votes ?? []) as PublicRoomView["votes"],

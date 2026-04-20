@@ -1,12 +1,19 @@
 "use client";
 
-import { use, useCallback, useEffect, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { supabase } from "@/lib/supabase/browser";
-import type { PublicRoomView } from "@/lib/game";
+import type { PublicRoomView, RoomState } from "@/lib/game";
 import { blockExplorerUrl } from "@/lib/chain";
 import { anteWithBaseAccount, useBaseAccount } from "@/lib/wallet";
+import {
+  isMuted as audioIsMuted,
+  playTurnChime,
+  primeAudio,
+  setMuted as audioSetMuted,
+} from "@/lib/audio";
 
 export default function RoomPage({
   params,
@@ -48,6 +55,17 @@ export default function RoomPage({
   useEffect(() => {
     if (!hydrated) return;
     refetch();
+  }, [hydrated, refetch]);
+
+  // Polling fallback: if Supabase Realtime is misconfigured (e.g. the
+  // room_events publication was dropped, or anon RLS blocks replication),
+  // players never see each other join because no event ever triggers a
+  // refetch. A slow poll ensures the lobby and game state converge
+  // regardless. 3s is short enough to feel live, cheap enough to spare.
+  useEffect(() => {
+    if (!hydrated) return;
+    const iv = setInterval(() => refetch(), 3000);
+    return () => clearInterval(iv);
   }, [hydrated, refetch]);
 
   useEffect(() => {
@@ -201,6 +219,13 @@ function RoomPlay({
 }) {
   const you = view.you!;
   const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
+  useTurnChime(view, playerId);
+  useAudioPriming();
+
+  const phaseHasTimer =
+    view.state === "playing" ||
+    view.state === "voting" ||
+    view.state === "guessing";
 
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-7 px-8 py-8">
@@ -211,15 +236,30 @@ function RoomPlay({
             {code}
           </span>
         </span>
-        <span className="flex items-baseline gap-2">
-          <span className="font-serif text-base italic text-ink normal-case tracking-normal">
-            {nicknameById.get(playerId)}
-          </span>
-          {you.isHost && (
-            <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[9px] tracking-[0.3em] text-accent">
-              Host
-            </span>
+        <span className="flex items-center gap-3">
+          {phaseHasTimer && view.phaseDeadline && (
+            <PhaseCountdown code={code} deadline={view.phaseDeadline} />
           )}
+          <Link
+            href="/rules"
+            target="_blank"
+            rel="noreferrer"
+            className="text-[10px] uppercase tracking-[0.3em] text-ink-faint transition hover:text-ink"
+            title="How to play"
+          >
+            Rules
+          </Link>
+          <MuteToggle />
+          <span className="flex items-baseline gap-2">
+            <span className="font-serif text-base italic text-ink normal-case tracking-normal">
+              {nicknameById.get(playerId)}
+            </span>
+            {you.isHost && (
+              <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[9px] tracking-[0.3em] text-accent">
+                Host
+              </span>
+            )}
+          </span>
         </span>
       </header>
 
@@ -267,6 +307,133 @@ function RoomPlay({
         )}
     </main>
   );
+}
+
+function PhaseCountdown({
+  code,
+  deadline,
+}: {
+  code: string;
+  deadline: string;
+}) {
+  const [now, setNow] = useState(() => Date.now());
+  const firedForRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const iv = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(iv);
+  }, []);
+
+  useEffect(() => {
+    const remaining = new Date(deadline).getTime() - now;
+    if (remaining > 0) return;
+    if (firedForRef.current === deadline) return;
+    firedForRef.current = deadline;
+    fetch(`/api/rooms/${code}/expire`, { method: "POST" }).catch(() => {});
+  }, [code, deadline, now]);
+
+  const remainingMs = Math.max(0, new Date(deadline).getTime() - now);
+  const seconds = Math.ceil(remainingMs / 1000);
+  const warn = seconds <= 10;
+
+  return (
+    <span
+      className={`font-serif text-base italic tabular-nums normal-case tracking-normal ${
+        warn ? "text-oxblood" : "text-ink-soft"
+      }`}
+    >
+      {seconds}s
+    </span>
+  );
+}
+
+function MuteToggle() {
+  const [muted, setMutedState] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMutedState(audioIsMuted());
+    setMounted(true);
+  }, []);
+
+  function toggle() {
+    primeAudio();
+    const next = !muted;
+    setMutedState(next);
+    audioSetMuted(next);
+  }
+
+  // Avoid SSR/client mismatch on the icon: render a stable placeholder
+  // until we've read localStorage.
+  const iconMuted = mounted ? muted : false;
+
+  return (
+    <button
+      onClick={toggle}
+      aria-label={iconMuted ? "Unmute sounds" : "Mute sounds"}
+      title={iconMuted ? "Unmute sounds" : "Mute sounds"}
+      className="flex h-6 w-6 items-center justify-center text-ink-faint transition hover:text-ink"
+    >
+      {iconMuted ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <line x1="23" y1="9" x2="17" y2="15" />
+          <line x1="17" y1="9" x2="23" y2="15" />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+function useAudioPriming() {
+  useEffect(() => {
+    const prime = () => primeAudio();
+    document.addEventListener("pointerdown", prime, { once: true });
+    return () => document.removeEventListener("pointerdown", prime);
+  }, []);
+}
+
+function useTurnChime(view: PublicRoomView, playerId: string) {
+  const prevCurrentTurnPlayerRef = useRef<string | undefined>(undefined);
+  const prevStateRef = useRef<RoomState | undefined>(undefined);
+
+  useEffect(() => {
+    const currentPlayerId = view.turnOrder[view.turnIndex];
+
+    if (view.state === "playing") {
+      if (
+        currentPlayerId === playerId &&
+        prevCurrentTurnPlayerRef.current !== playerId
+      ) {
+        playTurnChime();
+      }
+      prevCurrentTurnPlayerRef.current = currentPlayerId;
+    } else {
+      prevCurrentTurnPlayerRef.current = undefined;
+    }
+
+    const prevState = prevStateRef.current;
+    if (view.state !== prevState) {
+      if (view.state === "voting") {
+        playTurnChime();
+      } else if (view.state === "guessing" && view.you?.isImposter) {
+        playTurnChime();
+      }
+    }
+    prevStateRef.current = view.state;
+  }, [
+    view.state,
+    view.turnIndex,
+    view.turnOrder,
+    view.you?.isImposter,
+    playerId,
+  ]);
 }
 
 function VoidGameButton({
@@ -655,7 +822,9 @@ function LobbyPhase({
       <section className="space-y-4">
         <div className="flex items-baseline justify-between">
           <SectionLabel>
-            {anyScore ? "Match Score" : `Players · ${view.players.length}`}
+            {anyScore
+              ? "Match Score"
+              : `Players · ${view.players.length} of 4`}
           </SectionLabel>
           {anyScore && (
             <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
@@ -708,6 +877,17 @@ function LobbyPhase({
           {error}
         </p>
       )}
+
+      <div className="flex justify-center border-t border-line-soft pt-6">
+        <Link
+          href="/rules"
+          target="_blank"
+          rel="noreferrer"
+          className="text-[10px] uppercase tracking-[0.3em] text-ink-faint transition hover:text-ink"
+        >
+          How to play
+        </Link>
+      </div>
     </>
   );
 }
@@ -1021,7 +1201,7 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                   <span>Round {round}</span>
                   {isActive && <span>In progress</span>}
                 </div>
-                <ul className="divide-y divide-line-soft border-y border-line-soft">
+                <ul className="flex flex-col divide-y divide-line-soft border-y border-line-soft">
                   <AnimatePresence initial={false}>
                     {[...clues].reverse().map((c) => {
                       const nickname = nicknameById.get(c.player_id) ?? "";
@@ -1037,22 +1217,37 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                       return (
                         <motion.li
                           key={`${c.player_id}-${c.round}`}
-                          initial={{ opacity: 0, y: -6 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.18, ease: "easeOut" }}
-                          className="flex items-center gap-4 py-3"
+                          layout
+                          initial={{ opacity: 0, height: 0, y: -8 }}
+                          animate={{ opacity: 1, height: "auto", y: 0 }}
+                          exit={{ opacity: 0, height: 0, y: -8 }}
+                          transition={{
+                            opacity: { duration: 0.22, ease: "easeOut" },
+                            height: {
+                              duration: 0.28,
+                              ease: [0.2, 0.8, 0.2, 1],
+                            },
+                            y: { duration: 0.22, ease: "easeOut" },
+                            layout: {
+                              duration: 0.28,
+                              ease: [0.2, 0.8, 0.2, 1],
+                            },
+                          }}
+                          className="overflow-hidden"
                         >
-                          <div
-                            className={`flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold text-white ${color}`}
-                          >
-                            {initial}
+                          <div className="flex items-center gap-4 py-3">
+                            <div
+                              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ${color}`}
+                            >
+                              {initial}
+                            </div>
+                            <span className="flex-1 text-xs uppercase tracking-[0.15em] text-ink-faint">
+                              {nickname}
+                            </span>
+                            <span className="font-serif text-xl italic text-ink">
+                              {c.word}
+                            </span>
                           </div>
-                          <span className="flex-1 text-xs uppercase tracking-[0.15em] text-ink-faint">
-                            {nickname}
-                          </span>
-                          <span className="font-serif text-xl italic text-ink">
-                            {c.word}
-                          </span>
                         </motion.li>
                       );
                     })}

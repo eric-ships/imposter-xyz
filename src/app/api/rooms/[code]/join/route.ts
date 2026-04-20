@@ -30,6 +30,17 @@ export async function POST(
     );
   }
 
+  const { count: playerCount } = await supabaseAdmin
+    .from("players")
+    .select("id", { count: "exact", head: true })
+    .eq("room_code", code);
+  if ((playerCount ?? 0) >= 4) {
+    return NextResponse.json(
+      { error: "room is full · 4 players max" },
+      { status: 400 }
+    );
+  }
+
   const { data: player, error } = await supabaseAdmin
     .from("players")
     .insert({ room_code: code, nickname: trimmed })

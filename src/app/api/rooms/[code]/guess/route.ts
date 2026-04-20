@@ -115,6 +115,7 @@ export async function POST(
       state: "reveal",
       imposter_guess: trimmed,
       guess_outcome: outcome,
+      phase_deadline: null,
       updated_at: new Date().toISOString(),
     })
     .eq("code", code);
