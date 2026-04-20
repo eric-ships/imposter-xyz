@@ -10,7 +10,7 @@ export const TIMER_DURATIONS_MS: Record<
 > = {
   playing: 45_000,
   voting: 180_000,
-  guessing: 60_000,
+  guessing: 90_000,
 };
 
 // Silent buffer added to every deadline. The countdown UI subtracts this

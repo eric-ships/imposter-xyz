@@ -119,7 +119,7 @@ export default function RulesPage() {
         <ul className="space-y-2">
           <Timer label="Clue (per turn)" value="45 seconds" />
           <Timer label="Vote" value="3 minutes" />
-          <Timer label="Imposter&rsquo;s guess" value="60 seconds" />
+          <Timer label="Imposter&rsquo;s guess" value="90 seconds" />
         </ul>
         <p>
           If the clock runs out on a clue, the player is skipped with a blank
