@@ -842,7 +842,7 @@ function LobbyPhase({
           <SectionLabel>
             {anyScore
               ? "Match Score"
-              : `Players · ${view.players.length} of 4`}
+              : `Players · ${view.players.length} of 5`}
           </SectionLabel>
           {anyScore && (
             <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">

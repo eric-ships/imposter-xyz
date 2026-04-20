@@ -13,14 +13,14 @@ export default function RulesPage() {
         <p className="mt-4 text-sm leading-relaxed text-ink-soft">
           A short parlor game of bluffs and close reads.
           <br />
-          Three or four players. Ten to fifteen minutes.
+          Three to five players. Ten to fifteen minutes.
         </p>
       </header>
 
       <Section label="Setup">
         <p>
           One person creates a room and shares the four-letter code. Everyone
-          joins with a nickname. Rooms hold three or four players; the host
+          joins with a nickname. Rooms hold three to five players; the host
           starts the round once at least three are in.
         </p>
         <p>

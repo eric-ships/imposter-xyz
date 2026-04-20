@@ -48,11 +48,25 @@ export async function POST(
     return NextResponse.json({ error: "already started" }, { status: 400 });
   }
 
-  const { data: players } = await supabaseAdmin
+  // select * so an un-migrated column (e.g. spend_permission) doesn't
+  // nuke the query and make the host see the misleading
+  // "need at least 3 players" error with a full room.
+  const { data: players, error: playersErr } = await supabaseAdmin
     .from("players")
-    .select("id, ante_tx, wallet_address, spend_permission")
+    .select("*")
     .eq("room_code", code)
     .order("joined_at", { ascending: true });
+
+  if (playersErr) {
+    console.error("[start] players query error", {
+      code,
+      error: playersErr.message,
+    });
+    return NextResponse.json(
+      { error: `could not read players: ${playersErr.message}` },
+      { status: 500 }
+    );
+  }
 
   if (!players || players.length < 3) {
     return NextResponse.json(
