@@ -483,6 +483,14 @@ function useAudioPriming() {
   }, []);
 }
 
+function buzzMobile() {
+  if (typeof navigator === "undefined") return;
+  // navigator.vibrate is a no-op outside supporting mobile browsers.
+  if (typeof navigator.vibrate === "function") {
+    navigator.vibrate([80, 60, 80]);
+  }
+}
+
 function useTurnChime(view: PublicRoomView, playerId: string) {
   const prevCurrentTurnPlayerRef = useRef<string | undefined>(undefined);
   const prevStateRef = useRef<RoomState | undefined>(undefined);
@@ -496,6 +504,7 @@ function useTurnChime(view: PublicRoomView, playerId: string) {
         prevCurrentTurnPlayerRef.current !== playerId
       ) {
         playTurnChime();
+        buzzMobile();
       }
       prevCurrentTurnPlayerRef.current = currentPlayerId;
     } else {
@@ -506,8 +515,10 @@ function useTurnChime(view: PublicRoomView, playerId: string) {
     if (view.state !== prevState) {
       if (view.state === "voting") {
         playTurnChime();
+        buzzMobile();
       } else if (view.state === "guessing" && view.you?.isCaughtImposter) {
         playTurnChime();
+        buzzMobile();
       }
     }
     prevStateRef.current = view.state;
@@ -1119,34 +1130,52 @@ function PlayingPhase({
       <TurnStrip view={displayView} playerId={playerId} />
 
       {isMyTurn ? (
-        <div className="space-y-3">
-          <SectionLabel>Your one-word clue</SectionLabel>
-          <div className="flex gap-2">
-            <input
-              value={word}
-              onChange={(e) => setWord(e.target.value)}
-              maxLength={40}
-              placeholder="e.g. syrup"
-              autoFocus
-              className="flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl italic text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && word.trim() && !submitting) submit();
-              }}
-            />
-            <button
-              onClick={submit}
-              disabled={submitting || word.trim().length === 0}
-              className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              {submitting ? "..." : "Submit"}
-            </button>
-          </div>
-          {error && (
-            <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
-              {error}
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: "easeOut" }}
+          className="relative border-2 border-accent bg-accent/5 px-6 py-6"
+        >
+          <motion.span
+            aria-hidden
+            animate={{ opacity: [1, 0.55, 1] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+            className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.45em] text-accent"
+          >
+            Your turn
+          </motion.span>
+          <div className="space-y-3 pt-1">
+            <p className="text-center text-sm text-ink-soft">
+              Give a one-word clue
             </p>
-          )}
-        </div>
+            <div className="flex gap-2">
+              <input
+                value={word}
+                onChange={(e) => setWord(e.target.value)}
+                maxLength={40}
+                placeholder="e.g. syrup"
+                autoFocus
+                className="flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl italic text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && word.trim() && !submitting) submit();
+                }}
+              />
+              <button
+                onClick={submit}
+                disabled={submitting || word.trim().length === 0}
+                className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                {submitting ? "..." : "Submit"}
+              </button>
+            </div>
+            {error && (
+              <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+                {error}
+              </p>
+            )}
+          </div>
+        </motion.div>
       ) : (
         <p className="text-center text-[11px] uppercase tracking-[0.3em]">
           {iAmNext ? (
