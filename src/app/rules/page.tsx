@@ -118,7 +118,7 @@ export default function RulesPage() {
         </p>
         <ul className="space-y-2">
           <Timer label="Clue (per turn)" value="45 seconds" />
-          <Timer label="Vote" value="2 minutes" />
+          <Timer label="Vote" value="3 minutes" />
           <Timer label="Imposter&rsquo;s guess" value="60 seconds" />
         </ul>
         <p>

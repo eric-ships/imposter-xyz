@@ -5,7 +5,7 @@ export const TIMER_DURATIONS_MS: Record<
   number
 > = {
   playing: 45_000,
-  voting: 120_000,
+  voting: 180_000,
   guessing: 60_000,
 };
 
