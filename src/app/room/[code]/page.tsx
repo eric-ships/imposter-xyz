@@ -1382,10 +1382,13 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                             >
                               {initial}
                             </div>
-                            <span className="flex-1 text-xs uppercase tracking-[0.15em] text-ink-faint">
+                            <span
+                              className="max-w-[88px] shrink-0 truncate text-xs uppercase tracking-[0.15em] text-ink-faint"
+                              title={nickname}
+                            >
                               {nickname}
                             </span>
-                            <span className="font-serif text-xl italic text-ink">
+                            <span className="min-w-0 flex-1 break-words text-right font-serif text-xl italic text-ink">
                               {c.word}
                             </span>
                           </div>
