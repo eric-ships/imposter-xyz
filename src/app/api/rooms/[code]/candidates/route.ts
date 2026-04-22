@@ -29,12 +29,19 @@ export async function GET(
     );
   }
 
-  const caughtImposterId: string | null =
-    (room.caught_imposter_id as string | null) ??
-    (room.imposter_id as string | null);
-  if (caughtImposterId !== playerId) {
+  // Anyone in the room can see the candidate list during guessing — it's
+  // public information once the imposter is on the spot. Verify the
+  // requester is actually a player in this room before spending an API
+  // call on them.
+  const { data: player } = await supabaseAdmin
+    .from("players")
+    .select("id")
+    .eq("room_code", code)
+    .eq("id", playerId)
+    .maybeSingle();
+  if (!player) {
     return NextResponse.json(
-      { error: "only the caught imposter can fetch candidates" },
+      { error: "not a player in this room" },
       { status: 403 }
     );
   }

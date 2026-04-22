@@ -1608,10 +1608,10 @@ function GuessPhase({
   const [candidates, setCandidates] = useState<string[] | null>(null);
   const [candidatesLoading, setCandidatesLoading] = useState(false);
 
-  // Fetch the pickable list once when this player is the caught imposter.
-  // Cached server-side per round, so refreshes return the same list.
+  // Fetch the pickable list for everyone in the room — the imposter uses
+  // it to pick, and the rest of the table watches the same shortlist so
+  // the moment feels shared. Cached server-side per round.
   useEffect(() => {
-    if (!you.isCaughtImposter) return;
     let cancelled = false;
     setCandidatesLoading(true);
     fetch(`/api/rooms/${code}/candidates?playerId=${playerId}`)
@@ -1622,7 +1622,8 @@ function GuessPhase({
         }
       })
       .catch(() => {
-        // Non-fatal: imposter can still type a free guess.
+        // Non-fatal: imposter can still type a free guess; watchers just
+        // miss the shortlist.
       })
       .finally(() => {
         if (!cancelled) setCandidatesLoading(false);
@@ -1630,7 +1631,7 @@ function GuessPhase({
     return () => {
       cancelled = true;
     };
-  }, [you.isCaughtImposter, code, playerId]);
+  }, [code, playerId]);
 
   async function submit() {
     setError(null);
@@ -1671,6 +1672,28 @@ function GuessPhase({
               {you.isImposter
                 ? "Your partner got caught. Their guess decides the round."
                 : "The caught imposter gets one guess at the secret word. Exact match: they steal the win. Close: a point for both sides."}
+            </div>
+
+            <div className="mt-6 border-t border-line-soft pt-5 text-left">
+              <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+                {candidatesLoading
+                  ? "Pulling shortlist"
+                  : candidates
+                    ? `${caughtNickname} is choosing from`
+                    : null}
+              </div>
+              {candidates && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {candidates.map((c) => (
+                    <span
+                      key={c}
+                      className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm italic text-ink-soft"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 
