@@ -227,6 +227,74 @@ export function normalizeWord(input: string): string {
   return input.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+const CANDIDATES_SYSTEM = `You produce a list of well-known members of a category for a guessing game. The user will give you the CATEGORY and a SECRET WORD that must appear in the list.
+
+Return ONLY JSON: {"candidates": ["...", "...", ...]}
+
+Rules:
+- Produce exactly 24 single-word candidates (Title Case, hyphens or apostrophes allowed, no spaces).
+- All 24 must be widely recognizable members of the category — the kind a 7-year-old or a grandparent could name.
+- INCLUDE the secret word verbatim in the list (case-insensitive). Do not flag it; place it among the others naturally.
+- No duplicates. No off-category items. Kid-safe (no alcohol, politics, religion, adult, gore).
+- No prose, no markdown fences, no commentary.`;
+
+export async function generateCandidates(
+  category: string,
+  secret: string
+): Promise<string[]> {
+  const resp = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 600,
+    temperature: 0.6,
+    system: CANDIDATES_SYSTEM,
+    messages: [
+      {
+        role: "user",
+        content: `CATEGORY: ${category}\nSECRET WORD: ${secret}\n\nReturn 24 candidates including the secret. JSON only.`,
+      },
+    ],
+  });
+
+  const text = resp.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("")
+    .trim();
+
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) {
+    throw new Error(`Could not parse candidates from: ${text}`);
+  }
+  const parsed = JSON.parse(match[0]) as { candidates?: unknown };
+  const raw: string[] = Array.isArray(parsed.candidates)
+    ? parsed.candidates.filter((c): c is string => typeof c === "string")
+    : [];
+
+  // Defensive: ensure the secret is in the list. The model usually obeys,
+  // but we never want the imposter staring at a list missing the answer.
+  const secretNorm = secret.toLowerCase();
+  const hasSecret = raw.some((c) => c.toLowerCase() === secretNorm);
+  const merged = hasSecret ? raw : [...raw, secret];
+
+  // Case-insensitive dedupe, preserve first occurrence.
+  const seen = new Set<string>();
+  const dedup: string[] = [];
+  for (const c of merged) {
+    const k = c.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    dedup.push(c);
+  }
+
+  // Shuffle so an appended secret doesn't always land at the end.
+  for (let i = dedup.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [dedup[i], dedup[j]] = [dedup[j], dedup[i]];
+  }
+
+  return dedup;
+}
+
 const JUDGE_SYSTEM = `You judge whether a player's guess is "close enough" to a secret word in a word-guessing game. The imposter is trying to guess the secret word after being caught, and deserves partial credit if they're clearly on the right track.
 
 Return ONLY JSON: {"close": true|false, "reason": "brief explanation"}

@@ -172,6 +172,11 @@ export async function POST(
   if ("caught_imposter_id" in room) {
     update.caught_imposter_id = null;
   }
+  if ("guess_candidates" in room) {
+    // Wipe last round's pickable list so the next caught imposter gets a
+    // fresh draw matched to this round's secret.
+    update.guess_candidates = [];
+  }
   if (hasRecentWords) {
     update.recent_words = [...recentWords, word].slice(-20);
   }

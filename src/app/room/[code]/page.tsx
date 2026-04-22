@@ -1585,6 +1585,32 @@ function GuessPhase({
   const [guess, setGuess] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [candidates, setCandidates] = useState<string[] | null>(null);
+  const [candidatesLoading, setCandidatesLoading] = useState(false);
+
+  // Fetch the pickable list once when this player is the caught imposter.
+  // Cached server-side per round, so refreshes return the same list.
+  useEffect(() => {
+    if (!you.isCaughtImposter) return;
+    let cancelled = false;
+    setCandidatesLoading(true);
+    fetch(`/api/rooms/${code}/candidates?playerId=${playerId}`)
+      .then(async (res) => {
+        const data = (await res.json()) as { candidates?: string[] };
+        if (!cancelled && Array.isArray(data.candidates)) {
+          setCandidates(data.candidates);
+        }
+      })
+      .catch(() => {
+        // Non-fatal: imposter can still type a free guess.
+      })
+      .finally(() => {
+        if (!cancelled) setCandidatesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [you.isCaughtImposter, code, playerId]);
 
   async function submit() {
     setError(null);
@@ -1678,6 +1704,37 @@ function GuessPhase({
             {error}
           </p>
         )}
+
+        <div className="mt-6 border-t border-line-soft pt-5 text-left">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            {candidatesLoading
+              ? "Pulling candidates"
+              : candidates
+                ? "Tap to pick"
+                : null}
+          </div>
+          {candidates && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {candidates.map((c) => {
+                const selected = guess === c;
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setGuess(c)}
+                    className={`rounded-full border px-3 py-1 font-serif text-sm italic transition ${
+                      selected
+                        ? "border-accent bg-accent text-page"
+                        : "border-line bg-page text-ink hover:border-accent hover:text-accent"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </section>
 
       <section className="flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-ink-faint">

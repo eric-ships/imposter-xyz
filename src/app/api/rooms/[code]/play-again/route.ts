@@ -61,6 +61,7 @@ export async function POST(
   if ("caught_imposter_id" in room) update.caught_imposter_id = null;
   if ("imposter_guess" in room) update.imposter_guess = null;
   if ("guess_outcome" in room) update.guess_outcome = null;
+  if ("guess_candidates" in room) update.guess_candidates = [];
   if ("prewarm_word" in room) {
     update.prewarm_word = null;
     update.prewarm_category = null;

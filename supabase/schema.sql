@@ -39,6 +39,12 @@ alter table rooms
 -- /expire route's forfeit logic.
 alter table rooms add column if not exists phase_deadline timestamptz;
 
+-- Cached list of plausible category members (including the secret), shown
+-- to the caught imposter as a pickable cheat-sheet during guessing. Lazily
+-- generated on first request and cleared at round/match boundaries.
+alter table rooms
+  add column if not exists guess_candidates text[] not null default '{}';
+
 -- Multi-imposter support. For 5-player rooms we seat 2 imposters; 3-4
 -- stays at 1. imposter_id (singular, older column) stays populated with
 -- the *first* imposter so legacy reads still work. caught_imposter_id
