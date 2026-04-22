@@ -237,7 +237,7 @@ function RoomPlay({
       : null;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-7 px-8 py-8">
+    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-7 px-8 py-8 md:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
       <header className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
         <span className="flex items-baseline gap-2">
           <span>Room</span>
