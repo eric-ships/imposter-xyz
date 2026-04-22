@@ -1947,6 +1947,8 @@ function RevealPhase({
         </div>
       </section>
 
+      <ClueLog view={view} />
+
       <section className="space-y-4">
         <SectionLabel>Votes</SectionLabel>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
