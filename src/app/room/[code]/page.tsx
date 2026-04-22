@@ -477,9 +477,25 @@ function MuteToggle() {
 
 function useAudioPriming() {
   useEffect(() => {
+    // iOS Safari auto-suspends the AudioContext if it sits idle, and
+    // resume() only works inside a user-gesture handler. Prime on every
+    // pointerdown/touchstart/keydown (not just the first) so a click
+    // anywhere during the game keeps audio alive.
     const prime = () => primeAudio();
-    document.addEventListener("pointerdown", prime, { once: true });
-    return () => document.removeEventListener("pointerdown", prime);
+    document.addEventListener("pointerdown", prime);
+    document.addEventListener("touchstart", prime, { passive: true });
+    document.addEventListener("keydown", prime);
+    // Also re-prime when the tab becomes visible again.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") primeAudio();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => {
+      document.removeEventListener("pointerdown", prime);
+      document.removeEventListener("touchstart", prime);
+      document.removeEventListener("keydown", prime);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, []);
 }
 
@@ -1636,27 +1652,15 @@ function GuessPhase({
           <br />
           Close enough: a split point for everyone.
         </div>
-      </section>
 
-      <section className="flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-ink-faint">
-        <span>Category</span>
-        <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
-          {view.category}
-        </span>
-      </section>
-
-      <ClueLog view={view} />
-
-      <div className="space-y-3">
-        <SectionLabel>Your guess</SectionLabel>
-        <div className="flex gap-2">
+        <div className="mt-6 flex gap-2 text-left">
           <input
             value={guess}
             onChange={(e) => setGuess(e.target.value)}
             maxLength={80}
             placeholder="e.g. Medusa"
             autoFocus
-            className="flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl italic text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl italic text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             onKeyDown={(e) => {
               if (e.key === "Enter" && guess.trim() && !submitting) submit();
             }}
@@ -1670,11 +1674,20 @@ function GuessPhase({
           </button>
         </div>
         {error && (
-          <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          <p className="mt-3 border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-left text-sm text-oxblood">
             {error}
           </p>
         )}
-      </div>
+      </section>
+
+      <section className="flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+        <span>Category</span>
+        <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
+          {view.category}
+        </span>
+      </section>
+
+      <ClueLog view={view} />
     </>
   );
 }

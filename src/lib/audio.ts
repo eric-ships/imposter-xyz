@@ -46,8 +46,12 @@ export function playTurnChime() {
   if (c.state === "suspended") c.resume().catch(() => {});
 
   const now = c.currentTime;
-  playTone(c, 660, now, 0.22);
-  playTone(c, 880, now + 0.12, 0.22);
+  // Three-tone arpeggio (E5 -> A5 -> C#6) at higher volume so it carries
+  // over a noisy room. Longer total envelope (~600ms) makes it feel like
+  // a real "your turn" cue rather than a click.
+  playTone(c, 660, now, 0.28, 0.32);
+  playTone(c, 880, now + 0.14, 0.28, 0.32);
+  playTone(c, 1108, now + 0.28, 0.36, 0.36);
 }
 
 // One tick per second of the final countdown. `urgent` raises the pitch
@@ -76,7 +80,8 @@ function playTone(
   c: AudioContext,
   freq: number,
   startAt: number,
-  duration: number
+  duration: number,
+  peak: number = 0.18
 ) {
   const osc = c.createOscillator();
   const gain = c.createGain();
@@ -84,7 +89,7 @@ function playTone(
   osc.frequency.value = freq;
   // Short attack/decay envelope so it sounds like a chime, not a square.
   gain.gain.setValueAtTime(0.0001, startAt);
-  gain.gain.exponentialRampToValueAtTime(0.18, startAt + 0.02);
+  gain.gain.exponentialRampToValueAtTime(peak, startAt + 0.02);
   gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
   osc.connect(gain).connect(c.destination);
   osc.start(startAt);
