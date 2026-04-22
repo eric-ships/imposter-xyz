@@ -236,8 +236,21 @@ function RoomPlay({
       ? view.state
       : null;
 
+  // The play/vote/guess phases use a 2-column layout on desktop and want
+  // the room. Lobby and reveal stay single-column where a narrower
+  // container reads better.
+  const widePhase =
+    view.state === "playing" ||
+    view.state === "voting" ||
+    view.state === "guessing";
+  const mainWidth = widePhase
+    ? "max-w-xl md:max-w-2xl lg:max-w-5xl xl:max-w-6xl"
+    : "max-w-xl md:max-w-2xl";
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-7 px-8 py-8 md:max-w-2xl lg:max-w-3xl xl:max-w-4xl">
+    <main
+      className={`mx-auto flex min-h-screen flex-col gap-7 px-8 py-8 ${mainWidth}`}
+    >
       <header className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
         <span className="flex items-baseline gap-2">
           <span>Room</span>
@@ -1131,102 +1144,105 @@ function PlayingPhase({
   }
 
   return (
-    <>
-      <section className="flex items-baseline justify-between pb-1">
-        <span className="font-serif text-base italic text-ink-soft">
-          {view.category}
-        </span>
-        <span className="text-[10px] uppercase tracking-[0.35em] text-ink-faint">
-          Round {view.round} / {view.totalRounds}
-        </span>
-      </section>
-
-      <section className="relative border-y border-line bg-surface/70 py-7 text-center">
-        <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.4em]">
-          <span className={you.isImposter ? "text-oxblood" : "text-leaf"}>
-            {you.isImposter ? "Imposter" : "Your word"}
+    <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-7 lg:col-span-2">
+        <section className="flex items-baseline justify-between pb-1">
+          <span className="font-serif text-base italic text-ink-soft">
+            {view.category}
           </span>
-        </span>
-        {you.isImposter ? (
-          <div className="font-serif text-2xl italic text-ink">
-            Bluff · Find the word
-          </div>
-        ) : (
-          <div className="font-serif text-4xl font-semibold leading-none tracking-tight text-ink">
-            {you.secretWord}
-          </div>
-        )}
-      </section>
+          <span className="text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+            Round {view.round} / {view.totalRounds}
+          </span>
+        </section>
 
-      <TurnStrip view={displayView} playerId={playerId} />
-
-      {isMyTurn ? (
-        <motion.div
-          layout
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, ease: "easeOut" }}
-          className="relative border-2 border-accent bg-accent/5 px-6 py-6"
-        >
-          <motion.span
-            aria-hidden
-            animate={{ opacity: [1, 0.55, 1] }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.45em] text-accent"
-          >
-            Your turn
-          </motion.span>
-          <div className="space-y-3 pt-1">
-            <p className="text-center text-sm text-ink-soft">
-              Give a one-word clue
-            </p>
-            <div className="flex gap-2">
-              <input
-                value={word}
-                onChange={(e) => setWord(e.target.value)}
-                maxLength={40}
-                placeholder="e.g. syrup"
-                autoFocus
-                className="flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl italic text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && word.trim() && !submitting) submit();
-                }}
-              />
-              <button
-                onClick={submit}
-                disabled={submitting || word.trim().length === 0}
-                className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                {submitting ? "..." : "Submit"}
-              </button>
-            </div>
-            {error && (
-              <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
-                {error}
-              </p>
-            )}
-          </div>
-        </motion.div>
-      ) : (
-        <p className="text-center text-[11px] uppercase tracking-[0.3em]">
-          {iAmNext ? (
-            <>
-              <span className="text-accent">You&apos;re up next</span>
-              <span className="text-ink-faint">
-                {" "}
-                · Awaiting {nicknameById.get(waitingFor)}
-              </span>
-            </>
-          ) : (
-            <span className="text-ink-faint">
-              Awaiting {nicknameById.get(waitingFor)}
+        <section className="relative border-y border-line bg-surface/70 py-7 text-center">
+          <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.4em]">
+            <span className={you.isImposter ? "text-oxblood" : "text-leaf"}>
+              {you.isImposter ? "Imposter" : "Your word"}
             </span>
+          </span>
+          {you.isImposter ? (
+            <div className="font-serif text-2xl italic text-ink">
+              Bluff · Find the word
+            </div>
+          ) : (
+            <div className="font-serif text-4xl font-semibold leading-none tracking-tight text-ink">
+              {you.secretWord}
+            </div>
           )}
-        </p>
-      )}
+        </section>
 
-      <ClueLog view={displayView} />
-    </>
+        {isMyTurn ? (
+          <motion.div
+            layout
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="relative border-2 border-accent bg-accent/5 px-6 py-6"
+          >
+            <motion.span
+              aria-hidden
+              animate={{ opacity: [1, 0.55, 1] }}
+              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.45em] text-accent"
+            >
+              Your turn
+            </motion.span>
+            <div className="space-y-3 pt-1">
+              <p className="text-center text-sm text-ink-soft">
+                Give a one-word clue
+              </p>
+              <div className="flex gap-2">
+                <input
+                  value={word}
+                  onChange={(e) => setWord(e.target.value)}
+                  maxLength={40}
+                  placeholder="e.g. syrup"
+                  autoFocus
+                  className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl italic text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && word.trim() && !submitting) submit();
+                  }}
+                />
+                <button
+                  onClick={submit}
+                  disabled={submitting || word.trim().length === 0}
+                  className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+                >
+                  {submitting ? "..." : "Submit"}
+                </button>
+              </div>
+              {error && (
+                <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+                  {error}
+                </p>
+              )}
+            </div>
+          </motion.div>
+        ) : (
+          <p className="text-center text-[11px] uppercase tracking-[0.3em]">
+            {iAmNext ? (
+              <>
+                <span className="text-accent">You&apos;re up next</span>
+                <span className="text-ink-faint">
+                  {" "}
+                  · Awaiting {nicknameById.get(waitingFor)}
+                </span>
+              </>
+            ) : (
+              <span className="text-ink-faint">
+                Awaiting {nicknameById.get(waitingFor)}
+              </span>
+            )}
+          </p>
+        )}
+      </div>
+
+      <aside className="flex flex-col gap-7 lg:col-span-1 lg:sticky lg:top-6">
+        <TurnStrip view={displayView} playerId={playerId} />
+        <ClueLog view={displayView} />
+      </aside>
+    </div>
   );
 }
 
@@ -1480,94 +1496,98 @@ function VotingPhase({
   const you = view.you!;
 
   return (
-    <>
-      <section className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
-        <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
-          {view.category}
-        </span>
-        {!you.isImposter && you.secretWord && (
-          <span>
-            Word
-            <span className="ml-2 font-serif text-sm italic text-ink normal-case tracking-normal">
-              {you.secretWord}
-            </span>
+    <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-7 lg:col-span-2">
+        <section className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+          <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
+            {view.category}
           </span>
-        )}
-        {you.isImposter && (
-          <span className="text-oxblood">You are the imposter</span>
-        )}
-      </section>
+          {!you.isImposter && you.secretWord && (
+            <span>
+              Word
+              <span className="ml-2 font-serif text-sm italic text-ink normal-case tracking-normal">
+                {you.secretWord}
+              </span>
+            </span>
+          )}
+          {you.isImposter && (
+            <span className="text-oxblood">You are the imposter</span>
+          )}
+        </section>
 
-      <section className="space-y-4">
-        <div className="text-center">
-          <div className="font-serif text-3xl italic text-ink">
-            Who is the imposter?
+        <section className="space-y-4">
+          <div className="text-center">
+            <div className="font-serif text-3xl italic text-ink">
+              Who is the imposter?
+            </div>
+            <div className="mt-1 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+              {alreadyVoted
+                ? `Vote locked · ${votesReceived} of ${totalPlayers}`
+                : `Cast your vote · ${votesReceived} of ${totalPlayers} in`}
+            </div>
           </div>
-          <div className="mt-1 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-            {alreadyVoted
-              ? `Vote locked · ${votesReceived} of ${totalPlayers}`
-              : `Cast your vote · ${votesReceived} of ${totalPlayers} in`}
-          </div>
-        </div>
-        <div className="divide-y divide-line-soft border-y border-line-soft">
-          {view.players.map((p) => {
-            const isYou = p.id === playerId;
-            const selected = target === p.id;
-            const { color, initial } = avatarFor(p.id, p.nickname);
-            return (
-              <button
-                key={p.id}
-                onClick={() => !alreadyVoted && !isYou && setTarget(p.id)}
-                disabled={alreadyVoted || isYou}
-                className={`flex w-full items-center gap-4 px-3 py-5 text-left transition ${
-                  selected ? "bg-accent/10 ring-1 ring-accent/40" : ""
-                } ${isYou || alreadyVoted ? "opacity-40" : "hover:bg-cream/40"}`}
-              >
-                <div
-                  className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold text-white ${color}`}
+          <div className="divide-y divide-line-soft border-y border-line-soft">
+            {view.players.map((p) => {
+              const isYou = p.id === playerId;
+              const selected = target === p.id;
+              const { color, initial } = avatarFor(p.id, p.nickname);
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => !alreadyVoted && !isYou && setTarget(p.id)}
+                  disabled={alreadyVoted || isYou}
+                  className={`flex w-full items-center gap-4 px-3 py-5 text-left transition ${
+                    selected ? "bg-accent/10 ring-1 ring-accent/40" : ""
+                  } ${isYou || alreadyVoted ? "opacity-40" : "hover:bg-cream/40"}`}
                 >
-                  {initial}
-                </div>
-                <div className="flex-1 font-serif text-xl text-ink">
-                  {p.nickname}
-                  {isYou && (
-                    <span className="ml-2 font-sans text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-                      (you)
+                  <div
+                    className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold text-white ${color}`}
+                  >
+                    {initial}
+                  </div>
+                  <div className="flex-1 font-serif text-xl text-ink">
+                    {p.nickname}
+                    {isYou && (
+                      <span className="ml-2 font-sans text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+                        (you)
+                      </span>
+                    )}
+                  </div>
+                  {alreadyVoted && myVote.target_id === p.id && (
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
+                      Your vote
                     </span>
                   )}
-                </div>
-                {alreadyVoted && myVote.target_id === p.id && (
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
-                    Your vote
-                  </span>
-                )}
-                {selected && !alreadyVoted && (
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
-                    Selected
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-        {!alreadyVoted && (
-          <button
-            onClick={submit}
-            disabled={!target || submitting}
-            className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            {submitting ? "Submitting" : "Lock in vote"}
-          </button>
-        )}
-        {error && (
-          <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
-            {error}
-          </p>
-        )}
-      </section>
+                  {selected && !alreadyVoted && (
+                    <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
+                      Selected
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {!alreadyVoted && (
+            <button
+              onClick={submit}
+              disabled={!target || submitting}
+              className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              {submitting ? "Submitting" : "Lock in vote"}
+            </button>
+          )}
+          {error && (
+            <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+              {error}
+            </p>
+          )}
+        </section>
+      </div>
 
-      <ClueLog view={view} />
-    </>
+      <aside className="flex flex-col gap-7 lg:col-span-1 lg:sticky lg:top-6">
+        <ClueLog view={view} />
+      </aside>
+    </div>
   );
 }
 
@@ -1638,114 +1658,122 @@ function GuessPhase({
          "them")
       : "the imposter";
     return (
-      <>
-        <section className="border border-line bg-surface p-8 text-center">
+      <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
+        <div className="flex flex-col gap-7 lg:col-span-2">
+          <section className="border border-line bg-surface p-8 text-center">
+            <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
+              Caught
+            </div>
+            <div className="mt-3 font-serif text-3xl italic text-ink">
+              One last chance
+            </div>
+            <div className="mt-4 text-sm leading-relaxed text-ink-soft">
+              {you.isImposter
+                ? "Your partner got caught. Their guess decides the round."
+                : "The caught imposter gets one guess at the secret word. Exact match: they steal the win. Close: a point for both sides."}
+            </div>
+          </section>
+
+          <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+            Awaiting {caughtNickname}&apos;s guess
+          </p>
+        </div>
+
+        <aside className="flex flex-col gap-7 lg:col-span-1 lg:sticky lg:top-6">
+          <ClueLog view={view} />
+        </aside>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
+      <div className="flex flex-col gap-7 lg:col-span-2">
+        <section className="border-2 border-accent bg-accent/5 p-8 text-center">
           <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
-            Caught
+            You were caught
           </div>
           <div className="mt-3 font-serif text-3xl italic text-ink">
             One last chance
           </div>
           <div className="mt-4 text-sm leading-relaxed text-ink-soft">
-            {you.isImposter
-              ? "Your partner got caught. Their guess decides the round."
-              : "The caught imposter gets one guess at the secret word. Exact match: they steal the win. Close: a point for both sides."}
+            Guess the secret word.
+            <br />
+            Exact match: you win the round.
+            <br />
+            Close enough: a split point for everyone.
+          </div>
+
+          <div className="mt-6 flex gap-2 text-left">
+            <input
+              value={guess}
+              onChange={(e) => setGuess(e.target.value)}
+              maxLength={80}
+              placeholder="e.g. Medusa"
+              autoFocus
+              className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl italic text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && guess.trim() && !submitting) submit();
+              }}
+            />
+            <button
+              onClick={submit}
+              disabled={submitting || guess.trim().length === 0}
+              className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              {submitting ? "Judging" : "Submit"}
+            </button>
+          </div>
+          {error && (
+            <p className="mt-3 border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-left text-sm text-oxblood">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-6 border-t border-line-soft pt-5 text-left">
+            <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+              {candidatesLoading
+                ? "Pulling candidates"
+                : candidates
+                  ? "Tap to pick"
+                  : null}
+            </div>
+            {candidates && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {candidates.map((c) => {
+                  const selected = guess === c;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setGuess(c)}
+                      className={`rounded-full border px-3 py-1 font-serif text-sm italic transition ${
+                        selected
+                          ? "border-accent bg-accent text-page"
+                          : "border-line bg-page text-ink hover:border-accent hover:text-accent"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
 
-        <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
-          Awaiting {caughtNickname}&apos;s guess
-        </p>
+        <section className="flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+          <span>Category</span>
+          <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
+            {view.category}
+          </span>
+        </section>
+      </div>
 
+      <aside className="flex flex-col gap-7 lg:col-span-1 lg:sticky lg:top-6">
         <ClueLog view={view} />
-      </>
-    );
-  }
-
-  return (
-    <>
-      <section className="border-2 border-accent bg-accent/5 p-8 text-center">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
-          You were caught
-        </div>
-        <div className="mt-3 font-serif text-3xl italic text-ink">
-          One last chance
-        </div>
-        <div className="mt-4 text-sm leading-relaxed text-ink-soft">
-          Guess the secret word.
-          <br />
-          Exact match: you win the round.
-          <br />
-          Close enough: a split point for everyone.
-        </div>
-
-        <div className="mt-6 flex gap-2 text-left">
-          <input
-            value={guess}
-            onChange={(e) => setGuess(e.target.value)}
-            maxLength={80}
-            placeholder="e.g. Medusa"
-            autoFocus
-            className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl italic text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && guess.trim() && !submitting) submit();
-            }}
-          />
-          <button
-            onClick={submit}
-            disabled={submitting || guess.trim().length === 0}
-            className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            {submitting ? "Judging" : "Submit"}
-          </button>
-        </div>
-        {error && (
-          <p className="mt-3 border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-left text-sm text-oxblood">
-            {error}
-          </p>
-        )}
-
-        <div className="mt-6 border-t border-line-soft pt-5 text-left">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-            {candidatesLoading
-              ? "Pulling candidates"
-              : candidates
-                ? "Tap to pick"
-                : null}
-          </div>
-          {candidates && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {candidates.map((c) => {
-                const selected = guess === c;
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setGuess(c)}
-                    className={`rounded-full border px-3 py-1 font-serif text-sm italic transition ${
-                      selected
-                        ? "border-accent bg-accent text-page"
-                        : "border-line bg-page text-ink hover:border-accent hover:text-accent"
-                    }`}
-                  >
-                    {c}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      </section>
-
-      <section className="flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-ink-faint">
-        <span>Category</span>
-        <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
-          {view.category}
-        </span>
-      </section>
-
-      <ClueLog view={view} />
-    </>
+      </aside>
+    </div>
   );
 }
 
