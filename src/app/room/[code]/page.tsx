@@ -1168,7 +1168,8 @@ function PlayingPhase({
     <>
       <TurnStrip view={displayView} playerId={playerId} />
 
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-7">
+      <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
+        <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
         <section className="flex items-baseline justify-between pb-1">
           <span className="font-serif text-base italic text-ink-soft">
             {view.category}
@@ -1264,9 +1265,12 @@ function PlayingPhase({
             )}
           </p>
         )}
-      </div>
+        </div>
 
-      <ClueLog view={displayView} />
+        <div className="min-w-0 lg:col-span-2">
+          <ClueLog view={displayView} />
+        </div>
+      </div>
     </>
   );
 }
@@ -1534,8 +1538,8 @@ function VotingPhase({
   const you = view.you!;
 
   return (
-    <>
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-7">
+    <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
+      <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
         <section className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
           <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
             {view.category}
@@ -1622,8 +1626,10 @@ function VotingPhase({
         </section>
       </div>
 
-      <ClueLog view={view} />
-    </>
+      <div className="min-w-0 lg:col-span-2">
+        <ClueLog view={view} />
+      </div>
+    </div>
   );
 }
 
@@ -1695,8 +1701,8 @@ function GuessPhase({
          "them")
       : "the imposter";
     return (
-      <>
-        <div className="mx-auto flex w-full max-w-2xl flex-col gap-7">
+      <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
+        <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
           <section className="border border-line bg-surface p-8 text-center">
             <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
               Caught
@@ -1747,14 +1753,16 @@ function GuessPhase({
           </p>
         </div>
 
-        <ClueLog view={view} />
-      </>
+        <div className="min-w-0 lg:col-span-2">
+          <ClueLog view={view} />
+        </div>
+      </div>
     );
   }
 
   return (
-    <>
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-7">
+    <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
+      <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
         <section className="border-2 border-accent bg-accent/5 p-8 text-center">
           <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
             You were caught
@@ -1836,8 +1844,10 @@ function GuessPhase({
         </section>
       </div>
 
-      <ClueLog view={view} />
-    </>
+      <div className="min-w-0 lg:col-span-2">
+        <ClueLog view={view} />
+      </div>
+    </div>
   );
 }
 
