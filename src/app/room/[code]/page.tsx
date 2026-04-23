@@ -1702,24 +1702,26 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                           }}
                           className="overflow-hidden"
                         >
-                          <div className="flex items-center gap-4 py-3">
-                            <div
-                              className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white ${color}`}
-                            >
-                              {initial}
+                          <div className="space-y-1 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <div
+                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${color}`}
+                              >
+                                {initial}
+                              </div>
+                              <span
+                                className="truncate text-xs tracking-normal text-ink-faint"
+                                title={nickname}
+                              >
+                                {nickname}
+                              </span>
                             </div>
-                            <span
-                              className="max-w-[100px] shrink-0 truncate text-xs tracking-normal text-ink-faint"
-                              title={nickname}
-                            >
-                              {nickname}
-                            </span>
-                            <span
-                              className="min-w-0 flex-1 truncate text-right font-serif text-xl italic text-ink"
+                            <div
+                              className="break-words font-serif text-lg italic leading-snug text-ink [overflow-wrap:anywhere]"
                               title={c.word}
                             >
                               {c.word}
-                            </span>
+                            </div>
                           </div>
                         </motion.li>
                       );
