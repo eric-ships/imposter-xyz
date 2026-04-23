@@ -1258,7 +1258,7 @@ function PlayingPhase({
         )}
       </div>
 
-      <aside className="flex min-w-0 flex-col gap-7 lg:order-1 lg:col-span-1 lg:sticky lg:top-6">
+      <aside className="flex min-w-0 flex-col gap-7 lg:sticky lg:top-6 lg:order-1 lg:col-span-1 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-2">
         <TurnStrip view={displayView} playerId={playerId} />
         <ClueLog view={displayView} />
       </aside>
@@ -1604,7 +1604,7 @@ function VotingPhase({
         </section>
       </div>
 
-      <aside className="flex min-w-0 flex-col gap-7 lg:order-1 lg:col-span-1 lg:sticky lg:top-6">
+      <aside className="flex min-w-0 flex-col gap-7 lg:sticky lg:top-6 lg:order-1 lg:col-span-1 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-2">
         <ClueLog view={view} />
       </aside>
     </div>
@@ -1722,7 +1722,7 @@ function GuessPhase({
           </p>
         </div>
 
-        <aside className="flex min-w-0 flex-col gap-7 lg:order-1 lg:col-span-1 lg:sticky lg:top-6">
+        <aside className="flex min-w-0 flex-col gap-7 lg:sticky lg:top-6 lg:order-1 lg:col-span-1 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-2">
           <ClueLog view={view} />
         </aside>
       </div>
@@ -1813,7 +1813,7 @@ function GuessPhase({
         </section>
       </div>
 
-      <aside className="flex min-w-0 flex-col gap-7 lg:order-1 lg:col-span-1 lg:sticky lg:top-6">
+      <aside className="flex min-w-0 flex-col gap-7 lg:sticky lg:top-6 lg:order-1 lg:col-span-1 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-2">
         <ClueLog view={view} />
       </aside>
     </div>
