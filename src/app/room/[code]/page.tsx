@@ -430,12 +430,13 @@ function PhaseCountdown({
   return (
     <section
       aria-live="polite"
-      className="relative overflow-hidden border-y border-line bg-surface/60 px-5 py-5"
+      className="relative overflow-hidden border-y border-line bg-surface/60 px-5 py-3"
     >
-      <div className="flex flex-col items-center gap-2 text-center">
-        <span className="text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+      <div className="flex items-baseline justify-center gap-3 text-center">
+        <span className="font-serif text-base italic text-ink-soft">
           {headline}
         </span>
+        <span className="text-ink-faint">·</span>
         <motion.span
           key={critical ? "crit" : warn ? "warn" : "ok"}
           animate={critical ? { scale: [1, 1.04, 1] } : { scale: 1 }}
@@ -444,15 +445,15 @@ function PhaseCountdown({
               ? { duration: 0.9, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.18 }
           }
-          className={`font-serif text-5xl italic tabular-nums leading-none transition-colors ${
+          className={`font-serif text-2xl italic tabular-nums leading-none transition-colors ${
             critical ? "text-oxblood" : warn ? "text-oxblood" : "text-ink"
           }`}
         >
           {display}
-          {mins === 0 && <span className="ml-0.5 text-2xl">s</span>}
+          {mins === 0 && <span className="ml-0.5 text-sm">s</span>}
         </motion.span>
       </div>
-      <div className="mt-4 h-0.5 overflow-hidden bg-line-soft">
+      <div className="mt-2 h-0.5 overflow-hidden bg-line-soft">
         <div
           className={`h-full transition-[width] duration-[250ms] ease-linear ${
             critical ? "bg-oxblood" : warn ? "bg-oxblood/70" : "bg-accent"
@@ -1164,105 +1165,113 @@ function PlayingPhase({
   }
 
   return (
-    <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
-      <div className="flex min-w-0 flex-col gap-7 lg:order-2 lg:col-span-2">
-        <section className="flex items-baseline justify-between pb-1">
-          <span className="font-serif text-base italic text-ink-soft">
-            {view.category}
-          </span>
-          <span className="text-[10px] uppercase tracking-[0.35em] text-ink-faint">
-            Round {view.round} / {view.totalRounds}
-          </span>
-        </section>
+    <>
+      <TurnStrip view={displayView} playerId={playerId} />
 
-        <section className="relative border-y border-line bg-surface/70 py-7 text-center">
-          <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.4em]">
-            <span className={you.isImposter ? "text-oxblood" : "text-leaf"}>
-              {you.isImposter ? "Imposter" : "Your word"}
+      <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
+        <div className="flex min-w-0 flex-col gap-7 lg:order-2 lg:col-span-2">
+          <section className="flex items-baseline justify-between pb-1">
+            <span className="font-serif text-base italic text-ink-soft">
+              {view.category}
             </span>
-          </span>
-          {you.isImposter ? (
-            <div className="font-serif text-2xl italic text-ink">
-              Bluff · Find the word
-            </div>
-          ) : (
-            <div className="font-serif text-4xl font-semibold leading-none tracking-tight text-ink">
-              {you.secretWord}
-            </div>
-          )}
-        </section>
+            <span className="text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+              Round {view.round} / {view.totalRounds}
+            </span>
+          </section>
 
-        {isMyTurn ? (
-          <motion.div
-            layout
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, ease: "easeOut" }}
-            className="relative border-2 border-accent bg-accent/5 px-6 py-6"
-          >
-            <motion.span
-              aria-hidden
-              animate={{ opacity: [1, 0.55, 1] }}
-              transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.45em] text-accent"
-            >
-              Your turn
-            </motion.span>
-            <div className="space-y-3 pt-1">
-              <p className="text-center text-sm text-ink-soft">
-                Give a one-word clue
-              </p>
-              <div className="flex gap-2">
-                <input
-                  value={word}
-                  onChange={(e) => setWord(e.target.value)}
-                  maxLength={40}
-                  placeholder="e.g. syrup"
-                  autoFocus
-                  className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl italic text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && word.trim() && !submitting) submit();
-                  }}
-                />
-                <button
-                  onClick={submit}
-                  disabled={submitting || word.trim().length === 0}
-                  className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
-                >
-                  {submitting ? "..." : "Submit"}
-                </button>
-              </div>
-              {error && (
-                <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
-                  {error}
-                </p>
-              )}
-            </div>
-          </motion.div>
-        ) : (
-          <p className="text-center text-[11px] uppercase tracking-[0.3em]">
-            {iAmNext ? (
-              <>
-                <span className="text-accent">You&apos;re up next</span>
-                <span className="text-ink-faint">
-                  {" "}
-                  · Awaiting {nicknameById.get(waitingFor)}
-                </span>
-              </>
-            ) : (
-              <span className="text-ink-faint">
-                Awaiting {nicknameById.get(waitingFor)}
+          <section className="relative border-y border-line bg-surface/70 py-7 text-center">
+            <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.4em]">
+              <span className={you.isImposter ? "text-oxblood" : "text-leaf"}>
+                {you.isImposter ? "Imposter" : "Your word"}
               </span>
+            </span>
+            {you.isImposter ? (
+              <div className="font-serif text-2xl italic text-ink">
+                Bluff · Find the word
+              </div>
+            ) : (
+              <div className="font-serif text-4xl font-semibold leading-none tracking-tight text-ink">
+                {you.secretWord}
+              </div>
             )}
-          </p>
-        )}
-      </div>
+          </section>
 
-      <aside className="flex min-w-0 flex-col gap-7 lg:sticky lg:top-6 lg:order-1 lg:col-span-1 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-2">
-        <TurnStrip view={displayView} playerId={playerId} />
-        <ClueLog view={displayView} />
-      </aside>
-    </div>
+          {isMyTurn ? (
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="relative border-2 border-accent bg-accent/5 px-6 py-6"
+            >
+              <motion.span
+                aria-hidden
+                animate={{ opacity: [1, 0.55, 1] }}
+                transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.45em] text-accent"
+              >
+                Your turn
+              </motion.span>
+              <div className="space-y-3 pt-1">
+                <p className="text-center text-sm text-ink-soft">
+                  Give a one-word clue
+                </p>
+                <div className="flex gap-2">
+                  <input
+                    value={word}
+                    onChange={(e) => setWord(e.target.value)}
+                    maxLength={40}
+                    placeholder="e.g. syrup"
+                    autoFocus
+                    className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl italic text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && word.trim() && !submitting) submit();
+                    }}
+                  />
+                  <button
+                    onClick={submit}
+                    disabled={submitting || word.trim().length === 0}
+                    className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+                  >
+                    {submitting ? "..." : "Submit"}
+                  </button>
+                </div>
+                {error && (
+                  <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+                    {error}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <p className="text-center text-[11px] uppercase tracking-[0.3em]">
+              {iAmNext ? (
+                <>
+                  <span className="text-accent">You&apos;re up next</span>
+                  <span className="text-ink-faint">
+                    {" · Awaiting "}
+                    <span className="font-serif text-sm italic normal-case tracking-normal text-ink-soft">
+                      {nicknameById.get(waitingFor)}
+                    </span>
+                  </span>
+                </>
+              ) : (
+                <span className="text-ink-faint">
+                  Awaiting{" "}
+                  <span className="font-serif text-sm italic normal-case tracking-normal text-ink-soft">
+                    {nicknameById.get(waitingFor)}
+                  </span>
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+
+        <aside className="flex min-w-0 flex-col gap-7 lg:sticky lg:top-6 lg:order-1 lg:col-span-1 lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:pr-2">
+          <ClueLog view={displayView} />
+        </aside>
+      </div>
+    </>
   );
 }
 
@@ -1350,7 +1359,7 @@ function TurnStrip({
               )}
             </div>
             <span
-              className={`max-w-[72px] truncate text-[10px] uppercase tracking-[0.15em] transition-colors ${
+              className={`max-w-[88px] truncate text-xs tracking-normal transition-colors ${
                 isCurrent ? "font-semibold text-accent" : "text-ink-faint"
               }`}
               title={p.nickname}
@@ -1435,7 +1444,7 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                               {initial}
                             </div>
                             <span
-                              className="max-w-[88px] shrink-0 truncate text-xs uppercase tracking-[0.15em] text-ink-faint"
+                              className="max-w-[100px] shrink-0 truncate text-xs tracking-normal text-ink-faint"
                               title={nickname}
                             >
                               {nickname}
@@ -1696,11 +1705,16 @@ function GuessPhase({
 
             <div className="mt-6 border-t border-line-soft pt-5 text-left">
               <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-                {candidatesLoading
-                  ? "Pulling shortlist"
-                  : candidates
-                    ? `${caughtNickname} is choosing from`
-                    : null}
+                {candidatesLoading ? (
+                  "Pulling shortlist"
+                ) : candidates ? (
+                  <>
+                    <span className="font-serif text-sm italic normal-case tracking-normal text-ink-soft">
+                      {caughtNickname}
+                    </span>{" "}
+                    is choosing from
+                  </>
+                ) : null}
               </div>
               {candidates && (
                 <div className="mt-3 flex flex-wrap gap-2">
@@ -1718,7 +1732,11 @@ function GuessPhase({
           </section>
 
           <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
-            Awaiting {caughtNickname}&apos;s guess
+            Awaiting{" "}
+            <span className="font-serif text-sm italic normal-case tracking-normal text-ink-soft">
+              {caughtNickname}
+            </span>
+            &apos;s guess
           </p>
         </div>
 
