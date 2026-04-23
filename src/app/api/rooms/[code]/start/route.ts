@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
-import { generateWordPrompt } from "@/lib/anthropic";
+import { generateCandidates, generateWordPrompt } from "@/lib/anthropic";
 import { deadlineFor } from "@/lib/timer";
 import {
   anteForOnChain,
@@ -173,9 +173,22 @@ export async function POST(
     update.caught_imposter_id = null;
   }
   if ("guess_candidates" in room) {
-    // Wipe last round's pickable list so the next caught imposter gets a
-    // fresh draw matched to this round's secret.
-    update.guess_candidates = [];
+    // Casual mode: pre-generate the shortlist so it's visible to everyone
+    // from the first turn. Otherwise wipe last round's list so the next
+    // caught imposter gets a fresh lazy draw matched to this round's secret.
+    if (
+      "show_candidates_always" in room &&
+      room.show_candidates_always
+    ) {
+      try {
+        update.guess_candidates = await generateCandidates(category, word);
+      } catch (e) {
+        console.error("[start] generateCandidates failed", e);
+        update.guess_candidates = [];
+      }
+    } else {
+      update.guess_candidates = [];
+    }
   }
   if (hasRecentWords) {
     update.recent_words = [...recentWords, word].slice(-20);

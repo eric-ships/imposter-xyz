@@ -362,6 +362,14 @@ function RoomPlay({
         </AnimatePresence>
       </div>
 
+      {view.showCandidatesAlways &&
+        view.guessCandidates.length > 0 &&
+        (view.state === "playing" ||
+          view.state === "voting" ||
+          view.state === "guessing") && (
+          <CandidatesShowcase view={view} />
+        )}
+
       {(view.state === "playing" ||
         view.state === "voting" ||
         view.state === "guessing") && (
@@ -945,6 +953,82 @@ function PotPanel({
   );
 }
 
+function CandidatesModeToggle({
+  view,
+  playerId,
+  code,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+}) {
+  const isHost = playerId === view.hostId;
+  const enabled = view.showCandidatesAlways;
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Non-hosts only see the panel when the mode is on (so they know what
+  // they signed up for). Hosts see it always so they can flip the toggle.
+  if (!isHost && !enabled) return null;
+
+  async function toggle() {
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/show-candidates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, enabled: !enabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <section
+      className={`space-y-2 border p-4 ${
+        enabled ? "border-accent/40 bg-accent/5" : "border-line"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <SectionLabel>Casual mode</SectionLabel>
+          <p className="mt-1 text-[11px] text-ink-soft">
+            Show the guess shortlist to everyone the whole match.
+          </p>
+        </div>
+        {isHost ? (
+          <button
+            onClick={toggle}
+            disabled={pending}
+            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.3em] transition disabled:opacity-40 ${
+              enabled
+                ? "bg-accent text-page hover:bg-ink"
+                : "border border-ink text-ink hover:bg-ink hover:text-page"
+            }`}
+          >
+            {pending ? "..." : enabled ? "On" : "Off"}
+          </button>
+        ) : (
+          <span className="shrink-0 rounded-sm border border-accent/60 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-accent">
+            On
+          </span>
+        )}
+      </div>
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 function LobbyPhase({
   view,
   playerId,
@@ -1035,6 +1119,8 @@ function LobbyPhase({
       </section>
 
       <PotPanel view={view} playerId={playerId} code={code} />
+
+      <CandidatesModeToggle view={view} playerId={playerId} code={code} />
 
       <section className="space-y-3">
         <SectionLabel>Invite</SectionLabel>
@@ -1312,6 +1398,29 @@ function avatarFor(id: string, nickname: string) {
   const color = AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
   const initial = nickname.trim().charAt(0).toUpperCase() || "?";
   return { color, initial };
+}
+
+function CandidatesShowcase({ view }: { view: PublicRoomView }) {
+  return (
+    <section className="space-y-3 border border-line-soft bg-surface/30 p-5">
+      <div className="flex items-baseline justify-between">
+        <SectionLabel>Possible answers</SectionLabel>
+        <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+          Casual mode · {view.guessCandidates.length} on the menu
+        </span>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {view.guessCandidates.map((c) => (
+          <span
+            key={c}
+            className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm italic text-ink-soft"
+          >
+            {c}
+          </span>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function MatchDock({

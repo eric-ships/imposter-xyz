@@ -45,6 +45,12 @@ alter table rooms add column if not exists phase_deadline timestamptz;
 alter table rooms
   add column if not exists guess_candidates text[] not null default '{}';
 
+-- Casual mode: when true, the candidate shortlist is generated at game
+-- start and visible to everyone the whole match (not just during the
+-- caught-imposter guess phase). Host toggles in the lobby.
+alter table rooms
+  add column if not exists show_candidates_always boolean not null default false;
+
 -- Multi-imposter support. For 5-player rooms we seat 2 imposters; 3-4
 -- stays at 1. imposter_id (singular, older column) stays populated with
 -- the *first* imposter so legacy reads still work. caught_imposter_id

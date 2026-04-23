@@ -156,6 +156,8 @@ export async function fetchRoomView(
     "guess_candidates" in room && Array.isArray(room.guess_candidates)
       ? (room.guess_candidates as string[])
       : [];
+  const showCandidatesAlways: boolean =
+    "show_candidates_always" in room && !!room.show_candidates_always;
 
   return {
     code: room.code,
@@ -177,6 +179,7 @@ export async function fetchRoomView(
     pot,
     payouts: payoutList,
     guessCandidates,
+    showCandidatesAlways,
     you,
     reveal,
   };

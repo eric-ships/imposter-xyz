@@ -67,6 +67,9 @@ export type PublicRoomView = {
   // (and to everyone afterward in reveal). Empty until the guess phase
   // generates them. See /api/rooms/[code]/candidates.
   guessCandidates: string[];
+  // Casual mode: when true, the shortlist is generated at game start and
+  // shown to everyone the whole match.
+  showCandidatesAlways: boolean;
   // Only populated for the requesting player:
   you: {
     id: string;
