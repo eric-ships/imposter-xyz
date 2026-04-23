@@ -281,7 +281,7 @@ function RoomPlay({
 
   return (
     <main
-      className={`mx-auto flex min-h-screen flex-col gap-7 px-8 py-8 ${mainWidth}`}
+      className={`mx-auto grid min-h-screen w-full grid-rows-[auto_1fr_auto] gap-7 px-8 py-8 ${mainWidth}`}
     >
       <header className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
         <span className="flex items-baseline gap-2">
@@ -314,51 +314,53 @@ function RoomPlay({
         </span>
       </header>
 
-      {timedState && view.phaseDeadline && (
-        <PhaseCountdown
-          code={code}
-          deadline={view.phaseDeadline}
-          state={timedState}
-          subject={timerSubject}
-          tickEnabled={timerTickEnabled}
-        />
-      )}
+      <div className="flex min-h-0 flex-col justify-center gap-7">
+        {timedState && view.phaseDeadline && (
+          <PhaseCountdown
+            code={code}
+            deadline={view.phaseDeadline}
+            state={timedState}
+            subject={timerSubject}
+            tickEnabled={timerTickEnabled}
+          />
+        )}
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={view.state}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.22, ease: "easeOut" }}
-          className="flex flex-col gap-7"
-        >
-          {view.state === "lobby" && (
-            <LobbyPhase
-              view={view}
-              playerId={playerId}
-              code={code}
-              onRefetch={onRefetch}
-            />
-          )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={view.state}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className="flex flex-col gap-7"
+          >
+            {view.state === "lobby" && (
+              <LobbyPhase
+                view={view}
+                playerId={playerId}
+                code={code}
+                onRefetch={onRefetch}
+              />
+            )}
 
-          {view.state === "playing" && (
-            <PlayingPhase view={view} playerId={playerId} code={code} />
-          )}
+            {view.state === "playing" && (
+              <PlayingPhase view={view} playerId={playerId} code={code} />
+            )}
 
-          {view.state === "voting" && (
-            <VotingPhase view={view} playerId={playerId} code={code} />
-          )}
+            {view.state === "voting" && (
+              <VotingPhase view={view} playerId={playerId} code={code} />
+            )}
 
-          {view.state === "guessing" && (
-            <GuessPhase view={view} playerId={playerId} code={code} />
-          )}
+            {view.state === "guessing" && (
+              <GuessPhase view={view} playerId={playerId} code={code} />
+            )}
 
-          {view.state === "reveal" && (
-            <RevealPhase view={view} playerId={playerId} code={code} />
-          )}
-        </motion.div>
-      </AnimatePresence>
+            {view.state === "reveal" && (
+              <RevealPhase view={view} playerId={playerId} code={code} />
+            )}
+          </motion.div>
+        </AnimatePresence>
+      </div>
 
       {(view.state === "playing" ||
         view.state === "voting" ||
@@ -1208,18 +1210,18 @@ function PlayingPhase({
           </div>
         </section>
 
-        <section className="relative border-y border-line bg-surface/70 py-7 text-center">
+        <section className="relative border-y-2 border-line bg-surface/70 px-6 py-10 text-center">
           <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.4em]">
             <span className={you.isImposter ? "text-oxblood" : "text-leaf"}>
               {you.isImposter ? "Imposter" : "Your word"}
             </span>
           </span>
           {you.isImposter ? (
-            <div className="font-serif text-2xl italic text-ink">
+            <div className="font-serif text-3xl italic text-ink">
               Bluff · Find the word
             </div>
           ) : (
-            <div className="font-serif text-4xl font-semibold leading-none tracking-tight text-ink">
+            <div className="font-serif text-5xl font-semibold leading-none tracking-tight text-ink">
               {you.secretWord}
             </div>
           )}
@@ -1486,28 +1488,39 @@ function ActivePlayerHero({
 }) {
   const { color, initial } = avatarFor(playerId, nickname);
   return (
-    <div className="flex flex-col items-center gap-4 py-6">
+    <div className="relative flex flex-col items-center gap-5 border border-line-soft bg-surface/30 px-6 py-10">
       <div className="relative">
         <motion.span
           aria-hidden
-          animate={{ scale: [1, 1.18, 1], opacity: [0.55, 0, 0.55] }}
+          animate={{ scale: [1, 1.22, 1], opacity: [0.5, 0, 0.5] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -inset-3 rounded-full ring-2 ring-accent"
+          className="absolute -inset-4 rounded-full ring-2 ring-accent"
+        />
+        <motion.span
+          aria-hidden
+          animate={{ scale: [1, 1.4, 1], opacity: [0.3, 0, 0.3] }}
+          transition={{
+            duration: 1.8,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.4,
+          }}
+          className="absolute -inset-4 rounded-full ring-1 ring-accent/50"
         />
         <div
-          className={`relative flex h-24 w-24 items-center justify-center rounded-full text-3xl font-semibold text-white ${color}`}
+          className={`relative flex h-32 w-32 items-center justify-center rounded-full text-5xl font-semibold text-white ${color}`}
         >
           {initial}
         </div>
       </div>
-      <div className="space-y-1 text-center">
-        <div className="font-serif text-2xl italic text-ink">{nickname}</div>
+      <div className="space-y-1.5 text-center">
+        <div className="font-serif text-3xl italic text-ink">{nickname}</div>
         <div className="flex items-baseline justify-center gap-1 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
           <span>is thinking</span>
           <ThinkingDots />
         </div>
         {iAmNext && (
-          <div className="pt-2 text-[10px] uppercase tracking-[0.35em] text-accent">
+          <div className="pt-3 text-[10px] uppercase tracking-[0.35em] text-accent">
             You&apos;re up next
           </div>
         )}
