@@ -2278,6 +2278,38 @@ function RevealPhase({
         </div>
       </section>
 
+      {view.guessCandidates.length > 0 && (
+        <section className="space-y-3">
+          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+            The shortlist
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {view.guessCandidates.map((c) => {
+              const isSecret =
+                reveal.secretWord &&
+                c.toLowerCase() === reveal.secretWord.toLowerCase();
+              const isGuess =
+                reveal.guess &&
+                c.toLowerCase() === reveal.guess.toLowerCase();
+              return (
+                <span
+                  key={c}
+                  className={`rounded-full border px-3 py-1 font-serif text-sm italic ${
+                    isSecret
+                      ? "border-leaf bg-leaf/10 text-leaf"
+                      : isGuess
+                        ? "border-oxblood bg-oxblood/10 text-oxblood"
+                        : "border-line bg-page text-ink-soft"
+                  }`}
+                >
+                  {c}
+                </span>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       <ClueLog view={view} />
 
       <section className="space-y-4">

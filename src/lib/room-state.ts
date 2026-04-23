@@ -152,6 +152,11 @@ export async function fetchRoomView(
     kind: p.kind as "payout" | "refund",
   }));
 
+  const guessCandidates: string[] =
+    "guess_candidates" in room && Array.isArray(room.guess_candidates)
+      ? (room.guess_candidates as string[])
+      : [];
+
   return {
     code: room.code,
     hostId: room.host_id,
@@ -171,6 +176,7 @@ export async function fetchRoomView(
     votes: (votes ?? []) as PublicRoomView["votes"],
     pot,
     payouts: payoutList,
+    guessCandidates,
     you,
     reveal,
   };

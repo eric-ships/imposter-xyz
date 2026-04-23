@@ -63,6 +63,10 @@ export type PublicRoomView = {
   votes: Vote[];
   pot: PotInfo | null;
   payouts: Payout[];
+  // Plausible category words shown to the caught imposter during guessing
+  // (and to everyone afterward in reveal). Empty until the guess phase
+  // generates them. See /api/rooms/[code]/candidates.
+  guessCandidates: string[];
   // Only populated for the requesting player:
   you: {
     id: string;
