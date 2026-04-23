@@ -48,16 +48,6 @@ export async function POST(
     return NextResponse.json({ error: "not your turn" }, { status: 403 });
   }
 
-  const { error: clueErr } = await supabaseAdmin.from("clues").insert({
-    room_code: code,
-    player_id: playerId,
-    round: room.round,
-    word: trimmed,
-  });
-  if (clueErr) {
-    return NextResponse.json({ error: clueErr.message }, { status: 500 });
-  }
-
   // Advance turn/round/state.
   let nextTurnIndex = room.turn_index + 1;
   let nextRound = room.round;
@@ -72,6 +62,12 @@ export async function POST(
     }
   }
 
+  // Claim the turn atomically BEFORE inserting the clue row. Guard on the
+  // exact (state, round, turn_index) we read — if /expire or a retried
+  // /clue already moved things on, the update touches zero rows and we
+  // bail out without inserting a duplicate clue. This is the bug where a
+  // late /clue submission after /expire had already forfeited the turn
+  // produced two clue rows for the same player in the same round.
   const clueUpdate: Record<string, unknown> = {
     turn_index: nextTurnIndex,
     round: nextRound,
@@ -81,13 +77,45 @@ export async function POST(
   if ("phase_deadline" in room) {
     clueUpdate.phase_deadline = deadlineFor(nextState);
   }
-  const { error: updateErr } = await supabaseAdmin
+
+  const { data: claimed, error: updateErr } = await supabaseAdmin
     .from("rooms")
     .update(clueUpdate)
-    .eq("code", code);
+    .eq("code", code)
+    .eq("state", "playing")
+    .eq("round", room.round)
+    .eq("turn_index", room.turn_index)
+    .select("code")
+    .maybeSingle();
 
   if (updateErr) {
     return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  }
+  if (!claimed) {
+    // Turn already advanced (expire or retry) — don't insert a clue.
+    return NextResponse.json(
+      { error: "turn already advanced" },
+      { status: 409 }
+    );
+  }
+
+  const { error: clueErr } = await supabaseAdmin.from("clues").insert({
+    room_code: code,
+    player_id: playerId,
+    round: room.round,
+    word: trimmed,
+  });
+  if (clueErr) {
+    // 23505 = unique_violation on (room_code, round, player_id). If
+    // we hit this after winning the CAS, it means /expire already
+    // wrote a blank clue for this slot — nothing to do.
+    if (clueErr.code === "23505") {
+      return NextResponse.json(
+        { error: "clue already recorded this round" },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json({ error: clueErr.message }, { status: 500 });
   }
 
   await notifyRoom(
