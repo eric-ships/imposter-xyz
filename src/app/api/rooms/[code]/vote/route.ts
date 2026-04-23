@@ -72,10 +72,14 @@ export async function POST(
       ? [room.imposter_id as string]
       : [];
   // Crew wins by catching at least one imposter as the plurality target.
-  // Other imposters stay hidden — their fate is tied to the caught one's
-  // guess result.
-  const caughtImposterId =
-    !tied && imposterIds.includes(topTargets[0]) ? topTargets[0] : null;
+  // A tie counts as a catch only if EVERY top-tied target is an imposter
+  // (e.g. a 2-2 split between the two imposters in a 5-player room): the
+  // table correctly fingered the imposter team, even if they couldn't pick
+  // one. We caught the first listed and proceed to the guess phase.
+  const allTopAreImposters =
+    topTargets.length > 0 &&
+    topTargets.every((id) => imposterIds.includes(id));
+  const caughtImposterId = allTopAreImposters ? topTargets[0] : null;
 
   if (!caughtImposterId) {
     // Imposter team escaped. Each imposter gets +2.

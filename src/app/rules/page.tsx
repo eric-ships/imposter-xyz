@@ -74,8 +74,10 @@ export default function RulesPage() {
           imposter&apos;s guess.
         </p>
         <p>
-          If the vote is tied, nobody has a plurality, or the crowd fingered a
-          crewmate,{" "}
+          A tie still counts as a catch if every top-tied target is an
+          imposter (e.g. a 2-2 split between the two imposters in a
+          five-player room) — one of them takes the guess. But if the tie
+          includes any crewmate, or the plurality lands on a crewmate,{" "}
           <span className="text-oxblood">the imposter team escapes</span> and
           wins the round outright.
         </p>

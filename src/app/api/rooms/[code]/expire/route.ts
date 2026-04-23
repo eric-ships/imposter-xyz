@@ -158,10 +158,13 @@ async function expireVoting(code: string, room: Room) {
 
   const { topTargets, tied, topCount } = tallyVotes(votes ?? []);
   const imposterIds = imposterIdsFrom(room);
-  const caughtId: string | null =
-    !tied && topCount > 0 && imposterIds.includes(topTargets[0])
-      ? topTargets[0]
-      : null;
+  // A tie counts as a catch only when every top-tied target is an imposter
+  // (e.g. 2-2 between two imposters in a 5-player room) — the table
+  // correctly fingered the team. Otherwise plurality has to be on a single
+  // imposter.
+  const allTopAreImposters =
+    topCount > 0 && topTargets.every((id) => imposterIds.includes(id));
+  const caughtId: string | null = allTopAreImposters ? topTargets[0] : null;
 
   if (caughtId) {
     const guessUpdate: Record<string, unknown> = {

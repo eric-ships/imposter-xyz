@@ -247,6 +247,28 @@ function RoomPlay({
     ? "max-w-xl md:max-w-2xl lg:max-w-5xl xl:max-w-6xl"
     : "max-w-xl md:max-w-2xl";
 
+  const currentPlayerId = view.turnOrder[view.turnIndex];
+  const currentPlayerName = currentPlayerId
+    ? (nicknameById.get(currentPlayerId) ?? null)
+    : null;
+  const caughtName = view.caughtImposterId
+    ? (nicknameById.get(view.caughtImposterId) ?? null)
+    : null;
+  const timerSubject =
+    view.state === "playing"
+      ? currentPlayerId === playerId
+        ? "Your turn"
+        : currentPlayerName
+          ? `${currentPlayerName}'s turn`
+          : null
+      : view.state === "voting"
+        ? "Voting"
+        : view.state === "guessing"
+          ? caughtName
+            ? `${caughtName}'s last guess`
+            : "Final guess"
+          : null;
+
   return (
     <main
       className={`mx-auto flex min-h-screen flex-col gap-7 px-8 py-8 ${mainWidth}`}
@@ -287,6 +309,7 @@ function RoomPlay({
           code={code}
           deadline={view.phaseDeadline}
           state={timedState}
+          subject={timerSubject}
         />
       )}
 
@@ -340,10 +363,12 @@ function PhaseCountdown({
   code,
   deadline,
   state,
+  subject,
 }: {
   code: string;
   deadline: string;
   state: "playing" | "voting" | "guessing";
+  subject: string | null;
 }) {
   const [now, setNow] = useState(() => Date.now());
   const firedForRef = useRef<string | null>(null);
@@ -394,45 +419,40 @@ function PhaseCountdown({
     playTimerTick(critical);
   }, [seconds, critical]);
 
-  const label =
+  const fallbackLabel =
     state === "playing"
       ? "Clue timer"
       : state === "voting"
         ? "Vote timer"
         : "Guess timer";
+  const headline = subject ?? fallbackLabel;
 
   return (
     <section
       aria-live="polite"
-      className="relative overflow-hidden border-y border-line bg-surface/60 px-5 py-4"
+      className="relative overflow-hidden border-y border-line bg-surface/60 px-5 py-5"
     >
-      <div className="flex items-baseline justify-between">
-        <span className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-          {label}
+      <div className="flex flex-col items-center gap-2 text-center">
+        <span className="text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+          {headline}
         </span>
         <motion.span
           key={critical ? "crit" : warn ? "warn" : "ok"}
-          animate={
-            critical ? { scale: [1, 1.04, 1] } : { scale: 1 }
-          }
+          animate={critical ? { scale: [1, 1.04, 1] } : { scale: 1 }}
           transition={
             critical
               ? { duration: 0.9, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.18 }
           }
           className={`font-serif text-5xl italic tabular-nums leading-none transition-colors ${
-            critical
-              ? "text-oxblood"
-              : warn
-                ? "text-oxblood"
-                : "text-ink"
+            critical ? "text-oxblood" : warn ? "text-oxblood" : "text-ink"
           }`}
         >
           {display}
           {mins === 0 && <span className="ml-0.5 text-2xl">s</span>}
         </motion.span>
       </div>
-      <div className="mt-3 h-0.5 overflow-hidden bg-line-soft">
+      <div className="mt-4 h-0.5 overflow-hidden bg-line-soft">
         <div
           className={`h-full transition-[width] duration-[250ms] ease-linear ${
             critical ? "bg-oxblood" : warn ? "bg-oxblood/70" : "bg-accent"
@@ -1145,7 +1165,7 @@ function PlayingPhase({
 
   return (
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
-      <div className="flex flex-col gap-7 lg:col-span-2">
+      <div className="flex min-w-0 flex-col gap-7 lg:order-2 lg:col-span-2">
         <section className="flex items-baseline justify-between pb-1">
           <span className="font-serif text-base italic text-ink-soft">
             {view.category}
@@ -1238,7 +1258,7 @@ function PlayingPhase({
         )}
       </div>
 
-      <aside className="flex flex-col gap-7 lg:col-span-1 lg:sticky lg:top-6">
+      <aside className="flex min-w-0 flex-col gap-7 lg:order-1 lg:col-span-1 lg:sticky lg:top-6">
         <TurnStrip view={displayView} playerId={playerId} />
         <ClueLog view={displayView} />
       </aside>
@@ -1497,7 +1517,7 @@ function VotingPhase({
 
   return (
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
-      <div className="flex flex-col gap-7 lg:col-span-2">
+      <div className="flex min-w-0 flex-col gap-7 lg:order-2 lg:col-span-2">
         <section className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
           <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
             {view.category}
@@ -1584,7 +1604,7 @@ function VotingPhase({
         </section>
       </div>
 
-      <aside className="flex flex-col gap-7 lg:col-span-1 lg:sticky lg:top-6">
+      <aside className="flex min-w-0 flex-col gap-7 lg:order-1 lg:col-span-1 lg:sticky lg:top-6">
         <ClueLog view={view} />
       </aside>
     </div>
@@ -1660,7 +1680,7 @@ function GuessPhase({
       : "the imposter";
     return (
       <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
-        <div className="flex flex-col gap-7 lg:col-span-2">
+        <div className="flex min-w-0 flex-col gap-7 lg:order-2 lg:col-span-2">
           <section className="border border-line bg-surface p-8 text-center">
             <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
               Caught
@@ -1702,7 +1722,7 @@ function GuessPhase({
           </p>
         </div>
 
-        <aside className="flex flex-col gap-7 lg:col-span-1 lg:sticky lg:top-6">
+        <aside className="flex min-w-0 flex-col gap-7 lg:order-1 lg:col-span-1 lg:sticky lg:top-6">
           <ClueLog view={view} />
         </aside>
       </div>
@@ -1711,7 +1731,7 @@ function GuessPhase({
 
   return (
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
-      <div className="flex flex-col gap-7 lg:col-span-2">
+      <div className="flex min-w-0 flex-col gap-7 lg:order-2 lg:col-span-2">
         <section className="border-2 border-accent bg-accent/5 p-8 text-center">
           <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
             You were caught
@@ -1793,7 +1813,7 @@ function GuessPhase({
         </section>
       </div>
 
-      <aside className="flex flex-col gap-7 lg:col-span-1 lg:sticky lg:top-6">
+      <aside className="flex min-w-0 flex-col gap-7 lg:order-1 lg:col-span-1 lg:sticky lg:top-6">
         <ClueLog view={view} />
       </aside>
     </div>
