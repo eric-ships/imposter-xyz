@@ -269,6 +269,16 @@ function RoomPlay({
             : "Final guess"
           : null;
 
+  const youHaveVoted = view.votes.some((v) => v.voter_id === playerId);
+  const timerTickEnabled =
+    view.state === "playing"
+      ? currentPlayerId === playerId
+      : view.state === "voting"
+        ? !youHaveVoted
+        : view.state === "guessing"
+          ? !!you.isCaughtImposter
+          : false;
+
   return (
     <main
       className={`mx-auto flex min-h-screen flex-col gap-7 px-8 py-8 ${mainWidth}`}
@@ -310,6 +320,7 @@ function RoomPlay({
           deadline={view.phaseDeadline}
           state={timedState}
           subject={timerSubject}
+          tickEnabled={timerTickEnabled}
         />
       )}
 
@@ -370,11 +381,16 @@ function PhaseCountdown({
   deadline,
   state,
   subject,
+  tickEnabled,
 }: {
   code: string;
   deadline: string;
   state: "playing" | "voting" | "guessing";
   subject: string | null;
+  // Only chime in the final 10s for players who are actually on the
+  // clock (current clue-giver, not-yet-voted, caught imposter). Everyone
+  // else watches silently.
+  tickEnabled: boolean;
 }) {
   const [now, setNow] = useState(() => Date.now());
   const firedForRef = useRef<string | null>(null);
@@ -417,13 +433,15 @@ function PhaseCountdown({
   }, [deadline]);
 
   // Tick once per whole second during the final 10. `critical` bumps the
-  // pitch on the last 5 to escalate the tension.
+  // pitch on the last 5 to escalate the tension. Only fires for players
+  // who are actually on the clock — passive watchers don't hear it.
   useEffect(() => {
+    if (!tickEnabled) return;
     if (seconds <= 0 || seconds > 10) return;
     if (lastTickSecondRef.current === seconds) return;
     lastTickSecondRef.current = seconds;
     playTimerTick(critical);
-  }, [seconds, critical]);
+  }, [seconds, critical, tickEnabled]);
 
   const fallbackLabel =
     state === "playing"
