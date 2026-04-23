@@ -20,8 +20,13 @@ export async function POST(
       { status: 400 }
     );
   }
-  if (trimmed.length > 40) {
-    return NextResponse.json({ error: "word too long" }, { status: 400 });
+  // One-word clues only — capped tight enough to keep the clue log
+  // readable without wrapping. Anything longer is a sentence, not a clue.
+  if (trimmed.length > 24) {
+    return NextResponse.json(
+      { error: "clue too long (24 chars max)" },
+      { status: 400 }
+    );
   }
 
   const { data: room } = await supabaseAdmin

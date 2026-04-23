@@ -349,6 +349,12 @@ function RoomPlay({
         </motion.div>
       </AnimatePresence>
 
+      {(view.state === "playing" ||
+        view.state === "voting" ||
+        view.state === "guessing") && (
+        <MatchDock view={view} playerId={playerId} />
+      )}
+
       {you.isHost &&
         (view.state === "playing" ||
           view.state === "voting" ||
@@ -1170,13 +1176,18 @@ function PlayingPhase({
 
       <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
         <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
-        <section className="flex items-baseline justify-between pb-1">
-          <span className="font-serif text-base italic text-ink-soft">
-            {view.category}
-          </span>
-          <span className="text-[10px] uppercase tracking-[0.35em] text-ink-faint">
-            Round {view.round} / {view.totalRounds}
-          </span>
+        <section className="space-y-1">
+          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+            Category
+          </div>
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="font-serif text-3xl italic leading-none text-ink">
+              {view.category}
+            </h2>
+            <span className="shrink-0 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+              Round {view.round} / {view.totalRounds}
+            </span>
+          </div>
         </section>
 
         <section className="relative border-y border-line bg-surface/70 py-7 text-center">
@@ -1220,7 +1231,7 @@ function PlayingPhase({
                 <input
                   value={word}
                   onChange={(e) => setWord(e.target.value)}
-                  maxLength={40}
+                  maxLength={24}
                   placeholder="e.g. syrup"
                   autoFocus
                   className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl italic text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
@@ -1244,26 +1255,11 @@ function PlayingPhase({
             </div>
           </motion.div>
         ) : (
-          <p className="text-center text-[11px] uppercase tracking-[0.3em]">
-            {iAmNext ? (
-              <>
-                <span className="text-accent">You&apos;re up next</span>
-                <span className="text-ink-faint">
-                  {" · Awaiting "}
-                  <span className="font-serif text-sm italic normal-case tracking-normal text-ink-soft">
-                    {nicknameById.get(waitingFor)}
-                  </span>
-                </span>
-              </>
-            ) : (
-              <span className="text-ink-faint">
-                Awaiting{" "}
-                <span className="font-serif text-sm italic normal-case tracking-normal text-ink-soft">
-                  {nicknameById.get(waitingFor)}
-                </span>
-              </span>
-            )}
-          </p>
+          <ActivePlayerHero
+            playerId={waitingFor}
+            nickname={nicknameById.get(waitingFor) ?? "?"}
+            iAmNext={iAmNext}
+          />
         )}
         </div>
 
@@ -1296,6 +1292,231 @@ function avatarFor(id: string, nickname: string) {
   const color = AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
   const initial = nickname.trim().charAt(0).toUpperCase() || "?";
   return { color, initial };
+}
+
+function MatchDock({
+  view,
+  playerId,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+}) {
+  const showPot = !!view.pot?.enabled;
+  return (
+    <section className="mt-auto border-t border-line bg-surface/40 px-1 py-5 lg:px-2">
+      <div
+        className={`grid gap-6 ${
+          showPot ? "lg:grid-cols-[2fr_3fr_1fr]" : "lg:grid-cols-[1fr_2fr]"
+        }`}
+      >
+        <Scoreboard view={view} playerId={playerId} />
+        <MatchProgress view={view} />
+        {showPot && <PotStatus view={view} />}
+      </div>
+    </section>
+  );
+}
+
+function Scoreboard({
+  view,
+  playerId,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+}) {
+  const sorted = [...view.players].sort((a, b) => b.score - a.score);
+  return (
+    <div className="space-y-2">
+      <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+        Scores
+      </div>
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        {sorted.map((p) => {
+          const isYou = p.id === playerId;
+          return (
+            <div key={p.id} className="flex items-baseline gap-1.5">
+              <span
+                className={`font-serif italic ${
+                  isYou ? "text-ink" : "text-ink-soft"
+                }`}
+              >
+                {p.nickname}
+              </span>
+              <span className="text-sm tabular-nums text-ink-faint">
+                {p.score}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MatchProgress({ view }: { view: PublicRoomView }) {
+  type Status = "done" | "current" | "upcoming";
+  const steps: { key: string; label: string; status: Status }[] = [];
+
+  for (let r = 1; r <= view.totalRounds; r++) {
+    let status: Status;
+    if (view.state === "lobby") status = "upcoming";
+    else if (view.state === "playing") {
+      status = r < view.round ? "done" : r === view.round ? "current" : "upcoming";
+    } else {
+      // voting / guessing / reveal: all clue rounds done
+      status = "done";
+    }
+    steps.push({ key: `r${r}`, label: `Round ${r}`, status });
+  }
+  steps.push({
+    key: "vote",
+    label: "Vote",
+    status:
+      view.state === "voting"
+        ? "current"
+        : view.state === "guessing" || view.state === "reveal"
+          ? "done"
+          : "upcoming",
+  });
+  steps.push({
+    key: "guess",
+    label: "Guess",
+    status:
+      view.state === "guessing"
+        ? "current"
+        : view.state === "reveal" && view.caughtImposterId
+          ? "done"
+          : "upcoming",
+  });
+  steps.push({
+    key: "reveal",
+    label: "Reveal",
+    status: view.state === "reveal" ? "current" : "upcoming",
+  });
+
+  return (
+    <div className="space-y-2">
+      <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+        Match progress
+      </div>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+        {steps.map((s, i) => (
+          <div key={s.key} className="flex items-center gap-2">
+            {i > 0 && (
+              <span
+                className={`h-px w-3 ${
+                  s.status === "upcoming" ? "bg-line" : "bg-accent/60"
+                }`}
+              />
+            )}
+            <div
+              className={`flex items-center gap-1.5 ${
+                s.status === "upcoming" ? "opacity-40" : ""
+              }`}
+            >
+              <span
+                className={`h-2 w-2 rounded-full ${
+                  s.status === "current"
+                    ? "bg-accent ring-2 ring-accent/30 ring-offset-1 ring-offset-page"
+                    : s.status === "done"
+                      ? "bg-accent"
+                      : "bg-line"
+                }`}
+              />
+              <span
+                className={`text-[10px] uppercase tracking-[0.2em] ${
+                  s.status === "current" ? "text-accent" : "text-ink-faint"
+                }`}
+              >
+                {s.label}
+              </span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PotStatus({ view }: { view: PublicRoomView }) {
+  if (!view.pot?.enabled) return null;
+  const ante = BigInt(view.pot.anteAmount);
+  const total = (ante * BigInt(view.pot.paidCount)).toString();
+  return (
+    <div className="space-y-2">
+      <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+        Pot
+      </div>
+      <div className="font-serif text-xl italic leading-none text-ink">
+        {formatUsdc(total)} USDC
+      </div>
+      <div className="text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+        {view.pot.paidCount} / {view.players.length} anted
+      </div>
+    </div>
+  );
+}
+
+function ActivePlayerHero({
+  playerId,
+  nickname,
+  iAmNext,
+}: {
+  playerId: string;
+  nickname: string;
+  iAmNext: boolean;
+}) {
+  const { color, initial } = avatarFor(playerId, nickname);
+  return (
+    <div className="flex flex-col items-center gap-4 py-6">
+      <div className="relative">
+        <motion.span
+          aria-hidden
+          animate={{ scale: [1, 1.18, 1], opacity: [0.55, 0, 0.55] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute -inset-3 rounded-full ring-2 ring-accent"
+        />
+        <div
+          className={`relative flex h-24 w-24 items-center justify-center rounded-full text-3xl font-semibold text-white ${color}`}
+        >
+          {initial}
+        </div>
+      </div>
+      <div className="space-y-1 text-center">
+        <div className="font-serif text-2xl italic text-ink">{nickname}</div>
+        <div className="flex items-baseline justify-center gap-1 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+          <span>is thinking</span>
+          <ThinkingDots />
+        </div>
+        {iAmNext && (
+          <div className="pt-2 text-[10px] uppercase tracking-[0.35em] text-accent">
+            You&apos;re up next
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ThinkingDots() {
+  return (
+    <span className="inline-flex gap-0.5">
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          animate={{ opacity: [0.2, 1, 0.2] }}
+          transition={{
+            duration: 1.2,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.2,
+          }}
+        >
+          .
+        </motion.span>
+      ))}
+    </span>
+  );
 }
 
 function TurnStrip({
@@ -1462,7 +1683,10 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                             >
                               {nickname}
                             </span>
-                            <span className="min-w-0 flex-1 break-words text-right font-serif text-xl italic text-ink">
+                            <span
+                              className="min-w-0 flex-1 truncate text-right font-serif text-xl italic text-ink"
+                              title={c.word}
+                            >
                               {c.word}
                             </span>
                           </div>
