@@ -526,7 +526,7 @@ const CANDIDATES_SYSTEM = `You produce a list of well-known members of a categor
 Return ONLY JSON: {"candidates": ["...", "...", ...]}
 
 Rules:
-- Produce exactly 24 single-word candidates (Title Case, hyphens or apostrophes allowed, no spaces).
+- Produce exactly 12 single-word candidates (Title Case, hyphens or apostrophes allowed, no spaces).
 - All 24 must be widely recognizable members of the category — the kind a 7-year-old or a grandparent could name.
 - INCLUDE the secret word verbatim in the list (case-insensitive). Do not flag it; place it among the others naturally.
 - No duplicates. No off-category items. Kid-safe (no alcohol, politics, religion, adult, gore).
@@ -544,7 +544,7 @@ export async function generateCandidates(
     messages: [
       {
         role: "user",
-        content: `CATEGORY: ${category}\nSECRET WORD: ${secret}\n\nReturn 24 candidates including the secret. JSON only.`,
+        content: `CATEGORY: ${category}\nSECRET WORD: ${secret}\n\nReturn 12 candidates including the secret. JSON only.`,
       },
     ],
   });
