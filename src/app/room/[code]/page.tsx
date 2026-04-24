@@ -555,8 +555,8 @@ function CasualModeButton({
       disabled={pending}
       title={
         enabled
-          ? "Casual mode: shortlist visible to all"
-          : "Casual mode: off (host can enable)"
+          ? "Shortlist: visible to all"
+          : "Shortlist: off (host can enable)"
       }
       className={`rounded-sm border px-2 py-0.5 text-[9px] uppercase tracking-[0.3em] transition disabled:opacity-40 ${
         enabled
@@ -564,7 +564,7 @@ function CasualModeButton({
           : "border-line text-ink-faint hover:border-ink hover:text-ink"
       }`}
     >
-      Casual {enabled ? "on" : "off"}
+      Shortlist {enabled ? "on" : "off"}
     </button>
   );
 }
@@ -1067,7 +1067,7 @@ function CandidatesModeToggle({
     >
       <div className="flex items-center justify-between gap-3">
         <div>
-          <SectionLabel>Casual mode</SectionLabel>
+          <SectionLabel>Shortlist</SectionLabel>
           <p className="mt-1 text-[11px] text-ink-soft">
             Show the guess shortlist to everyone the whole match.
           </p>
@@ -1478,8 +1478,8 @@ function CandidatesShowcase({ view }: { view: PublicRoomView }) {
         <SectionLabel>Possible answers</SectionLabel>
         <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
           {empty
-            ? "Casual mode · loading"
-            : `Casual mode · ${view.guessCandidates.length} on the menu`}
+            ? "Shortlist · loading"
+            : `Shortlist · ${view.guessCandidates.length} on the menu`}
         </span>
       </div>
       {empty ? (
