@@ -229,6 +229,26 @@ function RoomPlay({
   useTurnChime(view, playerId);
   useAudioPriming();
 
+  // Casual-mode safety net: if the host enabled "show candidates always"
+  // but the eager generation in /start failed (LLM hiccup, missing
+  // migration, etc.), kick a single fetch so the showcase fills in. Only
+  // the host triggers — avoids N players racing to write competing lists.
+  // The server caches and broadcasts via realtime so everyone converges
+  // on the same set.
+  const candidatesNeedFetch =
+    you.isHost &&
+    view.showCandidatesAlways &&
+    view.guessCandidates.length === 0 &&
+    (view.state === "playing" ||
+      view.state === "voting" ||
+      view.state === "guessing");
+  useEffect(() => {
+    if (!candidatesNeedFetch) return;
+    fetch(`/api/rooms/${code}/candidates?playerId=${playerId}`).catch(() => {
+      // Non-fatal: showcase just stays empty until next attempt.
+    });
+  }, [candidatesNeedFetch, code, playerId]);
+
   const timedState: "playing" | "voting" | "guessing" | null =
     view.state === "playing" ||
     view.state === "voting" ||

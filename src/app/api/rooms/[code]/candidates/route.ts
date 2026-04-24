@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { generateCandidates } from "@/lib/anthropic";
+import { notifyRoom } from "@/lib/room-state";
 
 export async function GET(
   request: Request,
@@ -22,17 +23,27 @@ export async function GET(
   if (!room) {
     return NextResponse.json({ error: "room not found" }, { status: 404 });
   }
-  if (room.state !== "guessing") {
+
+  const casualMode =
+    "show_candidates_always" in room && !!room.show_candidates_always;
+  const inActivePhase =
+    room.state === "playing" ||
+    room.state === "voting" ||
+    room.state === "guessing";
+  // Casual mode: candidates are public from the start of round 1, so any
+  // active-game phase is fair game. Otherwise (default), restrict to the
+  // guessing phase as before.
+  const allowed =
+    inActivePhase && (casualMode || room.state === "guessing");
+  if (!allowed) {
     return NextResponse.json(
-      { error: "not in guessing phase" },
+      { error: "candidates not available in this phase" },
       { status: 400 }
     );
   }
 
-  // Anyone in the room can see the candidate list during guessing — it's
-  // public information once the imposter is on the spot. Verify the
-  // requester is actually a player in this room before spending an API
-  // call on them.
+  // Verify the requester is actually a player in this room before spending
+  // an API call on them.
   const { data: player } = await supabaseAdmin
     .from("players")
     .select("id")
@@ -76,6 +87,9 @@ export async function GET(
       .from("rooms")
       .update({ guess_candidates: candidates })
       .eq("code", code);
+    // Broadcast so other clients refetch the room view and pick up the
+    // newly-cached list — keeps everyone on the same candidate set.
+    await notifyRoom(code, "candidates_ready");
   }
 
   return NextResponse.json({ candidates });
