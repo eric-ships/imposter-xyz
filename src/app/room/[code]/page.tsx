@@ -230,13 +230,12 @@ function RoomPlay({
   useAudioPriming();
 
   // Casual-mode safety net: if the host enabled "show candidates always"
-  // but the eager generation in /start failed (LLM hiccup, missing
-  // migration, etc.), kick a single fetch so the showcase fills in. Only
-  // the host triggers — avoids N players racing to write competing lists.
-  // The server caches and broadcasts via realtime so everyone converges
-  // on the same set.
+  // but the eager generation in /start didn't populate the list, kick a
+  // fetch so the showcase fills in. The server caches the first
+  // generation and broadcasts via realtime, so additional racing
+  // requests just return the cached list — safe to fire from every
+  // client.
   const candidatesNeedFetch =
-    you.isHost &&
     view.showCandidatesAlways &&
     view.guessCandidates.length === 0 &&
     (view.state === "playing" ||
@@ -245,7 +244,7 @@ function RoomPlay({
   useEffect(() => {
     if (!candidatesNeedFetch) return;
     fetch(`/api/rooms/${code}/candidates?playerId=${playerId}`).catch(() => {
-      // Non-fatal: showcase just stays empty until next attempt.
+      // Non-fatal: showcase keeps showing the loading state.
     });
   }, [candidatesNeedFetch, code, playerId]);
 
@@ -383,7 +382,6 @@ function RoomPlay({
       </div>
 
       {view.showCandidatesAlways &&
-        view.guessCandidates.length > 0 &&
         (view.state === "playing" ||
           view.state === "voting" ||
           view.state === "guessing") && (
@@ -1421,24 +1419,34 @@ function avatarFor(id: string, nickname: string) {
 }
 
 function CandidatesShowcase({ view }: { view: PublicRoomView }) {
+  const empty = view.guessCandidates.length === 0;
   return (
     <section className="space-y-3 border border-line-soft bg-surface/30 p-5">
       <div className="flex items-baseline justify-between">
         <SectionLabel>Possible answers</SectionLabel>
         <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-          Casual mode · {view.guessCandidates.length} on the menu
+          {empty
+            ? "Casual mode · loading"
+            : `Casual mode · ${view.guessCandidates.length} on the menu`}
         </span>
       </div>
-      <div className="flex flex-wrap gap-2">
-        {view.guessCandidates.map((c) => (
-          <span
-            key={c}
-            className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm italic text-ink-soft"
-          >
-            {c}
-          </span>
-        ))}
-      </div>
+      {empty ? (
+        <p className="text-sm italic text-ink-faint">
+          Pulling the shortlist from Claude
+          <ThinkingDots />
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {view.guessCandidates.map((c) => (
+            <span
+              key={c}
+              className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm italic text-ink-soft"
+            >
+              {c}
+            </span>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
