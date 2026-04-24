@@ -4,8 +4,9 @@ import { notifyRoom } from "@/lib/room-state";
 
 /**
  * Host-only: toggle the "show guess candidates throughout the match"
- * casual mode. Lobby only — flipping after the game has started would
- * surprise players mid-match.
+ * casual mode. Allowed in any phase — turning it on mid-game triggers
+ * the client-side fallback to fetch + cache candidates; turning it off
+ * just hides the showcase.
  */
 export async function POST(
   request: Request,
@@ -35,8 +36,6 @@ export async function POST(
     return NextResponse.json({ error: "room not found" }, { status: 404 });
   if (room.host_id !== playerId)
     return NextResponse.json({ error: "only host" }, { status: 403 });
-  if (room.state !== "lobby")
-    return NextResponse.json({ error: "lobby only" }, { status: 400 });
 
   const { error: updErr } = await supabaseAdmin
     .from("rooms")

@@ -310,6 +310,13 @@ function RoomPlay({
           </span>
         </span>
         <span className="flex items-center gap-3">
+          {you.isHost && (
+            <CasualModeButton
+              code={code}
+              playerId={playerId}
+              enabled={view.showCandidatesAlways}
+            />
+          )}
           <Link
             href="/rules"
             target="_blank"
@@ -514,6 +521,51 @@ function PhaseCountdown({
         />
       </div>
     </section>
+  );
+}
+
+function CasualModeButton({
+  code,
+  playerId,
+  enabled,
+}: {
+  code: string;
+  playerId: string;
+  enabled: boolean;
+}) {
+  const [pending, setPending] = useState(false);
+
+  async function toggle() {
+    if (pending) return;
+    setPending(true);
+    try {
+      await fetch(`/api/rooms/${code}/show-candidates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, enabled: !enabled }),
+      });
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <button
+      onClick={toggle}
+      disabled={pending}
+      title={
+        enabled
+          ? "Casual mode: shortlist visible to all"
+          : "Casual mode: off (host can enable)"
+      }
+      className={`rounded-sm border px-2 py-0.5 text-[9px] uppercase tracking-[0.3em] transition disabled:opacity-40 ${
+        enabled
+          ? "border-accent/60 bg-accent/10 text-accent hover:bg-accent hover:text-page"
+          : "border-line text-ink-faint hover:border-ink hover:text-ink"
+      }`}
+    >
+      Casual {enabled ? "on" : "off"}
+    </button>
   );
 }
 
