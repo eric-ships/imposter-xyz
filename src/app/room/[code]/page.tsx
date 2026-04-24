@@ -288,15 +288,16 @@ function RoomPlay({
             : "Final guess"
           : null;
 
-  const youHaveVoted = view.votes.some((v) => v.voter_id === playerId);
+  // Playing: only the active clue-giver hears the final-10 ticks (others
+  // can't act and shouldn't be distracted). Voting and guessing are
+  // shared moments — everyone in the room hears the countdown for
+  // collective drama.
   const timerTickEnabled =
     view.state === "playing"
       ? currentPlayerId === playerId
-      : view.state === "voting"
-        ? !youHaveVoted
-        : view.state === "guessing"
-          ? !!you.isCaughtImposter
-          : false;
+      : view.state === "voting" || view.state === "guessing"
+        ? true
+        : false;
 
   return (
     <main
