@@ -41,6 +41,9 @@ export type Clue = {
   player_id: string;
   round: number;
   word: string;
+  // Aggregate count per emoji + which emoji the requesting player has
+  // already tapped. Empty when no reactions yet. See /clues/[id]/react.
+  reactions: { emoji: string; count: number; mine: boolean }[];
 };
 
 export type Vote = {

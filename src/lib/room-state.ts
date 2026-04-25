@@ -64,6 +64,39 @@ export async function fetchRoomView(
       .order("created_at", { ascending: true }),
   ]);
 
+  // Pull reactions for the clues we just fetched. Defensive: if the
+  // table doesn't exist yet (pre-migration) the query errors and we just
+  // serve clues with empty reactions.
+  const clueIds = (clues ?? []).map((c) => c.id as number);
+  const reactionsByClue = new Map<
+    number,
+    { emoji: string; count: number; mine: boolean }[]
+  >();
+  if (clueIds.length > 0) {
+    const { data: rxs, error: rxErr } = await supabaseAdmin
+      .from("clue_reactions")
+      .select("clue_id, player_id, emoji")
+      .in("clue_id", clueIds);
+    if (!rxErr && rxs) {
+      // Aggregate: per (clue, emoji) count + whether the requester reacted.
+      const agg = new Map<string, { count: number; mine: boolean }>();
+      for (const r of rxs) {
+        const key = `${r.clue_id}|${r.emoji}`;
+        const cur = agg.get(key) ?? { count: 0, mine: false };
+        cur.count += 1;
+        if (playerId && r.player_id === playerId) cur.mine = true;
+        agg.set(key, cur);
+      }
+      for (const [key, val] of agg.entries()) {
+        const [cidStr, emoji] = key.split("|");
+        const cid = Number(cidStr);
+        const list = reactionsByClue.get(cid) ?? [];
+        list.push({ emoji, count: val.count, mine: val.mine });
+        reactionsByClue.set(cid, list);
+      }
+    }
+  }
+
   if (playersErr || cluesErr || votesErr || payoutsErr) {
     console.error("[fetchRoomView] query error(s)", {
       code,
@@ -175,7 +208,13 @@ export async function fetchRoomView(
         : null) ?? null,
     caughtImposterId,
     players: decoratedPlayers,
-    clues: (clues ?? []) as PublicRoomView["clues"],
+    clues: (clues ?? []).map((c) => ({
+      id: c.id as number,
+      player_id: c.player_id as string,
+      round: c.round as number,
+      word: c.word as string,
+      reactions: reactionsByClue.get(c.id as number) ?? [],
+    })),
     votes: (votes ?? []) as PublicRoomView["votes"],
     pot,
     payouts: payoutList,

@@ -136,6 +136,19 @@ do $$ begin
   end if;
 end $$;
 
+-- One row per (clue, player, emoji). Anonymous to other clients
+-- (only aggregate counts and which emoji you yourself toggled).
+create table if not exists clue_reactions (
+  clue_id bigint not null references clues(id) on delete cascade,
+  player_id uuid not null references players(id) on delete cascade,
+  emoji text not null,
+  created_at timestamptz not null default now(),
+  primary key (clue_id, player_id, emoji)
+);
+
+create index if not exists clue_reactions_clue_idx
+  on clue_reactions(clue_id);
+
 create table if not exists votes (
   id bigserial primary key,
   room_code text not null references rooms(code) on delete cascade,

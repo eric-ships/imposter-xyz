@@ -1473,6 +1473,7 @@ function PlayingPhase({
               player_id: optimisticClue.playerId,
               round: optimisticClue.round,
               word: optimisticClue.word,
+              reactions: [],
             },
           ],
           turnIndex: nextTurnIndex,
@@ -1610,7 +1611,7 @@ function PlayingPhase({
         </div>
 
         <div className="min-w-0 lg:col-span-2">
-          <ClueLog view={displayView} />
+          <ClueLog view={displayView} code={code} playerId={playerId} />
         </div>
       </div>
     </>
@@ -2002,7 +2003,89 @@ function TurnStrip({
   );
 }
 
-function ClueLog({ view }: { view: PublicRoomView }) {
+const REACTION_EMOJI = ["👀", "🤔", "💀", "🔥"];
+
+function ClueReactions({
+  clue,
+  code,
+  playerId,
+}: {
+  clue: PublicRoomView["clues"][number];
+  code: string;
+  playerId: string;
+}) {
+  // Optimistic toggle so the chip flips instantly; the realtime view
+  // refetch backfills the canonical state.
+  const [pendingDelta, setPendingDelta] = useState<Record<string, number>>({});
+  const counts = new Map<string, { count: number; mine: boolean }>();
+  for (const r of clue.reactions) {
+    counts.set(r.emoji, { count: r.count, mine: r.mine });
+  }
+
+  function effective(emoji: string) {
+    const base = counts.get(emoji) ?? { count: 0, mine: false };
+    const delta = pendingDelta[emoji] ?? 0;
+    if (delta === 0) return base;
+    // Pending toggle in-flight: flip mine and adjust count by delta.
+    return { count: Math.max(0, base.count + delta), mine: !base.mine };
+  }
+
+  async function tap(emoji: string) {
+    const cur = effective(emoji);
+    const delta = cur.mine ? -1 : 1;
+    setPendingDelta((p) => ({ ...p, [emoji]: delta }));
+    try {
+      await fetch(`/api/rooms/${code}/clues/${clue.id}/react`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, emoji }),
+      });
+    } finally {
+      // Clear pending — the realtime refetch will deliver the canonical
+      // state shortly after. Even if the request failed, retrying via
+      // another tap is cheap.
+      setPendingDelta((p) => {
+        const next = { ...p };
+        delete next[emoji];
+        return next;
+      });
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-1 pt-1">
+      {REACTION_EMOJI.map((emoji) => {
+        const { count, mine } = effective(emoji);
+        return (
+          <button
+            key={emoji}
+            onClick={() => tap(emoji)}
+            className={`flex h-6 items-center gap-1 rounded-full border px-2 text-[11px] transition ${
+              mine
+                ? "border-accent/60 bg-accent/10 text-accent"
+                : count > 0
+                  ? "border-line text-ink-soft hover:border-accent hover:text-accent"
+                  : "border-transparent text-ink-faint/40 hover:border-line hover:text-ink-faint"
+            }`}
+          >
+            <span>{emoji}</span>
+            {count > 0 && <span className="tabular-nums">{count}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function ClueLog({
+  view,
+  code,
+  playerId,
+}: {
+  view: PublicRoomView;
+  code: string;
+  playerId: string;
+}) {
   const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
   const avatarById = new Map(view.players.map((p) => [p.id, p.avatar]));
   const rounds: Record<number, typeof view.clues> = {};
@@ -2106,6 +2189,11 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                             >
                               {c.word}
                             </div>
+                            <ClueReactions
+                              clue={c}
+                              code={code}
+                              playerId={playerId}
+                            />
                           </div>
                         </motion.li>
                       );
@@ -2314,7 +2402,7 @@ function VotingPhase({
       </div>
 
       <div className="min-w-0 lg:col-span-2">
-        <ClueLog view={view} />
+        <ClueLog view={view} code={code} playerId={playerId} />
       </div>
     </div>
   );
@@ -2441,7 +2529,7 @@ function GuessPhase({
         </div>
 
         <div className="min-w-0 lg:col-span-2">
-          <ClueLog view={view} />
+          <ClueLog view={view} code={code} playerId={playerId} />
         </div>
       </div>
     );
@@ -2532,7 +2620,7 @@ function GuessPhase({
       </div>
 
       <div className="min-w-0 lg:col-span-2">
-        <ClueLog view={view} />
+        <ClueLog view={view} code={code} playerId={playerId} />
       </div>
     </div>
   );
@@ -2882,7 +2970,7 @@ function RevealPhase({
         </section>
       )}
 
-      <ClueLog view={view} />
+      <ClueLog view={view} code={code} playerId={playerId} />
 
       <section className="space-y-4">
         <SectionLabel>Votes</SectionLabel>
