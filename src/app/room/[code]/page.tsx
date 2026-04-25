@@ -2015,10 +2015,27 @@ function VotingPhase({
                 : `Cast your vote · ${votesReceived} of ${totalPlayers} in`}
             </div>
           </div>
+          <div className="flex items-center justify-center gap-2 pb-1">
+            {view.players.map((p) => {
+              const cast = mergedVotes.some((v) => v.voter_id === p.id);
+              return (
+                <span
+                  key={p.id}
+                  title={`${p.nickname} ${cast ? "has voted" : "still deciding"}`}
+                  className={`h-2.5 w-2.5 rounded-full transition-colors ${
+                    cast ? "bg-accent" : "bg-line ring-1 ring-line"
+                  }`}
+                />
+              );
+            })}
+          </div>
           <div className="divide-y divide-line-soft border-y border-line-soft">
             {view.players.map((p) => {
               const isYou = p.id === playerId;
               const selected = target === p.id;
+              const hasCastVote = mergedVotes.some(
+                (v) => v.voter_id === p.id
+              );
               const { color, initial } = avatarFor(p.id, p.nickname);
               return (
                 <button
@@ -2027,18 +2044,39 @@ function VotingPhase({
                   disabled={alreadyVoted || isYou}
                   className={`flex w-full items-center gap-4 px-3 py-5 text-left transition ${
                     selected ? "bg-accent/10 ring-1 ring-accent/40" : ""
-                  } ${isYou || alreadyVoted ? "opacity-40" : "hover:bg-cream/40"}`}
+                  } ${isYou || alreadyVoted ? "opacity-50" : "hover:bg-cream/40"}`}
                 >
-                  <div
-                    className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold text-white ${color}`}
-                  >
-                    {initial}
+                  <div className="relative">
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold text-white ${color}`}
+                    >
+                      {initial}
+                    </div>
+                    {hasCastVote && (
+                      <span
+                        title="cast their vote"
+                        className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-leaf text-[9px] font-bold text-white ring-2 ring-page"
+                      >
+                        ✓
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1 font-serif text-xl text-ink">
-                    {p.nickname}
+                  <div className="flex flex-1 items-baseline gap-2 font-serif text-xl text-ink">
+                    <span>{p.nickname}</span>
                     {isYou && (
-                      <span className="ml-2 font-sans text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+                      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-ink-faint">
                         (you)
+                      </span>
+                    )}
+                    {hasCastVote && !isYou && (
+                      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-leaf">
+                        voted
+                      </span>
+                    )}
+                    {!hasCastVote && (
+                      <span className="font-sans text-[10px] italic tracking-normal text-ink-faint">
+                        deciding
+                        <ThinkingDots />
                       </span>
                     )}
                   </div>
