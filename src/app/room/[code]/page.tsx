@@ -335,7 +335,15 @@ function RoomPlay({
             Rules
           </Link>
           <MuteToggle />
-          <span className="flex items-baseline gap-2">
+          <span className="flex items-center gap-2">
+            <AvatarPicker
+              code={code}
+              playerId={playerId}
+              nickname={nicknameById.get(playerId) ?? ""}
+              avatar={
+                view.players.find((p) => p.id === playerId)?.avatar ?? null
+              }
+            />
             <span className="font-serif text-base italic text-ink normal-case tracking-normal">
               {nicknameById.get(playerId)}
             </span>
@@ -529,6 +537,149 @@ function PhaseCountdown({
         />
       </div>
     </section>
+  );
+}
+
+const AVATAR_PRESETS = [
+  "🦊",
+  "🐻",
+  "🐸",
+  "🐼",
+  "🦉",
+  "🐙",
+  "🦄",
+  "🐝",
+  "🐢",
+  "🦋",
+  "🌵",
+  "🍄",
+  "🍒",
+  "🍕",
+  "🌮",
+  "👻",
+  "💀",
+  "🤖",
+  "👽",
+  "🧙",
+  "🧛",
+  "🧞",
+  "🦹",
+  "🥷",
+  "🎭",
+  "🎨",
+  "♟️",
+  "🪐",
+  "⚡",
+  "🔥",
+  "🌙",
+  "🌈",
+];
+
+function AvatarPicker({
+  code,
+  playerId,
+  nickname,
+  avatar,
+}: {
+  code: string;
+  playerId: string;
+  nickname: string;
+  avatar: string | null;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [custom, setCustom] = useState("");
+  const popRef = useRef<HTMLDivElement | null>(null);
+  const { color, initial, isCustom } = avatarFor(playerId, nickname, avatar);
+
+  // Close on outside click.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+
+  async function set(next: string | null) {
+    if (pending) return;
+    setPending(true);
+    try {
+      await fetch(`/api/rooms/${code}/avatar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, avatar: next }),
+      });
+      setOpen(false);
+      setCustom("");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="relative" ref={popRef}>
+      <button
+        onClick={() => setOpen((o) => !o)}
+        title="Pick your avatar"
+        className={`flex h-7 w-7 items-center justify-center rounded-full transition hover:ring-2 hover:ring-accent/50 ${color} ${
+          isCustom
+            ? "border border-line text-base"
+            : "text-xs font-semibold text-white"
+        }`}
+      >
+        {initial}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-9 z-50 w-72 space-y-3 rounded-sm border border-line bg-page p-4 shadow-lg">
+          <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            Pick an avatar
+          </div>
+          <div className="grid grid-cols-8 gap-1">
+            {AVATAR_PRESETS.map((emoji) => (
+              <button
+                key={emoji}
+                onClick={() => set(emoji)}
+                disabled={pending}
+                className={`flex h-8 w-8 items-center justify-center rounded-sm text-lg transition hover:bg-surface ${
+                  avatar === emoji ? "ring-2 ring-accent" : ""
+                }`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <input
+              value={custom}
+              onChange={(e) => setCustom(e.target.value.slice(0, 2))}
+              placeholder="🎯"
+              maxLength={2}
+              className="w-16 border border-line bg-page px-2 py-1 text-center text-base outline-none focus:border-accent"
+            />
+            <button
+              onClick={() => custom.trim() && set(custom.trim())}
+              disabled={pending || !custom.trim()}
+              className="flex-1 rounded-sm border border-ink px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page disabled:opacity-40"
+            >
+              Use custom
+            </button>
+          </div>
+          {avatar && (
+            <button
+              onClick={() => set(null)}
+              disabled={pending}
+              className="block w-full text-center text-[10px] uppercase tracking-[0.3em] text-ink-faint hover:text-oxblood"
+            >
+              Clear (use initial)
+            </button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -770,7 +921,11 @@ function PlayerList({
   return (
     <ul className="divide-y divide-line-soft border-y border-line-soft">
       {view.players.map((p, i) => {
-        const { color, initial } = avatarFor(p.id, p.nickname);
+        const { color, initial, isCustom } = avatarFor(
+          p.id,
+          p.nickname,
+          p.avatar
+        );
         return (
           <li key={p.id} className="flex items-center gap-4 py-3">
             {showRank && (
@@ -779,7 +934,11 @@ function PlayerList({
               </div>
             )}
             <div
-              className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold text-white ${color}`}
+              className={`flex h-9 w-9 items-center justify-center rounded-full ${color} ${
+                isCustom
+                  ? "border border-line text-base"
+                  : "text-sm font-semibold text-white"
+              }`}
             >
               {initial}
             </div>
@@ -1321,6 +1480,7 @@ function PlayingPhase({
       : view;
 
   const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
+  const playerById = new Map(view.players.map((p) => [p.id, p]));
   const currentPlayerId = view.turnOrder[view.turnIndex];
   const isMyTurn = currentPlayerId === playerId && !optimisticClue;
   const iAmNext =
@@ -1329,6 +1489,7 @@ function PlayingPhase({
   const waitingFor = optimisticClue
     ? view.turnOrder[nextTurnIndex]
     : currentPlayerId;
+  const waitingForPlayer = playerById.get(waitingFor);
 
   async function submit() {
     const trimmed = word.trim();
@@ -1441,7 +1602,8 @@ function PlayingPhase({
         ) : (
           <ActivePlayerHero
             playerId={waitingFor}
-            nickname={nicknameById.get(waitingFor) ?? "?"}
+            nickname={waitingForPlayer?.nickname ?? "?"}
+            avatar={waitingForPlayer?.avatar ?? null}
             iAmNext={iAmNext}
           />
         )}
@@ -1681,13 +1843,15 @@ function PotStatus({ view }: { view: PublicRoomView }) {
 function ActivePlayerHero({
   playerId,
   nickname,
+  avatar,
   iAmNext,
 }: {
   playerId: string;
   nickname: string;
+  avatar: string | null;
   iAmNext: boolean;
 }) {
-  const { color, initial } = avatarFor(playerId, nickname);
+  const { color, initial, isCustom } = avatarFor(playerId, nickname, avatar);
   return (
     <div className="relative flex flex-col items-center gap-5 border border-line-soft bg-surface/30 px-6 py-10">
       <div className="relative">
@@ -1709,7 +1873,11 @@ function ActivePlayerHero({
           className="absolute -inset-4 rounded-full ring-1 ring-accent/50"
         />
         <div
-          className={`relative flex h-32 w-32 items-center justify-center rounded-full text-5xl font-semibold text-white ${color}`}
+          className={`relative flex h-32 w-32 items-center justify-center rounded-full ${color} ${
+            isCustom
+              ? "border border-line text-6xl"
+              : "text-5xl font-semibold text-white"
+          }`}
         >
           {initial}
         </div>
@@ -1778,7 +1946,11 @@ function TurnStrip({
         const isCurrent = id === currentPlayerId;
         const isDone = cluedThisRound.has(id);
         const isYou = id === playerId;
-        const { color, initial } = avatarFor(id, p.nickname);
+        const { color, initial, isCustom } = avatarFor(
+          id,
+          p.nickname,
+          p.avatar
+        );
 
         return (
           <div
@@ -1796,7 +1968,11 @@ function TurnStrip({
               <motion.div
                 animate={{ opacity: isDone ? 0.3 : 1, scale: isCurrent ? 1.05 : 1 }}
                 transition={{ duration: 0.25, ease: "easeOut" }}
-                className={`relative flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold text-white ${color}`}
+                className={`relative flex h-12 w-12 items-center justify-center rounded-full ${color} ${
+                  isCustom
+                    ? "border border-line text-2xl"
+                    : "text-base font-semibold text-white"
+                }`}
               >
                 {initial}
               </motion.div>
@@ -1828,6 +2004,7 @@ function TurnStrip({
 
 function ClueLog({ view }: { view: PublicRoomView }) {
   const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
+  const avatarById = new Map(view.players.map((p) => [p.id, p.avatar]));
   const rounds: Record<number, typeof view.clues> = {};
   for (const c of view.clues) {
     (rounds[c.round] ??= []).push(c);
@@ -1873,9 +2050,11 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                   <AnimatePresence initial={false}>
                     {[...clues].reverse().map((c) => {
                       const nickname = nicknameById.get(c.player_id) ?? "";
-                      const { color, initial } = avatarFor(
+                      const avatar = avatarById.get(c.player_id) ?? null;
+                      const { color, initial, isCustom } = avatarFor(
                         c.player_id,
-                        nickname
+                        nickname,
+                        avatar
                       );
                       // Stable key across optimistic -> real swap: clues are
                       // unique per (player, round). Using this key lets React
@@ -1906,7 +2085,11 @@ function ClueLog({ view }: { view: PublicRoomView }) {
                           <div className="space-y-1 py-2.5">
                             <div className="flex items-center gap-2">
                               <div
-                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-semibold text-white ${color}`}
+                                className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${color} ${
+                                  isCustom
+                                    ? "border border-line text-xs"
+                                    : "text-[10px] font-semibold text-white"
+                                }`}
                               >
                                 {initial}
                               </div>
@@ -2047,7 +2230,11 @@ function VotingPhase({
               const hasCastVote = mergedVotes.some(
                 (v) => v.voter_id === p.id
               );
-              const { color, initial } = avatarFor(p.id, p.nickname);
+              const { color, initial, isCustom } = avatarFor(
+                p.id,
+                p.nickname,
+                p.avatar
+              );
               return (
                 <button
                   key={p.id}
@@ -2059,7 +2246,11 @@ function VotingPhase({
                 >
                   <div className="relative">
                     <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-full text-base font-semibold text-white ${color}`}
+                      className={`flex h-11 w-11 items-center justify-center rounded-full ${color} ${
+                        isCustom
+                          ? "border border-line text-2xl"
+                          : "text-base font-semibold text-white"
+                      }`}
                     >
                       {initial}
                     </div>
