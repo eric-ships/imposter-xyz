@@ -176,6 +176,7 @@ alter table players enable row level security;
 alter table clues enable row level security;
 alter table votes enable row level security;
 alter table room_events enable row level security;
+alter table clue_reactions enable row level security;
 
 -- Allow anon SELECT on room_events so realtime subscriptions pass RLS.
 -- No policies on other tables = anon can't read them.
