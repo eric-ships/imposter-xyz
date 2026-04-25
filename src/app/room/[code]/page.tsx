@@ -1,11 +1,18 @@
 "use client";
 
-import { use, useCallback, useEffect, useRef, useState } from "react";
+import {
+  use,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { supabase } from "@/lib/supabase/browser";
-import type { PublicRoomView, RoomState } from "@/lib/game";
+import type { GuessOutcome, PublicRoomView, RoomState } from "@/lib/game";
 import { blockExplorerUrl } from "@/lib/chain";
 import {
   DEFAULT_ALLOWANCE,
@@ -2336,6 +2343,149 @@ function GuessPhase({
   );
 }
 
+// Outcome flavor text. Each pool is a list of evocative one-liners; we
+// pick one deterministically per match so the same secret + outcome
+// always yields the same line within a single reveal screen (avoids
+// flicker on re-render).
+const REVEAL_LINES = {
+  imposterEscaped: [
+    "You fooled them all.",
+    "Bluffed your way to glory.",
+    "The table never saw it coming.",
+    "You sold the lie.",
+    "You walked among them.",
+    "Smooth tongue, full pockets.",
+    "The mask held.",
+  ],
+  imposterCaughtExact: [
+    "Caught — but you saved the round.",
+    "They sniffed you out, but the word was yours.",
+    "Last gasp, perfect guess.",
+    "Cornered. Then crowned.",
+  ],
+  imposterCaughtClose: [
+    "Close enough — the table splits the point.",
+    "Half a glory, half a confession.",
+    "Almost. A draw will do.",
+  ],
+  imposterCaughtWrong: [
+    "Caught red-handed.",
+    "The bluff died on your tongue.",
+    "Outmanned, outguessed.",
+    "The crewmates take this one.",
+  ],
+  crewMissed: [
+    "The {imp} slipped past you.",
+    "The bluff held.",
+    "Snake in the grass — and you missed it.",
+    "They walked away clean.",
+    "A wolf among the sheep, and you let them go.",
+  ],
+  crewCaughtExact: [
+    "You caught them — but they knew the word.",
+    "Smelled the rat. Couldn't stop the answer.",
+    "A fair fight. They won the toss.",
+  ],
+  crewCaughtClose: [
+    "Caught, but the guess was nearly right.",
+    "Half a victory.",
+    "Almost. The point splits.",
+  ],
+  crewCaughtWrong: [
+    "You caught the {imp} clean.",
+    "Nose for liars.",
+    "Sherlock energy.",
+    "You smelled the rat.",
+    "Rat caught, word safe.",
+  ],
+} as const;
+
+function pickRevealLine({
+  youAreImposter,
+  caught,
+  outcome,
+  imposterWord,
+}: {
+  youAreImposter: boolean;
+  caught: boolean;
+  outcome: GuessOutcome | null;
+  imposterWord: string;
+}): string {
+  const pool = !caught
+    ? youAreImposter
+      ? REVEAL_LINES.imposterEscaped
+      : REVEAL_LINES.crewMissed
+    : outcome === "exact"
+      ? youAreImposter
+        ? REVEAL_LINES.imposterCaughtExact
+        : REVEAL_LINES.crewCaughtExact
+      : outcome === "close"
+        ? youAreImposter
+          ? REVEAL_LINES.imposterCaughtClose
+          : REVEAL_LINES.crewCaughtClose
+        : youAreImposter
+          ? REVEAL_LINES.imposterCaughtWrong
+          : REVEAL_LINES.crewCaughtWrong;
+  const line = pool[Math.floor(Math.random() * pool.length)];
+  return line.replace(/\{imp\}/g, imposterWord);
+}
+
+function RevealConfetti({ variant }: { variant: "win" | "loss" | "draw" }) {
+  // Hand-rolled particle burst: avoids a runtime dep, plays nice with the
+  // existing motion library. Mounts once on reveal and self-removes after
+  // the animation. Loss variant skips fireworks intentionally — the
+  // muted screen IS the feedback.
+  const particles = useMemo(() => {
+    if (variant === "loss") return [];
+    const count = variant === "win" ? 36 : 18;
+    return Array.from({ length: count }, (_, i) => {
+      const angle = (Math.PI * 2 * i) / count + Math.random() * 0.6;
+      const distance = 220 + Math.random() * 200;
+      return {
+        id: i,
+        x: Math.cos(angle) * distance,
+        y: Math.sin(angle) * distance - 100, // bias upward
+        rotate: Math.random() * 540 - 270,
+        delay: Math.random() * 0.15,
+        size: 6 + Math.random() * 8,
+      };
+    });
+  }, [variant]);
+
+  if (variant === "loss") return null;
+
+  const colorClass =
+    variant === "win" ? "bg-leaf" : "bg-accent";
+
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
+    >
+      {particles.map((p) => (
+        <motion.span
+          key={p.id}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 0.6, rotate: 0 }}
+          animate={{
+            x: p.x,
+            y: p.y,
+            opacity: 0,
+            scale: 1,
+            rotate: p.rotate,
+          }}
+          transition={{
+            duration: 1.6,
+            delay: p.delay,
+            ease: [0.16, 0.84, 0.3, 1],
+          }}
+          className={`absolute rounded-sm ${colorClass}`}
+          style={{ width: p.size, height: p.size * 0.4 }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function RevealPhase({
   view,
   playerId,
@@ -2393,22 +2543,18 @@ function RevealPhase({
         : "Crewmates prevail";
 
   const imposterWord = multiImposter ? "imposters" : "imposter";
-  const theyWord = multiImposter ? "them" : "them";
-  const subtitle = youAreImposter
-    ? !caught
-      ? "You fooled them all."
-      : outcome === "exact"
-        ? "You were caught, but the word was guessed."
-        : outcome === "close"
-          ? "Close enough. The table splits the point."
-          : "The guess missed. The crewmates take it."
-    : !caught
-      ? `The ${imposterWord} slipped past you.`
-      : outcome === "exact"
-        ? `You caught ${theyWord}, but the word was named.`
-        : outcome === "close"
-          ? `Caught, but the guess was nearly right.`
-          : `You caught the ${imposterWord} clean.`;
+  // Lock in one line for the lifetime of this reveal mount so re-renders
+  // (e.g. from realtime view updates) don't reroll the copy.
+  const subtitle = useMemo(
+    () =>
+      pickRevealLine({
+        youAreImposter,
+        caught,
+        outcome,
+        imposterWord,
+      }),
+    [youAreImposter, caught, outcome, imposterWord]
+  );
 
   async function playAgain() {
     setRestarting(true);
@@ -2424,8 +2570,11 @@ function RevealPhase({
 
   return (
     <>
+      <RevealConfetti
+        variant={youDrew ? "draw" : youWon ? "win" : "loss"}
+      />
       <section
-        className={`border-2 p-10 text-center ${
+        className={`relative border-2 p-10 text-center ${
           youDrew
             ? "border-accent bg-accent/5"
             : youWon
