@@ -116,13 +116,19 @@ async function expirePlaying(code: string, room: Room) {
     return NextResponse.json({ ok: true, noop: true });
   }
 
-  // Record the forfeit as a blank clue so the UI shows the player was skipped.
-  await supabaseAdmin.from("clues").insert({
+  // Record the forfeit as a blank clue so the UI shows the player was
+  // skipped. Idempotent: if /clue already inserted a real clue for this
+  // (player, round) the unique constraint blocks the dash and that's
+  // fine — the real clue takes precedence.
+  const { error: forfeitErr } = await supabaseAdmin.from("clues").insert({
     room_code: code,
     player_id: currentPlayerId,
     round: room.round,
     word: "—",
   });
+  if (forfeitErr && !/duplicate|unique/i.test(forfeitErr.message)) {
+    console.error("[expire] forfeit clue insert failed", forfeitErr);
+  }
 
   await notifyRoom(
     code,

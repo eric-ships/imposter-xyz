@@ -104,10 +104,33 @@ create table if not exists clues (
   player_id uuid not null references players(id) on delete cascade,
   round int not null,
   word text not null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- One clue per player per round. Prevents the race where /clue and
+  -- /expire both insert at the deadline (the player's real word + the
+  -- forfeit dash).
+  unique (room_code, player_id, round)
 );
 
 create index if not exists clues_room_round_idx on clues(room_code, round);
+
+-- Migration for existing dbs: drop duplicates (keep oldest), add the
+-- constraint. Safe to re-run.
+do $$ begin
+  if not exists (
+    select 1 from pg_constraint
+    where conname = 'clues_room_code_player_id_round_key'
+  ) then
+    delete from clues a
+    using clues b
+    where a.id > b.id
+      and a.room_code = b.room_code
+      and a.player_id = b.player_id
+      and a.round = b.round;
+    alter table clues
+      add constraint clues_room_code_player_id_round_key
+      unique (room_code, player_id, round);
+  end if;
+end $$;
 
 create table if not exists votes (
   id bigserial primary key,

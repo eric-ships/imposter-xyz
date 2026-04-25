@@ -48,16 +48,6 @@ export async function POST(
     return NextResponse.json({ error: "not your turn" }, { status: 403 });
   }
 
-  const { error: clueErr } = await supabaseAdmin.from("clues").insert({
-    room_code: code,
-    player_id: playerId,
-    round: room.round,
-    word: trimmed,
-  });
-  if (clueErr) {
-    return NextResponse.json({ error: clueErr.message }, { status: 500 });
-  }
-
   // Advance turn/round/state.
   let nextTurnIndex = room.turn_index + 1;
   let nextRound = room.round;
@@ -81,13 +71,39 @@ export async function POST(
   if ("phase_deadline" in room) {
     clueUpdate.phase_deadline = deadlineFor(nextState);
   }
-  const { error: updateErr } = await supabaseAdmin
+
+  // CAS-claim the turn advance before inserting. If /expire (the timer
+  // forfeit) already moved this turn, our update affects 0 rows and we
+  // bail out — no duplicate clue, no stale state. Mirrors the pattern
+  // used in /expire so the two routes can race safely.
+  const { data: claimed } = await supabaseAdmin
     .from("rooms")
     .update(clueUpdate)
-    .eq("code", code);
+    .eq("code", code)
+    .eq("state", "playing")
+    .eq("turn_index", room.turn_index)
+    .select("code")
+    .maybeSingle();
 
-  if (updateErr) {
-    return NextResponse.json({ error: updateErr.message }, { status: 500 });
+  if (!claimed) {
+    return NextResponse.json(
+      { error: "turn already advanced" },
+      { status: 409 }
+    );
+  }
+
+  // We own the advance — record the clue. Idempotent via the unique
+  // (room_code, player_id, round) constraint: if the forfeit row landed
+  // first (extremely unlikely now that we CAS first), this insert errors
+  // and we still consider the turn advanced.
+  const { error: clueErr } = await supabaseAdmin.from("clues").insert({
+    room_code: code,
+    player_id: playerId,
+    round: room.round,
+    word: trimmed,
+  });
+  if (clueErr && !/duplicate|unique/i.test(clueErr.message)) {
+    return NextResponse.json({ error: clueErr.message }, { status: 500 });
   }
 
   await notifyRoom(
