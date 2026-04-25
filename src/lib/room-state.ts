@@ -126,6 +126,7 @@ export async function fetchRoomView(
     id: p.id as string,
     nickname: p.nickname as string,
     score: p.score as number,
+    avatar: (p.avatar as string | null) ?? null,
     walletAddress: (p.wallet_address as string | null) ?? null,
     hasPermission: !!(p.spend_permission as unknown),
     antePaid: !!(p.ante_tx as string | null),

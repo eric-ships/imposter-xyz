@@ -1468,14 +1468,18 @@ const AVATAR_PALETTE = [
   "bg-[#8a6b80]",
 ];
 
-function avatarFor(id: string, nickname: string) {
+function avatarFor(id: string, nickname: string, custom?: string | null) {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0;
   }
   const color = AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
-  const initial = nickname.trim().charAt(0).toUpperCase() || "?";
-  return { color, initial };
+  const fallback = nickname.trim().charAt(0).toUpperCase() || "?";
+  const initial = custom?.trim() || fallback;
+  // Custom emoji avatars hide the bg color (the emoji renders as its own
+  // glyph). Fall back to colored initial when no custom is set.
+  const isCustom = !!custom?.trim();
+  return { color: isCustom ? "bg-surface" : color, initial, isCustom };
 }
 
 function CandidatesShowcase({ view }: { view: PublicRoomView }) {

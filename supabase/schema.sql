@@ -98,6 +98,10 @@ create table if not exists players (
 
 create index if not exists players_room_idx on players(room_code);
 
+-- Optional player avatar (emoji or single character). Falls back to
+-- nickname's first letter if null.
+alter table players add column if not exists avatar text;
+
 create table if not exists clues (
   id bigserial primary key,
   room_code text not null references rooms(code) on delete cascade,

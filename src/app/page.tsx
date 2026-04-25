@@ -4,11 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+type Mode = "choose" | "create" | "join";
+
 export default function HomePage() {
   const router = useRouter();
+  const [mode, setMode] = useState<Mode>("choose");
   const [nickname, setNickname] = useState("");
   const [joinCode, setJoinCode] = useState("");
-  const [loading, setLoading] = useState<null | "create" | "join">(null);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   function savePlayer(code: string, playerId: string, nickname: string) {
@@ -18,7 +21,7 @@ export default function HomePage() {
 
   async function createRoom() {
     setError(null);
-    setLoading("create");
+    setSubmitting(true);
     try {
       const res = await fetch("/api/rooms", {
         method: "POST",
@@ -31,13 +34,13 @@ export default function HomePage() {
       router.push(`/room/${data.code}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
-      setLoading(null);
+      setSubmitting(false);
     }
   }
 
   async function joinRoom() {
     setError(null);
-    setLoading("join");
+    setSubmitting(true);
     try {
       const code = joinCode.trim().toUpperCase();
       const res = await fetch(`/api/rooms/${code}/join`, {
@@ -51,84 +54,137 @@ export default function HomePage() {
       router.push(`/room/${code}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
-      setLoading(null);
+      setSubmitting(false);
     }
   }
 
-  const canCreate = nickname.trim().length > 0 && !loading;
-  const canJoin =
-    nickname.trim().length > 0 && joinCode.trim().length === 4 && !loading;
+  const canSubmit =
+    nickname.trim().length > 0 &&
+    !submitting &&
+    (mode === "create" ||
+      (mode === "join" && joinCode.trim().length === 4));
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-14 px-8 py-16">
+    <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-12 px-6 py-16">
       <header className="text-center">
         <h1 className="font-serif text-5xl font-light italic tracking-tight text-ink">
           imposter
         </h1>
-        <div className="mt-2 text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-          A parlor game · 3 to 5 players
+        <div className="mt-3 text-xs tracking-wide text-ink-faint">
+          A parlor game for 3–5 players
         </div>
-        <p className="mt-6 text-sm leading-relaxed text-ink-soft">
+        <p className="mt-6 text-base leading-relaxed text-ink-soft">
           Everyone sees the category.
           <br />
           At least one of you is lying.
         </p>
         <Link
           href="/rules"
-          className="mt-5 inline-block border-b border-ink-faint pb-0.5 text-[10px] uppercase tracking-[0.3em] text-ink-soft transition hover:border-ink hover:text-ink"
+          className="mt-5 inline-block border-b border-ink-faint pb-0.5 text-xs text-ink-soft transition hover:border-ink hover:text-ink"
         >
           How to play
         </Link>
       </header>
 
-      <div className="w-full space-y-8">
-        <label className="block">
-          <span className="mb-3 block text-[10px] uppercase tracking-[0.3em] text-ink-faint">
-            Your name
-          </span>
-          <input
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            maxLength={20}
-            placeholder="Alice"
-            className="w-full border-b border-line bg-transparent px-1 pb-2 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-          />
-        </label>
+      <div className="w-full">
+        {mode === "choose" ? (
+          <div className="space-y-4">
+            <button
+              onClick={() => setMode("create")}
+              className="w-full rounded-sm bg-ink px-6 py-4 text-sm font-medium tracking-wide text-page transition hover:bg-accent"
+            >
+              Create or join
+            </button>
+            <p className="text-center text-xs text-ink-faint">
+              You'll pick a name on the next step.
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="flex gap-2 rounded-sm border border-line bg-surface/40 p-1 text-sm">
+              <button
+                onClick={() => setMode("create")}
+                className={`flex-1 rounded-sm px-3 py-2 transition ${
+                  mode === "create"
+                    ? "bg-ink text-page"
+                    : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                Create a room
+              </button>
+              <button
+                onClick={() => setMode("join")}
+                className={`flex-1 rounded-sm px-3 py-2 transition ${
+                  mode === "join"
+                    ? "bg-ink text-page"
+                    : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                Join a room
+              </button>
+            </div>
 
-        <button
-          onClick={createRoom}
-          disabled={!canCreate}
-          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
-        >
-          {loading === "create" ? "Creating" : "Create a room"}
-        </button>
+            <label className="block">
+              <span className="mb-2 block text-sm text-ink-soft">
+                Your name
+              </span>
+              <input
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                maxLength={20}
+                placeholder="Alice"
+                autoFocus
+                className="w-full border-b border-line bg-transparent px-1 pb-2 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+              />
+            </label>
 
-        <div className="relative py-1 text-center text-[10px] uppercase tracking-[0.4em] text-ink-faint">
-          <span className="bg-page px-4">or join</span>
-          <div className="absolute inset-x-0 top-1/2 -z-10 h-px bg-line" />
-        </div>
+            {mode === "join" && (
+              <label className="block">
+                <span className="mb-2 block text-sm text-ink-soft">
+                  Room code
+                </span>
+                <input
+                  value={joinCode}
+                  onChange={(e) =>
+                    setJoinCode(e.target.value.toUpperCase().slice(0, 4))
+                  }
+                  maxLength={4}
+                  placeholder="ABCD"
+                  className="w-full border-b border-line bg-transparent px-1 pb-2 text-center font-serif text-2xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+                />
+              </label>
+            )}
 
-        <div className="flex gap-3">
-          <input
-            value={joinCode}
-            onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-            maxLength={4}
-            placeholder="CODE"
-            className="flex-1 border-b border-line bg-transparent px-1 pb-2 text-center font-serif text-2xl tracking-[0.4em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-          />
-          <button
-            onClick={joinRoom}
-            disabled={!canJoin}
-            className="rounded-sm border border-ink px-6 py-3 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page disabled:cursor-not-allowed disabled:opacity-30"
-          >
-            {loading === "join" ? "..." : "Join"}
-          </button>
-        </div>
+            <button
+              onClick={mode === "create" ? createRoom : joinRoom}
+              disabled={!canSubmit}
+              className="w-full rounded-sm bg-ink px-6 py-4 text-sm font-medium tracking-wide text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+            >
+              {submitting
+                ? mode === "create"
+                  ? "Creating…"
+                  : "Joining…"
+                : mode === "create"
+                  ? "Create room"
+                  : "Join room"}
+            </button>
 
-        {error && (
-          <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
-            {error}
-          </p>
+            <button
+              onClick={() => {
+                setMode("choose");
+                setError(null);
+              }}
+              className="block w-full text-center text-xs text-ink-faint transition hover:text-ink"
+            >
+              ← Back
+            </button>
+
+            {error && (
+              <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+                {error}
+              </p>
+            )}
+          </div>
         )}
       </div>
     </main>

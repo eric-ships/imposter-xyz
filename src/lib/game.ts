@@ -11,6 +11,9 @@ export type Player = {
   id: string;
   nickname: string;
   score: number;
+  // Optional emoji or single character. Falls back to the nickname's
+  // first letter when null.
+  avatar: string | null;
   walletAddress: string | null;
   hasPermission: boolean; // has a live Base Account Spend Permission on file
   antePaid: boolean;
