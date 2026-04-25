@@ -88,42 +88,22 @@ export default function HomePage() {
 
       <div className="w-full">
         {mode === "choose" ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <button
               onClick={() => setMode("create")}
               className="w-full rounded-sm bg-ink px-6 py-4 text-sm font-medium tracking-wide text-page transition hover:bg-accent"
             >
-              Create or join
+              Create a room
             </button>
-            <p className="text-center text-xs text-ink-faint">
-              You'll pick a name on the next step.
-            </p>
+            <button
+              onClick={() => setMode("join")}
+              className="w-full rounded-sm border border-ink px-6 py-4 text-sm font-medium tracking-wide text-ink transition hover:bg-ink hover:text-page"
+            >
+              Join a room
+            </button>
           </div>
         ) : (
           <div className="space-y-6">
-            <div className="flex gap-2 rounded-sm border border-line bg-surface/40 p-1 text-sm">
-              <button
-                onClick={() => setMode("create")}
-                className={`flex-1 rounded-sm px-3 py-2 transition ${
-                  mode === "create"
-                    ? "bg-ink text-page"
-                    : "text-ink-soft hover:text-ink"
-                }`}
-              >
-                Create a room
-              </button>
-              <button
-                onClick={() => setMode("join")}
-                className={`flex-1 rounded-sm px-3 py-2 transition ${
-                  mode === "join"
-                    ? "bg-ink text-page"
-                    : "text-ink-soft hover:text-ink"
-                }`}
-              >
-                Join a room
-              </button>
-            </div>
-
             <label className="block">
               <span className="mb-2 block text-sm text-ink-soft">
                 Your name
