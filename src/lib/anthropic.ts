@@ -443,11 +443,12 @@ const SYSTEM = `You generate prompts for a social deduction word game played acr
 AUDIENCE: a 7-year-old and their grandparent should both recognize the pick. Think picture-book universal: common animals, common foods, Pixar/Disney movies, famous landmarks, weather, planets, fairy-tale characters, schoolyard sports. No alcohol, no adult media, no politics, no religion, no regional/subculture deep cuts.
 
 You will be given a SEED DOMAIN to anchor the round. Produce:
-- "category": a SINGLE word (Title Case, no spaces, hyphens allowed). Broad and familiar. Examples: "Cartoons", "Cereals", "Planets", "Instruments", "Flowers", "Dinosaurs", "Superheroes".
-- "word": a SINGLE word (Title Case, no spaces, hyphens allowed). One specific, universally well-known item that unambiguously belongs to that category. Examples: "Simba", "Jupiter", "Clarinet", "Rose", "Triceratops", "Batman".
+- "category": one or two words in Title Case. Use the natural form — "Dance Styles", "National Parks", "Dried Fruits", or single words like "Cartoons", "Planets". Do NOT hyphenate to fake a single word. Examples: "Cartoons", "Cereals", "Dance Styles", "National Parks", "Dried Fruits", "Greek Gods".
+- "word": one or two words in Title Case. Same rule — natural spelling, no forced hyphens. Examples: "Simba", "Jupiter", "French Toast", "Mount Fuji", "Big Ben", "Spider Man".
 
 Hard rules:
-- BOTH category and word must be exactly ONE word. No spaces. Hyphens and apostrophes allowed. If the natural phrase has a space (e.g. "French Toast"), pick a one-word alternative (e.g. "Croissant") or drop the qualifier (e.g. "Toast").
+- Up to TWO words for both category and word. Use natural spelling and spacing — never insert a hyphen just to dodge a space (no "Spider-Man" if the natural form is "Spider Man", no "Dried-Fruits", no "DanceStyles"). Real hyphens that exist in the name are fine ("Pop-Tarts", "Forget-Me-Not").
+- Prefer the shortest natural form. If a single word works, use it.
 - The item must be broadly recognizable to almost anyone — from a curious 7-year-old to a 75-year-old. If in doubt, pick something more famous, not more obscure.
 - Lean toward the second- or third-most-recognizable option within the category for freshness. Do NOT fall back to the single most obvious pick (no Pancakes, Medusa, Paris, Everest, Spider-Man, Voldemort).
 - Different pick every call.
@@ -526,8 +527,9 @@ const CANDIDATES_SYSTEM = `You produce a list of well-known members of a categor
 Return ONLY JSON: {"candidates": ["...", "...", ...]}
 
 Rules:
-- Produce exactly 12 single-word candidates (Title Case, hyphens or apostrophes allowed, no spaces).
-- All 24 must be widely recognizable members of the category — the kind a 7-year-old or a grandparent could name.
+- Produce exactly 12 candidates in Title Case. Each candidate may be one or two words — use the natural spelling and spacing. Never insert a hyphen just to dodge a space (no "Spider-Man" if the natural form is "Spider Man", no "DriedFig"). Real hyphens that exist in the name are fine ("Pop-Tarts", "Forget-Me-Not").
+- Prefer the shortest natural form. If a single word works, use it.
+- All 12 must be widely recognizable members of the category — the kind a 7-year-old or a grandparent could name.
 - INCLUDE the secret word verbatim in the list (case-insensitive). Do not flag it; place it among the others naturally.
 - No duplicates. No off-category items. Kid-safe (no alcohol, politics, religion, adult, gore).
 - No prose, no markdown fences, no commentary.`;
