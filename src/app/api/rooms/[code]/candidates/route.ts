@@ -3,6 +3,11 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { generateCandidates } from "@/lib/anthropic";
 import { notifyRoom } from "@/lib/room-state";
 
+// Candidates are now always generated at game start (the secret is
+// picked from them), so this route is mostly a reader. The lazy
+// generation branch remains as a safety net for legacy rooms started
+// before that change landed.
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ code: string }> }

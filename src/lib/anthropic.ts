@@ -456,6 +456,135 @@ Hard rules:
 
 Return ONLY JSON: {"category": "...", "word": "..."}. No prose, no markdown fences.`;
 
+const ROUND_SYSTEM = `You generate the full round payload for a social deduction word game played across mixed ages (kids through grandparents).
+
+AUDIENCE: a 7-year-old and their grandparent should both recognize every pick. Picture-book universal: common animals, common foods, Pixar/Disney movies, famous landmarks, weather, planets, fairy-tale characters, schoolyard sports. No alcohol, no adult media, no politics, no religion, no regional/subculture deep cuts.
+
+You will be given a SEED DOMAIN. Produce:
+- "category": one or two words in Title Case (natural spelling, no fake hyphens). Examples: "Cartoons", "Cereals", "Dance Styles", "National Parks", "Dried Fruits", "Greek Gods".
+- "candidates": exactly 12 distinct, well-known members of the category. Title Case, one or two words each (natural spelling, no fake hyphens). Real hyphens in real names ("Pop-Tarts", "Forget-Me-Not") are fine.
+
+Hard rules:
+- Up to two words per item. Use natural spelling and spacing — never insert a hyphen just to dodge a space (no "Spider-Man" if the natural form is "Spider Man", no "DriedFig"). Prefer the shortest natural form.
+- Every candidate must be broadly recognizable to almost anyone — from a curious 7-year-old to a 75-year-old. If in doubt, pick something more famous, not more obscure.
+- DIVERSITY IS CRITICAL: the 12 candidates must be meaningfully distinct from each other. NO near-duplicates, NO synonyms, NO singular/plural pairs, NO members from the same sub-family that share most attributes.
+  - Bad: ["Pancake", "Pancakes", "Flapjack"] (same thing).
+  - Bad: ["Black Bear", "Brown Bear", "Polar Bear", "Grizzly Bear"] (one bear is enough).
+  - Bad: ["Maine Coon", "Persian", "Ragdoll", "Sphynx"] for "Cats" (all are breeds — pick the breeds OR pick household-recognizable variants, not five from the same micro-category).
+  - Good: a wide spread across the category so a player could tell any two apart at a glance.
+- The category should be familiar enough that 12 distinct, famous members exist. If the seed is too narrow, broaden gracefully.
+- No duplicates (case-insensitive). No off-category items. Kid-safe.
+- Different category every call — avoid the recent ones in the avoid list.
+
+Return ONLY JSON: {"category": "...", "candidates": ["...", "...", ...]}. No prose, no markdown fences.`;
+
+export type RoundPayload = {
+  category: string;
+  word: string;
+  candidates: string[];
+};
+
+/**
+ * Single Claude call: produces the category + 12 distinct candidates.
+ * The secret word is then picked server-side from the candidate list,
+ * so the shortlist is guaranteed to contain the answer (no risk of the
+ * model dropping it from a separate "candidates from secret" call).
+ */
+export async function generateRound(
+  avoid: { categories?: string[]; words?: string[] } = {}
+): Promise<RoundPayload> {
+  const seed = pickSeed(avoid.categories ?? []);
+  const avoidLines: string[] = [];
+  if (avoid.categories?.length) {
+    avoidLines.push(
+      `Avoid these recent categories: ${avoid.categories
+        .map((c) => `"${c}"`)
+        .join(", ")}.`
+    );
+  }
+  if (avoid.words?.length) {
+    avoidLines.push(
+      `Avoid these recent secret words: ${avoid.words
+        .map((w) => `"${w}"`)
+        .join(", ")}.`
+    );
+  }
+  const salt = Math.random().toString(36).slice(2, 10);
+  const userContent = [
+    `SEED DOMAIN: ${seed}`,
+    `Salt (ignore, just ensures variety): ${salt}`,
+    avoidLines.join("\n"),
+    "Generate a fresh category and 12 distinct candidates from the seed domain. Return only JSON.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const resp = await client.messages.create({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: 800,
+    temperature: 1,
+    system: ROUND_SYSTEM,
+    messages: [{ role: "user", content: userContent }],
+  });
+
+  const text = resp.content
+    .filter((b): b is Anthropic.TextBlock => b.type === "text")
+    .map((b) => b.text)
+    .join("")
+    .trim();
+  const match = text.match(/\{[\s\S]*\}/);
+  if (!match) {
+    throw new Error(`Could not parse round payload from: ${text}`);
+  }
+  const parsed = JSON.parse(match[0]) as {
+    category?: string;
+    candidates?: unknown;
+  };
+  if (!parsed.category || !Array.isArray(parsed.candidates)) {
+    throw new Error(`Invalid round payload: ${text}`);
+  }
+
+  // Sanitize candidates: case-insensitive dedupe, drop empties, cap at 12.
+  const seen = new Set<string>();
+  const cleaned: string[] = [];
+  for (const raw of parsed.candidates) {
+    if (typeof raw !== "string") continue;
+    const trimmed = raw.trim();
+    if (!trimmed) continue;
+    const k = trimmed.toLowerCase();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    cleaned.push(trimmed);
+    if (cleaned.length >= 12) break;
+  }
+  if (cleaned.length < 4) {
+    throw new Error(`Too few candidates: ${cleaned.length}`);
+  }
+
+  // Pick the secret from the candidate pool. Avoid recently used words
+  // when possible (so casual mode + a tight category doesn't keep
+  // landing on the same secret across rounds).
+  const recentWords = new Set(
+    (avoid.words ?? []).map((w) => w.toLowerCase())
+  );
+  const fresh = cleaned.filter((c) => !recentWords.has(c.toLowerCase()));
+  const pool = fresh.length > 0 ? fresh : cleaned;
+  const word = pool[Math.floor(Math.random() * pool.length)];
+
+  // Shuffle so the secret isn't always in the same position in the list
+  // shown to players.
+  for (let i = cleaned.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [cleaned[i], cleaned[j]] = [cleaned[j], cleaned[i]];
+  }
+
+  return {
+    category: parsed.category.trim(),
+    word,
+    candidates: cleaned,
+  };
+}
+
 export async function generateWordPrompt(
   avoid: { categories?: string[]; words?: string[] } = {}
 ): Promise<WordPrompt> {
@@ -530,6 +659,7 @@ Rules:
 - Produce exactly 12 candidates in Title Case. Each candidate may be one or two words — use the natural spelling and spacing. Never insert a hyphen just to dodge a space (no "Spider-Man" if the natural form is "Spider Man", no "DriedFig"). Real hyphens that exist in the name are fine ("Pop-Tarts", "Forget-Me-Not").
 - Prefer the shortest natural form. If a single word works, use it.
 - All 12 must be widely recognizable members of the category — the kind a 7-year-old or a grandparent could name.
+- DIVERSITY IS CRITICAL: the 12 must be meaningfully distinct. NO near-duplicates, NO synonyms, NO singular/plural pairs, NO multiple items from the same micro-sub-family. A player should be able to tell any two apart at a glance.
 - INCLUDE the secret word verbatim in the list (case-insensitive). Do not flag it; place it among the others naturally.
 - No duplicates. No off-category items. Kid-safe (no alcohol, politics, religion, adult, gore).
 - No prose, no markdown fences, no commentary.`;

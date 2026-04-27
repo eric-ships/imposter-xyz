@@ -32,6 +32,8 @@ alter table rooms
 alter table rooms add column if not exists prewarm_word text;
 alter table rooms add column if not exists prewarm_category text;
 alter table rooms
+  add column if not exists prewarm_candidates text[] not null default '{}';
+alter table rooms
   add column if not exists prewarm_started_at timestamptz;
 
 -- Per-phase deadline. Set whenever state advances into playing / voting /

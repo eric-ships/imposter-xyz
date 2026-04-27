@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { generateWordPrompt } from "@/lib/anthropic";
+import { generateRound } from "@/lib/anthropic";
 
 // Kick off a Claude word generation in the lobby so /start is instant.
 // Safe to call many times: if a prewarm is already cached or already
@@ -50,17 +50,18 @@ export async function POST(
     .eq("code", code);
 
   try {
-    const { category, word } = await generateWordPrompt({
+    const { category, word, candidates } = await generateRound({
       words: room.recent_words ?? [],
       categories: room.recent_categories ?? [],
     });
-    await supabaseAdmin
-      .from("rooms")
-      .update({
-        prewarm_word: word,
-        prewarm_category: category,
-      })
-      .eq("code", code);
+    const update: Record<string, unknown> = {
+      prewarm_word: word,
+      prewarm_category: category,
+    };
+    if ("prewarm_candidates" in room) {
+      update.prewarm_candidates = candidates;
+    }
+    await supabaseAdmin.from("rooms").update(update).eq("code", code);
     return NextResponse.json({ ok: true, cached: false });
   } catch (e) {
     // Release the in-flight lock so a retry can try again.

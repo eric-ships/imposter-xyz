@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
-import { generateCandidates, generateWordPrompt } from "@/lib/anthropic";
+import { generateRound } from "@/lib/anthropic";
 import { deadlineFor } from "@/lib/timer";
 import {
   anteForOnChain,
@@ -140,20 +140,31 @@ export async function POST(
     ? (room.recent_categories ?? [])
     : [];
 
-  // Consume a pre-warmed word if the lobby prewarm finished while we waited.
+  // Consume a pre-warmed round if the lobby prewarm finished while we
+  // waited. Otherwise generate now.
   const hasPrewarm = "prewarm_word" in room;
+  const hasPrewarmCandidates = "prewarm_candidates" in room;
   let category: string;
   let word: string;
+  let candidates: string[] = [];
   if (hasPrewarm && room.prewarm_word && room.prewarm_category) {
     word = room.prewarm_word;
     category = room.prewarm_category;
+    if (
+      hasPrewarmCandidates &&
+      Array.isArray(room.prewarm_candidates) &&
+      room.prewarm_candidates.length > 0
+    ) {
+      candidates = room.prewarm_candidates as string[];
+    }
   } else {
-    const fresh = await generateWordPrompt({
+    const fresh = await generateRound({
       words: recentWords,
       categories: recentCategories,
     });
     category = fresh.category;
     word = fresh.word;
+    candidates = fresh.candidates;
   }
 
   const update: Record<string, unknown> = {
@@ -173,22 +184,11 @@ export async function POST(
     update.caught_imposter_id = null;
   }
   if ("guess_candidates" in room) {
-    // Casual mode: pre-generate the shortlist so it's visible to everyone
-    // from the first turn. Otherwise wipe last round's list so the next
-    // caught imposter gets a fresh lazy draw matched to this round's secret.
-    if (
-      "show_candidates_always" in room &&
-      room.show_candidates_always
-    ) {
-      try {
-        update.guess_candidates = await generateCandidates(category, word);
-      } catch (e) {
-        console.error("[start] generateCandidates failed", e);
-        update.guess_candidates = [];
-      }
-    } else {
-      update.guess_candidates = [];
-    }
+    // Always store the candidate list now — the secret was picked from
+    // it, so the shortlist is always consistent. The casual-mode toggle
+    // controls whether the UI displays it during the match; the
+    // caught-imposter guess phase always shows it.
+    update.guess_candidates = candidates;
   }
   if (hasRecentWords) {
     update.recent_words = [...recentWords, word].slice(-20);
@@ -201,6 +201,9 @@ export async function POST(
     update.prewarm_word = null;
     update.prewarm_category = null;
     update.prewarm_started_at = null;
+    if (hasPrewarmCandidates) {
+      update.prewarm_candidates = [];
+    }
   }
   // Only write phase_deadline if the column is migrated. Without it, the
   // timer quietly no-ops but the game still works end-to-end.
