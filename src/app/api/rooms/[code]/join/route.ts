@@ -34,9 +34,9 @@ export async function POST(
     .from("players")
     .select("id", { count: "exact", head: true })
     .eq("room_code", code);
-  if ((playerCount ?? 0) >= 5) {
+  if ((playerCount ?? 0) >= 8) {
     return NextResponse.json(
-      { error: "room is full · 5 players max" },
+      { error: "room is full · 8 players max" },
       { status: 400 }
     );
   }

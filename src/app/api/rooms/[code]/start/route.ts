@@ -124,9 +124,13 @@ export async function POST(
   }
 
   const ids = players.map((p) => p.id);
-  // 5-player rooms seat 2 imposters; 3-4 seat 1. Imposters don't know
-  // about each other — their client view just shows "isImposter = true".
-  const imposterCount = ids.length >= 5 ? 2 : 1;
+  // Imposter scaling:
+  //   3-4 players → 1 imposter
+  //   5-7 players → 2 imposters
+  //   8 players   → 3 imposters
+  // Imposters don't know about each other — their client view just
+  // shows "isImposter = true".
+  const imposterCount = ids.length >= 8 ? 3 : ids.length >= 5 ? 2 : 1;
   const imposterIds = shuffle(ids).slice(0, imposterCount);
   const imposterId = imposterIds[0]; // legacy singleton field
   const turnOrder = shuffle(ids);

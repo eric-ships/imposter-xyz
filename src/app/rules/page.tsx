@@ -13,21 +13,28 @@ export default function RulesPage() {
         <p className="mt-4 text-sm leading-relaxed text-ink-soft">
           A short parlor game of bluffs and close reads.
           <br />
-          Three to five players. Ten to fifteen minutes.
+          Three to eight players. Ten to fifteen minutes.
         </p>
       </header>
 
       <Section label="Setup">
         <p>
           One person creates a room and shares the four-letter code. Everyone
-          joins with a nickname. Rooms hold three to five players; the host
+          joins with a nickname. Rooms hold three to eight players; the host
           starts the round once at least three are in.
         </p>
         <p>
-          When the round begins, a player is secretly chosen as the{" "}
-          <em>imposter</em>. With five at the table, two imposters are
-          seated instead of one — and they don&apos;t know about each
-          other. Everyone else is a <em>crewmate</em>.
+          When the round begins, players are secretly chosen as the{" "}
+          <em>imposter</em>. The count scales with the table:
+        </p>
+        <ul className="space-y-1 pl-0">
+          <li>3-4 players → 1 imposter</li>
+          <li>5-7 players → 2 imposters</li>
+          <li>8 players → 3 imposters</li>
+        </ul>
+        <p>
+          Imposters don&apos;t know who else is on their team. Everyone
+          else is a <em>crewmate</em>.
         </p>
       </Section>
 
@@ -69,15 +76,15 @@ export default function RulesPage() {
         <p>
           If one player has a clear plurality and they were an imposter,{" "}
           <span className="text-ink">that imposter is caught</span> and gets
-          one last chance to guess the word. In five-player rooms the other
-          imposter stays hidden — their fate is tied to the caught
-          imposter&apos;s guess.
+          one last chance to guess the word. When there are multiple
+          imposters at the table, the others stay hidden — their fate
+          is tied to the caught imposter&apos;s guess.
         </p>
         <p>
           A tie still counts as a catch if every top-tied target is an
-          imposter (e.g. a 2-2 split between the two imposters in a
-          five-player room) — one of them takes the guess. But if the tie
-          includes any crewmate, or the plurality lands on a crewmate,{" "}
+          imposter (e.g. a 2-2 split between two imposters) — one of
+          them takes the guess. But if the tie includes any crewmate,
+          or the plurality lands on a crewmate,{" "}
           <span className="text-oxblood">the imposter team escapes</span> and
           wins the round outright.
         </p>
