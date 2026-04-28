@@ -912,11 +912,16 @@ function PlayerList({
   showScores = true,
   showAnte = false,
   showRank = false,
+  deltas,
 }: {
   view: PublicRoomView;
   showScores?: boolean;
   showAnte?: boolean;
   showRank?: boolean;
+  // Optional per-player score delta to show as a +N / 0 badge next to
+  // the score. Used on the reveal screen to highlight what was just
+  // earned this round.
+  deltas?: Record<string, number>;
 }) {
   return (
     <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -986,8 +991,29 @@ function PlayerList({
               </div>
             )}
             {showScores && (
-              <div className="font-serif text-lg italic text-ink-soft">
-                {p.score}
+              <div className="flex items-baseline gap-2">
+                <div className="font-serif text-lg italic text-ink-soft">
+                  {p.score}
+                </div>
+                {deltas && deltas[p.id] !== undefined && (
+                  <motion.span
+                    initial={{ opacity: 0, y: -4, scale: 0.8 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 500,
+                      damping: 24,
+                      delay: 0.1 * i,
+                    }}
+                    className={`rounded-full px-1.5 text-[10px] font-semibold tabular-nums ${
+                      deltas[p.id] > 0
+                        ? "bg-leaf/10 text-leaf"
+                        : "text-ink-faint/40"
+                    }`}
+                  >
+                    {deltas[p.id] > 0 ? `+${deltas[p.id]}` : "—"}
+                  </motion.span>
+                )}
               </div>
             )}
           </li>
@@ -1717,7 +1743,6 @@ function Scoreboard({
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {sorted.map((p) => {
           const isYou = p.id === playerId;
-          const delta = p.lastRoundDelta;
           return (
             <div key={p.id} className="flex items-baseline gap-1.5">
               <span
@@ -1730,21 +1755,6 @@ function Scoreboard({
               <span className="text-sm tabular-nums text-ink-faint">
                 {p.score}
               </span>
-              {delta > 0 && (
-                <motion.span
-                  key={`${p.id}-${p.score}`}
-                  initial={{ opacity: 0, y: -4, scale: 0.8 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 500,
-                    damping: 24,
-                  }}
-                  className="rounded-full bg-leaf/10 px-1.5 text-[10px] font-semibold tabular-nums text-leaf"
-                >
-                  +{delta}
-                </motion.span>
-              )}
             </div>
           );
         })}
@@ -2980,6 +2990,29 @@ function RevealPhase({
 
   const sortedPlayers = [...view.players].sort((a, b) => b.score - a.score);
 
+  // Per-player delta from this match, derived from reveal data:
+  //   imposters escape          → imposters +2, crew +0
+  //   caught + exact guess      → imposters +2, crew +0
+  //   caught + close guess      → everyone +1
+  //   caught + wrong guess      → crew +1, imposters +0
+  // This mirrors the server scoring in vote/route.ts and guess/route.ts.
+  const roundDeltas: Record<string, number> = {};
+  const imposterIdSet = new Set(reveal.imposterIds);
+  for (const p of view.players) {
+    const isImp = imposterIdSet.has(p.id);
+    let d = 0;
+    if (!caught) {
+      d = isImp ? 2 : 0;
+    } else if (outcome === "exact") {
+      d = isImp ? 2 : 0;
+    } else if (outcome === "close") {
+      d = 1;
+    } else {
+      d = isImp ? 0 : 1;
+    }
+    roundDeltas[p.id] = d;
+  }
+
   return (
     <>
       <RevealConfetti
@@ -3162,7 +3195,10 @@ function RevealPhase({
 
       <section className="space-y-4">
         <SectionLabel>Scoreboard</SectionLabel>
-        <PlayerList view={{ ...view, players: sortedPlayers }} />
+        <PlayerList
+          view={{ ...view, players: sortedPlayers }}
+          deltas={roundDeltas}
+        />
       </section>
 
       {isHost ? (

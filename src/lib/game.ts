@@ -11,9 +11,6 @@ export type Player = {
   id: string;
   nickname: string;
   score: number;
-  // Score earned in the most recent completed match (the round just
-  // played). Reset to 0 when a new match starts via /play-again.
-  lastRoundDelta: number;
   // Optional emoji or single character. Falls back to the nickname's
   // first letter when null.
   avatar: string | null;

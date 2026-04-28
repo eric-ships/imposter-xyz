@@ -186,12 +186,7 @@ async function expireVoting(code: string, room: Room) {
   }
 
   // Imposter team escaped (or no votes / tied): award each imposter +2,
-  // settle, reveal. Reset everyone else's last_round_delta so stale
-  // badges from a previous match don't linger.
-  await supabaseAdmin
-    .from("players")
-    .update({ last_round_delta: 0 })
-    .eq("room_code", code);
+  // settle, reveal.
   for (const impId of imposterIds) {
     const { data: current } = await supabaseAdmin
       .from("players")
@@ -200,10 +195,7 @@ async function expireVoting(code: string, room: Room) {
       .single();
     await supabaseAdmin
       .from("players")
-      .update({
-        score: (current?.score ?? 0) + 2,
-        last_round_delta: 2,
-      })
+      .update({ score: (current?.score ?? 0) + 2 })
       .eq("id", impId);
   }
 
@@ -265,15 +257,10 @@ async function expireGuessing(code: string, room: Room) {
 
   const imposterSet = new Set(imposterIds);
   const crewmates = players?.filter((p) => !imposterSet.has(p.id)) ?? [];
-  // Forfeit guess = wrong: only crewmates score. Reset deltas first.
-  await supabaseAdmin
-    .from("players")
-    .update({ last_round_delta: 0 })
-    .eq("room_code", code);
   for (const c of crewmates) {
     await supabaseAdmin
       .from("players")
-      .update({ score: c.score + 1, last_round_delta: 1 })
+      .update({ score: c.score + 1 })
       .eq("id", c.id);
   }
 

@@ -82,13 +82,7 @@ export async function POST(
   const caughtImposterId = allTopAreImposters ? topTargets[0] : null;
 
   if (!caughtImposterId) {
-    // Imposter team escaped. Each imposter gets +2; reset everyone
-    // else's last_round_delta to 0 so a stale +N from a prior match
-    // doesn't linger on the scoreboard badge.
-    await supabaseAdmin
-      .from("players")
-      .update({ last_round_delta: 0 })
-      .eq("room_code", code);
+    // Imposter team escaped. Each imposter gets +2.
     for (const impId of imposterIds) {
       const { data: current } = await supabaseAdmin
         .from("players")
@@ -97,10 +91,7 @@ export async function POST(
         .single();
       await supabaseAdmin
         .from("players")
-        .update({
-          score: (current?.score ?? 0) + 2,
-          last_round_delta: 2,
-        })
+        .update({ score: (current?.score ?? 0) + 2 })
         .eq("id", impId);
     }
 

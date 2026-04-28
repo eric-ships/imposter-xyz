@@ -104,11 +104,6 @@ create index if not exists players_room_idx on players(room_code);
 -- nickname's first letter if null.
 alter table players add column if not exists avatar text;
 
--- Score delta from the most recent match (set at vote/guess/expire
--- when scoring runs, cleared in play_again). Drives the "+2" badge in
--- the scoreboard so players can see what they just earned.
-alter table players add column if not exists last_round_delta int not null default 0;
-
 create table if not exists clues (
   id bigserial primary key,
   room_code text not null references rooms(code) on delete cascade,
