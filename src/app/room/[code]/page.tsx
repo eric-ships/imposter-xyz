@@ -908,10 +908,39 @@ function MoleModeBadge({
   view: PublicRoomView;
   you: NonNullable<PublicRoomView["you"]>;
 }) {
-  if (!view.moleMode) return null;
+  if (!view.moleMode && !view.jesusMode) return null;
   const playerById = new Map(view.players.map((p) => [p.id, p]));
 
-  // Imposter view: list teammates (other imposters).
+  // Jesus mode: only the imposter sees anything (their jesus). Crewmates
+  // see nothing (asymmetric info — that's the whole point of the mode).
+  if (view.jesusMode) {
+    if (!you.isImposter) return null;
+    if (!you.partnerId) return null;
+    const j = playerById.get(you.partnerId);
+    if (!j) return null;
+    const av = avatarFor(j.id, j.nickname, j.avatar);
+    return (
+      <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-leaf/40 bg-leaf/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-leaf">
+        <span>Your jesus:</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            className={`flex h-5 w-5 items-center justify-center rounded-full ${av.color} ${
+              av.isCustom
+                ? "border border-line text-xs"
+                : "text-[10px] font-semibold text-white"
+            }`}
+          >
+            {av.initial}
+          </span>
+          <span className="font-serif italic normal-case tracking-normal text-ink">
+            {j.nickname}
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  // Mole mode — imposter view: list teammates.
   if (you.isImposter) {
     if (you.teammateIds.length === 0) {
       return (
@@ -950,7 +979,7 @@ function MoleModeBadge({
     );
   }
 
-  // Crewmate view: show your partner.
+  // Mole mode — crewmate view: show your partner.
   if (you.partnerId) {
     const p = playerById.get(you.partnerId);
     if (!p) return null;
@@ -976,8 +1005,7 @@ function MoleModeBadge({
     );
   }
 
-  // Crewmate with no partner (odd-numbered crew, shouldn't happen with
-  // our pairing math but handle it gracefully).
+  // Mole mode — crewmate without a partner (lone wolf in odd crew counts).
   return (
     <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-line px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-ink-soft">
       You have no partner this round
@@ -1322,6 +1350,86 @@ function PotPanel({
   );
 }
 
+function JesusModeToggle({
+  view,
+  playerId,
+  code,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+}) {
+  const isHost = playerId === view.hostId;
+  const enabled = view.jesusMode;
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!isHost && !enabled) return null;
+
+  async function toggle() {
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/jesus-mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, enabled: !enabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <section
+      className={`space-y-2 border p-4 ${
+        enabled ? "border-accent/40 bg-accent/5" : "border-line"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <SectionLabel>Jesus christ mode</SectionLabel>
+          <p className="mt-1 text-[11px] text-ink-soft">
+            1 imposter who knows one random crewmate (their jesus). The
+            crewmate has no idea.
+          </p>
+          {view.moleMode && enabled && (
+            <p className="mt-1 text-[11px] text-oxblood">
+              Replaces moley moley mole — they&apos;re mutually exclusive.
+            </p>
+          )}
+        </div>
+        {isHost ? (
+          <button
+            onClick={toggle}
+            disabled={pending}
+            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition disabled:opacity-40 ${
+              enabled
+                ? "bg-accent text-page hover:bg-ink"
+                : "border border-ink text-ink hover:bg-ink hover:text-page"
+            }`}
+          >
+            {pending ? "..." : enabled ? "On" : "Off"}
+          </button>
+        ) : (
+          <span className="shrink-0 rounded-sm border border-accent/60 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-accent">
+            On
+          </span>
+        )}
+      </div>
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 function MoleModeToggle({
   view,
   playerId,
@@ -1583,6 +1691,8 @@ function LobbyPhase({
       <CandidatesModeToggle view={view} playerId={playerId} code={code} />
 
       <MoleModeToggle view={view} playerId={playerId} code={code} />
+
+      <JesusModeToggle view={view} playerId={playerId} code={code} />
 
       <section className="space-y-3">
         <SectionLabel>Invite</SectionLabel>

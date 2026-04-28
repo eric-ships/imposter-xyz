@@ -3,10 +3,12 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
 
 /**
- * Host-only: toggle "moley moley mole" mode in the lobby. Imposters
- * know each other; crewmates pair up at start. Lobby-only because the
- * pairings get baked in at /start; flipping mid-game would mean the
- * room state already reflects whichever mode was active.
+ * Host-only: toggle "jesus christ" mode in the lobby. 1 imposter who
+ * knows one randomly-chosen crewmate ("their jesus"). Lobby-only since
+ * the assignment is baked in at /start.
+ *
+ * Turning this ON also turns OFF mole_mode (the two are mutually
+ * exclusive: jesus is a single-imposter mode; mole is multi-imposter).
  */
 export async function POST(
   request: Request,
@@ -40,11 +42,11 @@ export async function POST(
     return NextResponse.json({ error: "lobby only" }, { status: 400 });
 
   const update: Record<string, unknown> = {
-    mole_mode: enabled,
+    jesus_mode: enabled,
     updated_at: new Date().toISOString(),
   };
-  // Mutually exclusive with jesus mode (single-imposter mode).
-  if (enabled) update.jesus_mode = false;
+  // Mutually exclusive with mole mode.
+  if (enabled) update.mole_mode = false;
 
   const { error: updErr } = await supabaseAdmin
     .from("rooms")
@@ -53,6 +55,6 @@ export async function POST(
   if (updErr)
     return NextResponse.json({ error: updErr.message }, { status: 500 });
 
-  await notifyRoom(code, enabled ? "mole_mode_on" : "mole_mode_off");
+  await notifyRoom(code, enabled ? "jesus_mode_on" : "jesus_mode_off");
   return NextResponse.json({ ok: true });
 }

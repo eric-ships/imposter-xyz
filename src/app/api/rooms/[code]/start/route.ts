@@ -130,17 +130,24 @@ export async function POST(
   //   8 players   → 3 imposters
   // Imposters don't know about each other — their client view just
   // shows "isImposter = true".
-  // EXCEPT in mole mode, where there are always exactly 2 imposters
-  // (they know each other) and crewmates pair up. If the crew count is
-  // odd, one crewmate is left without a partner.
+  // EXCEPT:
+  //   - mole mode: always 2 imposters (they know each other) and
+  //     crewmates pair up
+  //   - jesus mode: always 1 imposter who knows 1 random crewmate
+  // The two are mutually exclusive at the toggle level, but if both
+  // are somehow on we let jesus take priority (it's the single-imp
+  // mode, simpler to reason about).
   const isMoleMode = "mole_mode" in room && !!room.mole_mode;
-  const imposterCount = isMoleMode
-    ? Math.min(2, ids.length - 1) // never more imposters than (N-1)
-    : ids.length >= 8
-      ? 3
-      : ids.length >= 5
-        ? 2
-        : 1;
+  const isJesusMode = "jesus_mode" in room && !!room.jesus_mode;
+  const imposterCount = isJesusMode
+    ? 1
+    : isMoleMode
+      ? Math.min(2, ids.length - 1)
+      : ids.length >= 8
+        ? 3
+        : ids.length >= 5
+          ? 2
+          : 1;
   const imposterIds = shuffle(ids).slice(0, imposterCount);
   const imposterId = imposterIds[0]; // legacy singleton field
   const turnOrder = shuffle(ids);
@@ -234,23 +241,37 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Mole mode: pair the crewmates and write each player's partner_id.
-  // Imposters always have partner_id = null (they "know" each other via
-  // imposter_ids, not partner_id). Imposter count was picked above so
-  // crewmate count is always even, but we guard anyway.
-  if (isMoleMode) {
-    const imposterSet = new Set(imposterIds);
-    const crewIds = shuffle(ids.filter((id) => !imposterSet.has(id)));
-
-    // First: clear partner_id for everyone in the room (defensive in
-    // case a previous match left stale data).
+  // Clear partner_id for everyone first (defensive in case a previous
+  // match left stale data; both modes below assume a clean slate).
+  if (isMoleMode || isJesusMode) {
     await supabaseAdmin
       .from("players")
       .update({ partner_id: null })
       .eq("room_code", code);
+  }
 
-    // Pair adjacent crewmates in the shuffled list. If odd somehow, the
-    // last one is left unpaired.
+  // Jesus mode: pick a random crewmate and link the (single) imposter
+  // to them via partner_id. The crewmate's partner_id stays null —
+  // they don't know they've been outed.
+  if (isJesusMode && imposterIds.length === 1) {
+    const imp = imposterIds[0];
+    const crewIds = ids.filter((id) => id !== imp);
+    if (crewIds.length > 0) {
+      const jesus = crewIds[Math.floor(Math.random() * crewIds.length)];
+      await supabaseAdmin
+        .from("players")
+        .update({ partner_id: jesus })
+        .eq("id", imp);
+    }
+  }
+
+  // Mole mode: pair the crewmates and write each player's partner_id.
+  // Imposters always have partner_id = null (they "know" each other via
+  // imposter_ids, not partner_id). If crewmate count is odd, the last
+  // one is a "lone wolf" with no partner.
+  if (isMoleMode && !isJesusMode) {
+    const imposterSet = new Set(imposterIds);
+    const crewIds = shuffle(ids.filter((id) => !imposterSet.has(id)));
     for (let i = 0; i + 1 < crewIds.length; i += 2) {
       const a = crewIds[i];
       const b = crewIds[i + 1];

@@ -62,6 +62,14 @@ alter table rooms
 alter table rooms
   add column if not exists mole_mode boolean not null default false;
 
+-- "Jesus christ" mode: when true, exactly 1 imposter is seated and
+-- they know one randomly-chosen crewmate ("their jesus"). The
+-- crewmate does NOT know they've been outed — pure asymmetric info
+-- for the imposter's bluffing. Stored via partner_id on the imposter
+-- row pointing at the jesus crewmate.
+alter table rooms
+  add column if not exists jesus_mode boolean not null default false;
+
 -- Multi-imposter support. For 5-player rooms we seat 2 imposters; 3-4
 -- stays at 1. imposter_id (singular, older column) stays populated with
 -- the *first* imposter so legacy reads still work. caught_imposter_id

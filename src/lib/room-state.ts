@@ -149,14 +149,23 @@ export async function fetchRoomView(
   // Mole mode reveal: imposters know who their teammates are; crewmates
   // know who their pair partner is. Only revealed during active phases
   // (not lobby) and only after start has run.
+  // Jesus mode reveal: the imposter knows their jesus (a random crewmate);
+  // the crewmate does NOT see anything.
   const moleMode = "mole_mode" in room && !!room.mole_mode;
-  const moleActive = moleMode && state !== "lobby";
+  const jesusMode = "jesus_mode" in room && !!room.jesus_mode;
+  const sharedActive = (moleMode || jesusMode) && state !== "lobby";
   const myPartnerId = (() => {
-    if (!playerId || !moleActive || isImposter) return null;
+    if (!playerId || !sharedActive) return null;
     const me = (players ?? []).find((p) => p.id === playerId);
-    return ((me?.partner_id as string | null) ?? null) || null;
+    const stored = ((me?.partner_id as string | null) ?? null) || null;
+    if (!stored) return null;
+    // In mole mode, partner_id is set on crew rows (and points at the
+    // pair partner). In jesus mode, it's set on the imposter row only
+    // (pointing at the jesus crew). Both cases are returned as-is —
+    // the UI decides how to label it.
+    return stored;
   })();
-  const myTeammateIds = moleActive && isImposter
+  const myTeammateIds = moleMode && state !== "lobby" && isImposter
     ? imposterIds.filter((id) => id !== playerId)
     : [];
 
@@ -253,6 +262,7 @@ export async function fetchRoomView(
     guessCandidates,
     showCandidatesAlways,
     moleMode,
+    jesusMode,
     you,
     reveal,
   };

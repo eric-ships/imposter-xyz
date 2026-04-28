@@ -100,6 +100,8 @@ export type PublicRoomView = {
   } | null;
   // Mole mode toggle (host-controlled, lobby only).
   moleMode: boolean;
+  // Jesus christ mode toggle (host-controlled, lobby only).
+  jesusMode: boolean;
   // Only populated during reveal:
   reveal: {
     imposterIds: string[];
