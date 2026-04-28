@@ -91,7 +91,15 @@ export type PublicRoomView = {
     // the final guess. Only meaningful during the guessing phase.
     isCaughtImposter: boolean;
     secretWord: string | null; // null if imposter
+    // Mole mode: if you're an imposter, the other imposter ids on your
+    // team (excluding yourself). If you're a crewmate, your partner's id.
+    // Both undefined when mole mode is off, or empty/null in odd table
+    // sizes where pairing isn't possible.
+    teammateIds: string[];
+    partnerId: string | null;
   } | null;
+  // Mole mode toggle (host-controlled, lobby only).
+  moleMode: boolean;
   // Only populated during reveal:
   reveal: {
     imposterIds: string[];

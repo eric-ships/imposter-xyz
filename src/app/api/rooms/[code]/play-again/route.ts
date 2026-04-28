@@ -42,7 +42,7 @@ export async function POST(
     // ante state so the next round can be re-anted.
     supabaseAdmin
       .from("players")
-      .update({ ante_tx: null })
+      .update({ ante_tx: null, partner_id: null })
       .eq("room_code", code),
   ]);
 

@@ -130,7 +130,18 @@ export async function POST(
   //   8 players   → 3 imposters
   // Imposters don't know about each other — their client view just
   // shows "isImposter = true".
-  const imposterCount = ids.length >= 8 ? 3 : ids.length >= 5 ? 2 : 1;
+  // EXCEPT in mole mode, where the count is chosen so crewmates pair
+  // evenly: 1 imposter if N is odd, 2 if N is even.
+  const isMoleMode = "mole_mode" in room && !!room.mole_mode;
+  const imposterCount = isMoleMode
+    ? ids.length % 2 === 0
+      ? 2
+      : 1
+    : ids.length >= 8
+      ? 3
+      : ids.length >= 5
+        ? 2
+        : 1;
   const imposterIds = shuffle(ids).slice(0, imposterCount);
   const imposterId = imposterIds[0]; // legacy singleton field
   const turnOrder = shuffle(ids);
@@ -222,6 +233,39 @@ export async function POST(
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Mole mode: pair the crewmates and write each player's partner_id.
+  // Imposters always have partner_id = null (they "know" each other via
+  // imposter_ids, not partner_id). Imposter count was picked above so
+  // crewmate count is always even, but we guard anyway.
+  if (isMoleMode) {
+    const imposterSet = new Set(imposterIds);
+    const crewIds = shuffle(ids.filter((id) => !imposterSet.has(id)));
+
+    // First: clear partner_id for everyone in the room (defensive in
+    // case a previous match left stale data).
+    await supabaseAdmin
+      .from("players")
+      .update({ partner_id: null })
+      .eq("room_code", code);
+
+    // Pair adjacent crewmates in the shuffled list. If odd somehow, the
+    // last one is left unpaired.
+    for (let i = 0; i + 1 < crewIds.length; i += 2) {
+      const a = crewIds[i];
+      const b = crewIds[i + 1];
+      await Promise.all([
+        supabaseAdmin
+          .from("players")
+          .update({ partner_id: b })
+          .eq("id", a),
+        supabaseAdmin
+          .from("players")
+          .update({ partner_id: a })
+          .eq("id", b),
+      ]);
+    }
   }
 
   await notifyRoom(code, "game_started");

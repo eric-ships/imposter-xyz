@@ -53,6 +53,13 @@ alter table rooms
 alter table rooms
   add column if not exists show_candidates_always boolean not null default false;
 
+-- "Moley moley mole" mode: when true, imposters know each other and
+-- crewmates are paired up at game start (each crewmate knows their
+-- partner). Imposter count picks so crewmates always pair evenly
+-- (1 imposter if player count is odd, 2 if even).
+alter table rooms
+  add column if not exists mole_mode boolean not null default false;
+
 -- Multi-imposter support. For 5-player rooms we seat 2 imposters; 3-4
 -- stays at 1. imposter_id (singular, older column) stays populated with
 -- the *first* imposter so legacy reads still work. caught_imposter_id
@@ -103,6 +110,11 @@ create index if not exists players_room_idx on players(room_code);
 -- Optional player avatar (emoji or single character). Falls back to
 -- nickname's first letter if null.
 alter table players add column if not exists avatar text;
+
+-- Crewmate pair partner for mole_mode rooms. Two paired crewmates
+-- have partner_id pointing at each other. Null for imposters and
+-- for non-mole-mode rooms.
+alter table players add column if not exists partner_id uuid;
 
 create table if not exists clues (
   id bigserial primary key,

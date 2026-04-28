@@ -23,6 +23,25 @@ export async function POST(
   if (!room) {
     return NextResponse.json({ error: "room not found" }, { status: 404 });
   }
+
+  // Reclaim path: if the nickname (case-insensitive) already exists in
+  // this room, return that player's id instead of inserting a new row.
+  // Lets someone who lost localStorage (cleared cache, switched device,
+  // closed the tab mid-game) come back as themselves by typing the same
+  // name — works in both lobby and active phases.
+  const { data: existing } = await supabaseAdmin
+    .from("players")
+    .select("id, nickname")
+    .eq("room_code", code)
+    .ilike("nickname", trimmed)
+    .maybeSingle();
+  if (existing) {
+    await notifyRoom(code, "player_rejoined");
+    return NextResponse.json({ playerId: existing.id, rejoined: true });
+  }
+
+  // Fresh join: only allowed in the lobby. After start, no new
+  // participants — the seat assignments and roles are baked in.
   if (room.state !== "lobby") {
     return NextResponse.json(
       { error: "game already started" },

@@ -146,6 +146,20 @@ export async function fetchRoomView(
     // during the guessing phase.
     (state === "guessing" || state === "reveal");
 
+  // Mole mode reveal: imposters know who their teammates are; crewmates
+  // know who their pair partner is. Only revealed during active phases
+  // (not lobby) and only after start has run.
+  const moleMode = "mole_mode" in room && !!room.mole_mode;
+  const moleActive = moleMode && state !== "lobby";
+  const myPartnerId = (() => {
+    if (!playerId || !moleActive || isImposter) return null;
+    const me = (players ?? []).find((p) => p.id === playerId);
+    return ((me?.partner_id as string | null) ?? null) || null;
+  })();
+  const myTeammateIds = moleActive && isImposter
+    ? imposterIds.filter((id) => id !== playerId)
+    : [];
+
   const you = playerId
     ? {
         id: playerId,
@@ -153,6 +167,8 @@ export async function fetchRoomView(
         isImposter,
         isCaughtImposter,
         secretWord: isImposter ? null : room.secret_word,
+        teammateIds: myTeammateIds,
+        partnerId: myPartnerId,
       }
     : null;
 
@@ -236,6 +252,7 @@ export async function fetchRoomView(
     payouts: payoutList,
     guessCandidates,
     showCandidatesAlways,
+    moleMode,
     you,
     reveal,
   };

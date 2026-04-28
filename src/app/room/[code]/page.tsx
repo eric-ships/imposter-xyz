@@ -901,6 +901,90 @@ function VoidGameButton({
   );
 }
 
+function MoleModeBadge({
+  view,
+  you,
+}: {
+  view: PublicRoomView;
+  you: NonNullable<PublicRoomView["you"]>;
+}) {
+  if (!view.moleMode) return null;
+  const playerById = new Map(view.players.map((p) => [p.id, p]));
+
+  // Imposter view: list teammates (other imposters).
+  if (you.isImposter) {
+    if (you.teammateIds.length === 0) {
+      return (
+        <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-oxblood/40 bg-oxblood/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-oxblood">
+          You&apos;re flying solo
+        </div>
+      );
+    }
+    const teammates = you.teammateIds
+      .map((id) => playerById.get(id))
+      .filter((p): p is NonNullable<typeof p> => !!p);
+    return (
+      <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-oxblood/40 bg-oxblood/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-oxblood">
+        <span>Your {teammates.length === 1 ? "partner" : "team"}:</span>
+        {teammates.map((p, i) => {
+          const av = avatarFor(p.id, p.nickname, p.avatar);
+          return (
+            <span key={p.id} className="inline-flex items-center gap-1.5">
+              {i > 0 && <span className="text-ink-faint">·</span>}
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-full ${av.color} ${
+                  av.isCustom
+                    ? "border border-line text-xs"
+                    : "text-[10px] font-semibold text-white"
+                }`}
+              >
+                {av.initial}
+              </span>
+              <span className="font-serif italic normal-case tracking-normal text-ink">
+                {p.nickname}
+              </span>
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Crewmate view: show your partner.
+  if (you.partnerId) {
+    const p = playerById.get(you.partnerId);
+    if (!p) return null;
+    const av = avatarFor(p.id, p.nickname, p.avatar);
+    return (
+      <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-leaf/40 bg-leaf/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-leaf">
+        <span>Your partner:</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            className={`flex h-5 w-5 items-center justify-center rounded-full ${av.color} ${
+              av.isCustom
+                ? "border border-line text-xs"
+                : "text-[10px] font-semibold text-white"
+            }`}
+          >
+            {av.initial}
+          </span>
+          <span className="font-serif italic normal-case tracking-normal text-ink">
+            {p.nickname}
+          </span>
+        </span>
+      </div>
+    );
+  }
+
+  // Crewmate with no partner (odd-numbered crew, shouldn't happen with
+  // our pairing math but handle it gracefully).
+  return (
+    <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-line px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-ink-soft">
+      You have no partner this round
+    </div>
+  );
+}
+
 function SpeakerIcon({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -1238,6 +1322,93 @@ function PotPanel({
   );
 }
 
+function MoleModeToggle({
+  view,
+  playerId,
+  code,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+}) {
+  const isHost = playerId === view.hostId;
+  const enabled = view.moleMode;
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!isHost && !enabled) return null;
+
+  async function toggle() {
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/mole-mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, enabled: !enabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  // Pairing math preview so the host can see what they're signing up for.
+  const n = view.players.length;
+  const impCount = n % 2 === 0 ? 2 : 1;
+  const crewCount = n - impCount;
+  const pairs = Math.floor(crewCount / 2);
+
+  return (
+    <section
+      className={`space-y-2 border p-4 ${
+        enabled ? "border-accent/40 bg-accent/5" : "border-line"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <SectionLabel>Moley moley mole</SectionLabel>
+          <p className="mt-1 text-[11px] text-ink-soft">
+            Imposters know each other. Crewmates pair up — you&apos;ll
+            see your partner.
+          </p>
+          {n >= 3 && (
+            <p className="mt-1 text-[11px] text-ink-faint">
+              With {n} players: {impCount} imposter{impCount === 1 ? "" : "s"} ·{" "}
+              {pairs} crew pair{pairs === 1 ? "" : "s"}
+            </p>
+          )}
+        </div>
+        {isHost ? (
+          <button
+            onClick={toggle}
+            disabled={pending}
+            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition disabled:opacity-40 ${
+              enabled
+                ? "bg-accent text-page hover:bg-ink"
+                : "border border-ink text-ink hover:bg-ink hover:text-page"
+            }`}
+          >
+            {pending ? "..." : enabled ? "On" : "Off"}
+          </button>
+        ) : (
+          <span className="shrink-0 rounded-sm border border-accent/60 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-accent">
+            On
+          </span>
+        )}
+      </div>
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 function CandidatesModeToggle({
   view,
   playerId,
@@ -1406,6 +1577,8 @@ function LobbyPhase({
       <PotPanel view={view} playerId={playerId} code={code} />
 
       <CandidatesModeToggle view={view} playerId={playerId} code={code} />
+
+      <MoleModeToggle view={view} playerId={playerId} code={code} />
 
       <section className="space-y-3">
         <SectionLabel>Invite</SectionLabel>
@@ -1599,6 +1772,7 @@ function PlayingPhase({
               {you.secretWord}
             </div>
           )}
+          <MoleModeBadge view={view} you={you} />
         </section>
 
         {isMyTurn ? (
