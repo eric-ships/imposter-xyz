@@ -27,6 +27,7 @@ import {
   playTurnChime,
   primeAudio,
   setMuted as audioSetMuted,
+  speakText,
 } from "@/lib/audio";
 import { TIMER_DURATIONS_MS, TIMER_GRACE_MS } from "@/lib/timer";
 
@@ -897,6 +898,26 @@ function VoidGameButton({
             : "Void game"}
       </button>
     </div>
+  );
+}
+
+function SpeakerIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={`shrink-0 self-center ${className}`}
+      aria-hidden
+    >
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+    </svg>
   );
 }
 
@@ -2321,12 +2342,15 @@ function ClueLog({
                               </span>
                             </div>
                             <div className="flex items-baseline justify-between gap-3">
-                              <div
-                                className="min-w-0 break-words font-serif text-lg italic leading-snug text-ink [overflow-wrap:anywhere]"
-                                title={c.word}
+                              <button
+                                type="button"
+                                onClick={() => speakText(c.word)}
+                                title={`Tap to hear · ${c.word}`}
+                                className="group/word inline-flex min-w-0 items-baseline gap-1.5 break-words text-left font-serif text-lg italic leading-snug text-ink transition hover:text-accent [overflow-wrap:anywhere]"
                               >
-                                {c.word}
-                              </div>
+                                <span>{c.word}</span>
+                                <SpeakerIcon className="opacity-0 transition group-hover/word:opacity-60" />
+                              </button>
                               <ClueReactions
                                 clue={c}
                                 code={code}

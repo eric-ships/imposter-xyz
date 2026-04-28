@@ -54,6 +54,33 @@ export function playTurnChime() {
   playTone(c, 1108, now + 0.28, 0.36, 0.36);
 }
 
+// Speak the given text via the Web Speech API. Cancels any in-flight
+// utterance so rapid taps don't pile up. Respects the global mute
+// toggle. No-ops gracefully on browsers without speech synthesis.
+export function speakText(text: string) {
+  if (isMuted()) return;
+  if (typeof window === "undefined") return;
+  const synth = window.speechSynthesis;
+  if (!synth) return;
+  const trimmed = text.trim();
+  if (!trimmed) return;
+
+  // Cancel anything currently speaking — so clicking a second clue
+  // interrupts the first instead of queuing.
+  synth.cancel();
+
+  const u = new SpeechSynthesisUtterance(trimmed);
+  u.rate = 0.95;
+  u.pitch = 1;
+  u.volume = 1;
+  // Prefer an English voice if any are available; otherwise let the
+  // platform pick.
+  const voices = synth.getVoices();
+  const en = voices.find((v) => v.lang?.toLowerCase().startsWith("en"));
+  if (en) u.voice = en;
+  synth.speak(u);
+}
+
 // Soft single-bell tone for reveal-stage transitions. Lower pitched
 // than the turn chime so it reads as "something just happened" rather
 // than "act now".
