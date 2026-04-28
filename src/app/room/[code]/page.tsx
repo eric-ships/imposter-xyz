@@ -1357,10 +1357,13 @@ function MoleModeToggle({
   }
 
   // Pairing math preview so the host can see what they're signing up for.
+  // Mole mode: always 2 imposters (capped at N-1 in the degenerate
+  // 3-player case). Crew pairs up; odd crewmate is left unpaired.
   const n = view.players.length;
-  const impCount = n % 2 === 0 ? 2 : 1;
-  const crewCount = n - impCount;
+  const impCount = Math.min(2, Math.max(0, n - 1));
+  const crewCount = Math.max(0, n - impCount);
   const pairs = Math.floor(crewCount / 2);
+  const lone = crewCount % 2 === 1;
 
   return (
     <section
@@ -1372,13 +1375,14 @@ function MoleModeToggle({
         <div>
           <SectionLabel>Moley moley mole</SectionLabel>
           <p className="mt-1 text-[11px] text-ink-soft">
-            Imposters know each other. Crewmates pair up — you&apos;ll
+            2 imposters know each other. Crewmates pair up — you&apos;ll
             see your partner.
           </p>
           {n >= 3 && (
             <p className="mt-1 text-[11px] text-ink-faint">
               With {n} players: {impCount} imposter{impCount === 1 ? "" : "s"} ·{" "}
               {pairs} crew pair{pairs === 1 ? "" : "s"}
+              {lone ? " · 1 lone wolf" : ""}
             </p>
           )}
         </div>

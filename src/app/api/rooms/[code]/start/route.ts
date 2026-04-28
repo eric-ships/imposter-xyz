@@ -130,13 +130,12 @@ export async function POST(
   //   8 players   → 3 imposters
   // Imposters don't know about each other — their client view just
   // shows "isImposter = true".
-  // EXCEPT in mole mode, where the count is chosen so crewmates pair
-  // evenly: 1 imposter if N is odd, 2 if N is even.
+  // EXCEPT in mole mode, where there are always exactly 2 imposters
+  // (they know each other) and crewmates pair up. If the crew count is
+  // odd, one crewmate is left without a partner.
   const isMoleMode = "mole_mode" in room && !!room.mole_mode;
   const imposterCount = isMoleMode
-    ? ids.length % 2 === 0
-      ? 2
-      : 1
+    ? Math.min(2, ids.length - 1) // never more imposters than (N-1)
     : ids.length >= 8
       ? 3
       : ids.length >= 5
