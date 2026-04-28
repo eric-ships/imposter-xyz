@@ -22,6 +22,7 @@ import {
 } from "@/lib/wallet";
 import {
   isMuted as audioIsMuted,
+  playRevealStageChime,
   playTimerTick,
   playTurnChime,
   primeAudio,
@@ -2908,6 +2909,31 @@ function RevealConfetti({ variant }: { variant: "win" | "loss" | "draw" }) {
   );
 }
 
+// Pulsing dots while waiting for the next reveal stage to fire. Keeps
+// the layout from collapsing as content fades in/out and gives the
+// pause an actual presence (so the table reads it as "wait for it..."
+// instead of "the screen is broken").
+function RevealEllipsis() {
+  return (
+    <span className="inline-flex gap-1 text-3xl text-ink-faint/40">
+      {[0, 1, 2].map((i) => (
+        <motion.span
+          key={i}
+          animate={{ opacity: [0.2, 0.9, 0.2] }}
+          transition={{
+            duration: 1.4,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: i * 0.2,
+          }}
+        >
+          ·
+        </motion.span>
+      ))}
+    </span>
+  );
+}
+
 function RevealPhase({
   view,
   playerId,
@@ -2926,6 +2952,36 @@ function RevealPhase({
   const youAreImposter = reveal.imposterIds.includes(playerId);
   const caught = reveal.caught;
   const outcome = reveal.guessOutcome;
+
+  // Tiered reveal: unspool the round resolution over a few seconds
+  // instead of dumping everything at once.
+  //   stage 0 (immediate): "The imposter was..." header only
+  //   stage 1 (~1.4s):     imposter name(s) appear  (chime)
+  //   stage 2 (~1.4s):     secret word appears      (chime)
+  //   stage 3 (~1.4s):     imposter's guess appears (chime, if any)
+  //   stage 4 (~1.0s):     outcome banner + confetti + everything else
+  const hasGuess = !!reveal.guess;
+  const finalStage = hasGuess ? 4 : 3;
+  const [stage, setStage] = useState(0);
+  useEffect(() => {
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const advance = (s: number, delay: number) => {
+      timers.push(
+        setTimeout(() => {
+          setStage(s);
+          if (s < finalStage) playRevealStageChime(s);
+        }, delay)
+      );
+    };
+    let t = 1400;
+    advance(1, t);
+    advance(2, (t += 1400));
+    if (hasGuess) advance(3, (t += 1400));
+    advance(finalStage, (t += hasGuess ? 1400 : 1400));
+    return () => {
+      for (const x of timers) clearTimeout(x);
+    };
+  }, [hasGuess, finalStage]);
   const multiImposter = reveal.imposterIds.length > 1;
 
   type Side = "imposter" | "crewmates" | "draw";
@@ -3013,93 +3069,176 @@ function RevealPhase({
     roundDeltas[p.id] = d;
   }
 
+  const showFinal = stage >= finalStage;
+
   return (
     <>
-      <RevealConfetti
-        variant={youDrew ? "draw" : youWon ? "win" : "loss"}
-      />
-      <section
-        className={`relative border-2 p-10 text-center ${
-          youDrew
-            ? "border-accent bg-accent/5"
-            : youWon
-              ? "border-leaf bg-leaf/5"
-              : "border-oxblood bg-oxblood/5"
-        }`}
-      >
-        <div
-          className={`font-serif text-6xl italic ${
-            youDrew ? "text-accent" : youWon ? "text-leaf" : "text-oxblood"
-          }`}
-        >
-          {youDrew ? "Split point" : youWon ? "You won" : "You lost"}
-        </div>
-        <div className="mt-4 text-sm text-ink-soft">{subtitle}</div>
-        {pointsEarned > 0 && (
-          <div className="mt-5 inline-block border border-ink px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-ink">
-            +{pointsEarned} point{pointsEarned === 1 ? "" : "s"}
-          </div>
+      {showFinal && (
+        <RevealConfetti
+          variant={youDrew ? "draw" : youWon ? "win" : "loss"}
+        />
+      )}
+
+      <AnimatePresence>
+        {showFinal && (
+          <motion.section
+            key="outcome-banner"
+            initial={{ opacity: 0, y: -12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{
+              type: "spring",
+              stiffness: 320,
+              damping: 26,
+            }}
+            className={`relative border-2 p-10 text-center ${
+              youDrew
+                ? "border-accent bg-accent/5"
+                : youWon
+                  ? "border-leaf bg-leaf/5"
+                  : "border-oxblood bg-oxblood/5"
+            }`}
+          >
+            <div
+              className={`font-serif text-6xl italic ${
+                youDrew ? "text-accent" : youWon ? "text-leaf" : "text-oxblood"
+              }`}
+            >
+              {youDrew ? "Split point" : youWon ? "You won" : "You lost"}
+            </div>
+            <div className="mt-4 text-sm text-ink-soft">{subtitle}</div>
+            {pointsEarned > 0 && (
+              <div className="mt-5 inline-block border border-ink px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-ink">
+                +{pointsEarned} point{pointsEarned === 1 ? "" : "s"}
+              </div>
+            )}
+          </motion.section>
         )}
-      </section>
+      </AnimatePresence>
 
       <section className="border border-line bg-surface p-8 text-center">
         <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
           {multiImposter ? "The imposters were" : "The imposter was"}
         </div>
-        <div className="mt-3 flex flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl italic text-oxblood">
-          {reveal.imposterIds.map((id, i) => (
-            <span key={id} className="inline-flex items-baseline gap-3">
-              {i > 0 && (
-                <span className="text-lg text-ink-faint">&</span>
-              )}
-              <span>{nicknameById.get(id) ?? "?"}</span>
-              {reveal.caughtImposterId === id && multiImposter && (
-                <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
-                  caught
-                </span>
-              )}
-            </span>
-          ))}
+        <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl italic text-oxblood">
+          {stage >= 1 ? (
+            reveal.imposterIds.map((id, i) => (
+              <motion.span
+                key={id}
+                initial={{ opacity: 0, y: -8, scale: 0.85, rotateX: -60 }}
+                animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 360,
+                  damping: 24,
+                  delay: i * 0.18,
+                }}
+                className="inline-flex items-baseline gap-3"
+              >
+                {i > 0 && (
+                  <span className="text-lg text-ink-faint">&</span>
+                )}
+                <span>{nicknameById.get(id) ?? "?"}</span>
+                {reveal.caughtImposterId === id && multiImposter && (
+                  <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
+                    caught
+                  </span>
+                )}
+              </motion.span>
+            ))
+          ) : (
+            <RevealEllipsis />
+          )}
         </div>
+
         <div className="mt-6 border-t border-line-soft pt-6">
           <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
             Secret word
           </div>
-          <div className="mt-2 font-serif text-3xl text-ink">
-            {reveal.secretWord}
+          <div className="mt-2 flex min-h-[2.5rem] items-center justify-center font-serif text-3xl text-ink">
+            {stage >= 2 ? (
+              <motion.span
+                initial={{ opacity: 0, y: -8, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 360, damping: 24 }}
+              >
+                {reveal.secretWord}
+              </motion.span>
+            ) : (
+              <RevealEllipsis />
+            )}
           </div>
-          <div className="mt-2 text-xs text-ink-faint">
-            Category · {view.category}
-          </div>
+          {stage >= 2 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mt-2 text-xs text-ink-faint"
+            >
+              Category · {view.category}
+            </motion.div>
+          )}
         </div>
+
         {reveal.guess && (
           <div className="mt-6 border-t border-line-soft pt-6">
             <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
               Imposter guessed
             </div>
-            <div className="mt-2 flex items-center justify-center gap-3">
-              <span className="font-serif text-2xl italic text-ink">
-                {reveal.guess}
-              </span>
-              <span
-                className={`rounded-sm px-2 py-0.5 text-[9px] uppercase tracking-[0.3em] ${
-                  reveal.guessOutcome === "exact"
-                    ? "bg-leaf text-white"
-                    : reveal.guessOutcome === "close"
-                      ? "bg-accent text-white"
-                      : "bg-oxblood text-white"
-                }`}
-              >
-                {reveal.guessOutcome}
-              </span>
+            <div className="mt-2 flex min-h-[2rem] items-center justify-center gap-3">
+              {stage >= 3 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: -8, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 360,
+                    damping: 24,
+                  }}
+                  className="flex items-center gap-3"
+                >
+                  <span className="font-serif text-2xl italic text-ink">
+                    {reveal.guess}
+                  </span>
+                  <span
+                    className={`rounded-sm px-2 py-0.5 text-[9px] uppercase tracking-[0.3em] ${
+                      reveal.guessOutcome === "exact"
+                        ? "bg-leaf text-white"
+                        : reveal.guessOutcome === "close"
+                          ? "bg-accent text-white"
+                          : "bg-oxblood text-white"
+                    }`}
+                  >
+                    {reveal.guessOutcome}
+                  </span>
+                </motion.div>
+              ) : (
+                <RevealEllipsis />
+              )}
             </div>
           </div>
         )}
-        <div className="mt-5 text-[10px] uppercase tracking-[0.3em] text-ink-soft">
-          {outcomeLabel}
-        </div>
+
+        {showFinal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.15 }}
+            className="mt-5 text-[10px] uppercase tracking-[0.3em] text-ink-soft"
+          >
+            {outcomeLabel}
+          </motion.div>
+        )}
       </section>
 
+      <AnimatePresence>
+        {showFinal && (
+          <motion.div
+            key="reveal-tail"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.32, ease: "easeOut" }}
+            className="flex flex-col gap-7"
+          >
       {view.guessCandidates.length > 0 && (
         <section className="space-y-3">
           <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
@@ -3222,6 +3361,9 @@ function RevealPhase({
           Awaiting the host
         </p>
       )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

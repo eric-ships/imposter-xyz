@@ -54,6 +54,26 @@ export function playTurnChime() {
   playTone(c, 1108, now + 0.28, 0.36, 0.36);
 }
 
+// Soft single-bell tone for reveal-stage transitions. Lower pitched
+// than the turn chime so it reads as "something just happened" rather
+// than "act now".
+export function playRevealStageChime(stage: number) {
+  if (isMuted()) return;
+  const c = getCtx();
+  if (!c) return;
+  if (c.state === "suspended") c.resume().catch(() => {});
+
+  // Climb a minor third per stage so the sequence has shape: F4, Ab4,
+  // C5, Eb5. Final stage gets a soft chord (root + fifth) as a payoff.
+  const ladder = [349, 415, 523, 622];
+  const freq = ladder[Math.min(stage, ladder.length - 1)];
+  const now = c.currentTime;
+  playTone(c, freq, now, 0.5, 0.16);
+  if (stage >= 3) {
+    playTone(c, freq * 1.5, now + 0.05, 0.55, 0.12);
+  }
+}
+
 // One tick per second of the final countdown. `urgent` raises the pitch
 // a little so the last few seconds read as extra pressure.
 export function playTimerTick(urgent: boolean) {
