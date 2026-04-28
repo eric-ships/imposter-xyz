@@ -136,7 +136,7 @@ export default function RoomPage({
         </p>
         <button
           onClick={() => router.push("/")}
-          className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page"
+          className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
         >
           Back home
         </button>
@@ -147,7 +147,7 @@ export default function RoomPage({
   if (!view) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md items-center justify-center">
-        <p className="text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           Loading
         </p>
       </main>
@@ -166,7 +166,7 @@ export default function RoomPage({
           </p>
           <button
             onClick={() => router.push("/")}
-            className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page"
+            className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
           >
             Back home
           </button>
@@ -176,7 +176,7 @@ export default function RoomPage({
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-8 px-8">
         <div className="text-center">
-          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
             Join room
           </div>
           <div className="mt-2 font-serif text-4xl tracking-[0.3em] text-ink">
@@ -184,7 +184,7 @@ export default function RoomPage({
           </div>
         </div>
         <label className="block w-full">
-          <span className="mb-3 block text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+          <span className="mb-3 block text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             Your name
           </span>
           <input
@@ -198,7 +198,7 @@ export default function RoomPage({
         <button
           onClick={doJoin}
           disabled={joining || joinNickname.trim().length === 0}
-          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
         >
           {joining ? "Joining" : "Join"}
         </button>
@@ -311,7 +311,7 @@ function RoomPlay({
     <main
       className={`mx-auto grid min-h-screen w-full grid-rows-[auto_1fr_auto] gap-7 px-8 py-8 ${mainWidth}`}
     >
-      <header className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+      <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         <span className="flex items-baseline gap-2">
           <span>Room</span>
           <span className="font-serif text-base tracking-[0.25em] text-ink normal-case">
@@ -330,7 +330,7 @@ function RoomPlay({
             href="/rules"
             target="_blank"
             rel="noreferrer"
-            className="text-[10px] uppercase tracking-[0.3em] text-ink-faint transition hover:text-ink"
+            className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
             title="How to play"
           >
             Rules
@@ -349,7 +349,7 @@ function RoomPlay({
               {nicknameById.get(playerId)}
             </span>
             {you.isHost && (
-              <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[9px] tracking-[0.3em] text-accent">
+              <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-accent">
                 Host
               </span>
             )}
@@ -357,7 +357,7 @@ function RoomPlay({
         </span>
       </header>
 
-      <div className="flex min-h-0 flex-col justify-center gap-7">
+      <div className="flex min-h-0 flex-col gap-7">
         {timedState && view.phaseDeadline && (
           <PhaseCountdown
             code={code}
@@ -636,7 +636,7 @@ function AvatarPicker({
       </button>
       {open && (
         <div className="absolute right-0 top-9 z-50 w-72 space-y-3 rounded-sm border border-line bg-page p-4 shadow-lg">
-          <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             Pick an avatar
           </div>
           <div className="grid grid-cols-8 gap-1">
@@ -664,7 +664,7 @@ function AvatarPicker({
             <button
               onClick={() => custom.trim() && set(custom.trim())}
               disabled={pending || !custom.trim()}
-              className="flex-1 rounded-sm border border-ink px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page disabled:opacity-40"
+              className="flex-1 rounded-sm border border-ink px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page disabled:opacity-40"
             >
               Use custom
             </button>
@@ -673,7 +673,7 @@ function AvatarPicker({
             <button
               onClick={() => set(null)}
               disabled={pending}
-              className="block w-full text-center text-[10px] uppercase tracking-[0.3em] text-ink-faint hover:text-oxblood"
+              className="block w-full text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint hover:text-oxblood"
             >
               Clear (use initial)
             </button>
@@ -718,7 +718,7 @@ function CasualModeButton({
           ? "Shortlist: visible to all"
           : "Shortlist: off (host can enable)"
       }
-      className={`rounded-sm border px-2 py-0.5 text-[9px] uppercase tracking-[0.3em] transition disabled:opacity-40 ${
+      className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] transition disabled:opacity-40 ${
         enabled
           ? "border-accent/60 bg-accent/10 text-accent hover:bg-accent hover:text-page"
           : "border-line text-ink-faint hover:border-ink hover:text-ink"
@@ -884,7 +884,7 @@ function VoidGameButton({
       <button
         onClick={voidGame}
         disabled={submitting}
-        className={`text-[10px] uppercase tracking-[0.3em] transition ${
+        className={`text-[11px] uppercase tracking-[0.2em] transition ${
           armed
             ? "text-oxblood hover:opacity-80"
             : "text-ink-faint hover:text-oxblood"
@@ -902,7 +902,7 @@ function VoidGameButton({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+    <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
       {children}
     </h2>
   );
@@ -952,13 +952,13 @@ function PlayerList({
               <div className="text-sm text-ink">
                 {p.nickname}
                 {p.id === view.hostId && (
-                  <span className="ml-2 text-[9px] uppercase tracking-[0.3em] text-accent">
+                  <span className="ml-2 text-[10px] uppercase tracking-[0.18em] text-accent">
                     Host
                   </span>
                 )}
               </div>
               {showAnte && (
-                <div className="mt-0.5 text-[10px] uppercase tracking-[0.25em] text-ink-faint">
+                <div className="mt-0.5 text-[11px] uppercase tracking-[0.18em] text-ink-faint">
                   {p.antePaid
                     ? "anted"
                     : p.hasPermission
@@ -1112,11 +1112,11 @@ function PotPanel({
         <button
           onClick={() => toggle(true)}
           disabled={hostToggling}
-          className="w-full rounded-sm border border-ink px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page disabled:opacity-40"
+          className="w-full rounded-sm border border-ink px-4 py-3 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page disabled:opacity-40"
         >
           {hostToggling ? "Enabling..." : "Enable 1 USDC pot"}
         </button>
-        <p className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           Base Sepolia · testnet USDC · winner takes the pot
         </p>
         {error && (
@@ -1140,7 +1140,7 @@ function PotPanel({
           <button
             onClick={() => toggle(false)}
             disabled={hostToggling}
-            className="text-[10px] uppercase tracking-[0.3em] text-ink-faint hover:text-oxblood"
+            className="text-[11px] uppercase tracking-[0.2em] text-ink-faint hover:text-oxblood"
           >
             disable
           </button>
@@ -1151,7 +1151,7 @@ function PotPanel({
           <div className="font-serif text-3xl text-ink">
             {formatUsdc(totalPot)} USDC
           </div>
-          <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             {pot.paidCount} of {playerCount} anted · {formatUsdc(pot.anteAmount)} each
           </div>
         </div>
@@ -1160,7 +1160,7 @@ function PotPanel({
             href={blockExplorerUrl(pot.chainCreateTx)}
             target="_blank"
             rel="noreferrer"
-            className="text-[10px] uppercase tracking-[0.3em] text-accent hover:text-ink"
+            className="text-[11px] uppercase tracking-[0.2em] text-accent hover:text-ink"
           >
             tx ↗
           </a>
@@ -1175,7 +1175,7 @@ function PotPanel({
         <div className="rounded-sm border border-leaf/40 bg-leaf/10 px-4 py-3 text-sm text-leaf">
           ✓ Authorized · host can begin when everyone&apos;s in
           {address && (
-            <div className="mt-1 text-[10px] uppercase tracking-[0.25em] text-leaf/80">
+            <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-leaf/80">
               {shortAddress(address)} · {formatUsdc(DEFAULT_ALLOWANCE)} USDC
               / {DEFAULT_PERIOD_DAYS} days
             </div>
@@ -1184,14 +1184,14 @@ function PotPanel({
       ) : (
         <div className="space-y-2">
           {address && (
-            <div className="text-[10px] uppercase tracking-[0.25em] text-ink-faint">
+            <div className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
               Wallet: {shortAddress(address)}
             </div>
           )}
           <button
             onClick={doGrantPermission}
             disabled={granting || isConnecting}
-            className="w-full rounded-sm bg-ink px-4 py-3 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:opacity-40"
+            className="w-full rounded-sm bg-ink px-4 py-3 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:opacity-40"
           >
             {granting
               ? "Authorizing..."
@@ -1201,7 +1201,7 @@ function PotPanel({
                   ? `Authorize ${formatUsdc(DEFAULT_ALLOWANCE)} USDC`
                   : `Connect & authorize ${formatUsdc(DEFAULT_ALLOWANCE)} USDC`}
           </button>
-          <p className="text-[10px] uppercase tracking-[0.25em] text-ink-faint">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
             One sign · {formatUsdc(DEFAULT_ALLOWANCE)} USDC /
             {" "}{DEFAULT_PERIOD_DAYS} days · revoke anytime
           </p>
@@ -1270,7 +1270,7 @@ function CandidatesModeToggle({
           <button
             onClick={toggle}
             disabled={pending}
-            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.3em] transition disabled:opacity-40 ${
+            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition disabled:opacity-40 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
                 : "border border-ink text-ink hover:bg-ink hover:text-page"
@@ -1279,7 +1279,7 @@ function CandidatesModeToggle({
             {pending ? "..." : enabled ? "On" : "Off"}
           </button>
         ) : (
-          <span className="shrink-0 rounded-sm border border-accent/60 px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-accent">
+          <span className="shrink-0 rounded-sm border border-accent/60 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-accent">
             On
           </span>
         )}
@@ -1369,7 +1369,7 @@ function LobbyPhase({
               : `Players · ${view.players.length} of 5`}
           </SectionLabel>
           {anyScore && (
-            <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
               {view.players.length} players
             </span>
           )}
@@ -1400,7 +1400,7 @@ function LobbyPhase({
               setCopied(true);
               setTimeout(() => setCopied(false), 1500);
             }}
-            className="text-[10px] uppercase tracking-[0.3em] text-accent transition hover:text-ink"
+            className="text-[11px] uppercase tracking-[0.2em] text-accent transition hover:text-ink"
           >
             {copied ? "Copied" : "Copy"}
           </button>
@@ -1411,12 +1411,12 @@ function LobbyPhase({
         <button
           onClick={start}
           disabled={!startReady || starting}
-          className="rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
         >
           {startLabel}
         </button>
       ) : (
-        <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           Awaiting the host
         </p>
       )}
@@ -1432,7 +1432,7 @@ function LobbyPhase({
           href="/rules"
           target="_blank"
           rel="noreferrer"
-          className="text-[10px] uppercase tracking-[0.3em] text-ink-faint transition hover:text-ink"
+          className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
         >
           How to play
         </Link>
@@ -1550,21 +1550,21 @@ function PlayingPhase({
       <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
         <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
         <section className="space-y-1">
-          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
             Category
           </div>
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="font-serif text-3xl italic leading-none text-ink">
               {view.category}
             </h2>
-            <span className="shrink-0 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            <span className="shrink-0 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
               Round {view.round} / {view.totalRounds}
             </span>
           </div>
         </section>
 
         <section className="relative border-y-2 border-line bg-surface/70 px-6 py-10 text-center">
-          <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.4em]">
+          <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[11px] uppercase tracking-[0.22em]">
             <span className={you.isImposter ? "text-oxblood" : "text-leaf"}>
               {you.isImposter ? "Imposter" : "Your word"}
             </span>
@@ -1592,7 +1592,7 @@ function PlayingPhase({
               aria-hidden
               animate={{ opacity: [1, 0.55, 1] }}
               transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[10px] uppercase tracking-[0.45em] text-accent"
+              className="absolute -top-px left-1/2 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[11px] uppercase tracking-[0.25em] text-accent"
             >
               Your turn
             </motion.span>
@@ -1615,7 +1615,7 @@ function PlayingPhase({
                 <button
                   onClick={submit}
                   disabled={submitting || word.trim().length === 0}
-                  className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+                  className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   {submitting ? "..." : "Submit"}
                 </button>
@@ -1678,7 +1678,7 @@ function CandidatesShowcase({ view }: { view: PublicRoomView }) {
     <section className="space-y-3 border border-line-soft bg-surface/30 p-5">
       <div className="flex items-baseline justify-between">
         <SectionLabel>Possible answers</SectionLabel>
-        <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+        <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           {empty
             ? "Shortlist · loading"
             : `Shortlist · ${view.guessCandidates.length} on the menu`}
@@ -1738,7 +1738,7 @@ function Scoreboard({
   const sorted = [...view.players].sort((a, b) => b.score - a.score);
   return (
     <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+      <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         Scores
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -1807,7 +1807,7 @@ function MatchProgress({ view }: { view: PublicRoomView }) {
 
   return (
     <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+      <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         Match progress
       </div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
@@ -1835,7 +1835,7 @@ function MatchProgress({ view }: { view: PublicRoomView }) {
                 }`}
               />
               <span
-                className={`text-[10px] uppercase tracking-[0.2em] ${
+                className={`text-[11px] uppercase tracking-[0.18em] ${
                   s.status === "current" ? "text-accent" : "text-ink-faint"
                 }`}
               >
@@ -1855,13 +1855,13 @@ function PotStatus({ view }: { view: PublicRoomView }) {
   const total = (ante * BigInt(view.pot.paidCount)).toString();
   return (
     <div className="space-y-2">
-      <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+      <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         Pot
       </div>
       <div className="font-serif text-xl italic leading-none text-ink">
         {formatUsdc(total)} USDC
       </div>
-      <div className="text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+      <div className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
         {view.pot.paidCount} / {view.players.length} anted
       </div>
     </div>
@@ -1912,12 +1912,12 @@ function ActivePlayerHero({
       </div>
       <div className="space-y-1.5 text-center">
         <div className="font-serif text-3xl italic text-ink">{nickname}</div>
-        <div className="flex items-baseline justify-center gap-1 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+        <div className="flex items-baseline justify-center gap-1 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span>is thinking</span>
           <ThinkingDots />
         </div>
         {iAmNext && (
-          <div className="pt-3 text-[10px] uppercase tracking-[0.35em] text-accent">
+          <div className="pt-3 text-[11px] uppercase tracking-[0.22em] text-accent">
             You&apos;re up next
           </div>
         )}
@@ -2259,7 +2259,7 @@ function ClueLog({
             return (
               <div key={round}>
                 <div
-                  className={`mb-2 flex items-baseline justify-between text-[10px] uppercase tracking-[0.3em] ${
+                  className={`mb-2 flex items-baseline justify-between text-[11px] uppercase tracking-[0.2em] ${
                     isActive ? "text-accent" : "text-ink-faint"
                   }`}
                 >
@@ -2409,7 +2409,7 @@ function VotingPhase({
   return (
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
       <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
-        <section className="flex items-center justify-between border-b border-line pb-3 text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+        <section className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
             {view.category}
           </span>
@@ -2431,7 +2431,7 @@ function VotingPhase({
             <div className="font-serif text-3xl italic text-ink">
               Who is the imposter?
             </div>
-            <div className="mt-1 text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
               {alreadyVoted
                 ? `Vote locked · ${votesReceived} of ${totalPlayers}`
                 : `Cast your vote · ${votesReceived} of ${totalPlayers} in`}
@@ -2494,12 +2494,12 @@ function VotingPhase({
                   <div className="flex flex-1 items-baseline gap-2 font-serif text-xl text-ink">
                     <span>{p.nickname}</span>
                     {isYou && (
-                      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+                      <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-ink-faint">
                         (you)
                       </span>
                     )}
                     {hasCastVote && !isYou && (
-                      <span className="font-sans text-[10px] uppercase tracking-[0.3em] text-leaf">
+                      <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-leaf">
                         voted
                       </span>
                     )}
@@ -2511,12 +2511,12 @@ function VotingPhase({
                     )}
                   </div>
                   {alreadyVoted && myVote.target_id === p.id && (
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
                       Your vote
                     </span>
                   )}
                   {selected && !alreadyVoted && (
-                    <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
                       Selected
                     </span>
                   )}
@@ -2528,7 +2528,7 @@ function VotingPhase({
             <button
               onClick={submit}
               disabled={!target || submitting}
-              className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+              className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
             >
               {submitting ? "Submitting" : "Lock in vote"}
             </button>
@@ -2619,7 +2619,7 @@ function GuessPhase({
       <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
         <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
           <section className="border border-line bg-surface p-8 text-center">
-            <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
+            <div className="text-[11px] uppercase tracking-[0.22em] text-accent">
               Caught
             </div>
             <div className="mt-3 font-serif text-3xl italic text-ink">
@@ -2632,7 +2632,7 @@ function GuessPhase({
             </div>
 
             <div className="mt-6 border-t border-line-soft pt-5 text-left">
-              <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+              <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
                 {candidatesLoading ? (
                   "Pulling shortlist"
                 ) : candidates ? (
@@ -2659,7 +2659,7 @@ function GuessPhase({
             </div>
           </section>
 
-          <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+          <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             Awaiting{" "}
             <span className="font-serif text-sm italic normal-case tracking-normal text-ink-soft">
               {caughtNickname}
@@ -2679,7 +2679,7 @@ function GuessPhase({
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
       <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
         <section className="border-2 border-accent bg-accent/5 p-8 text-center">
-          <div className="text-[10px] uppercase tracking-[0.4em] text-accent">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-accent">
             You were caught
           </div>
           <div className="mt-3 font-serif text-3xl italic text-ink">
@@ -2708,7 +2708,7 @@ function GuessPhase({
             <button
               onClick={submit}
               disabled={submitting || guess.trim().length === 0}
-              className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+              className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
             >
               {submitting ? "Judging" : "Submit"}
             </button>
@@ -2720,7 +2720,7 @@ function GuessPhase({
           )}
 
           <div className="mt-6 border-t border-line-soft pt-5 text-left">
-            <div className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
               {candidatesLoading
                 ? "Pulling candidates"
                 : candidates
@@ -2751,7 +2751,7 @@ function GuessPhase({
           </div>
         </section>
 
-        <section className="flex items-center justify-between text-[10px] uppercase tracking-[0.35em] text-ink-faint">
+        <section className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span>Category</span>
           <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
             {view.category}
@@ -3107,7 +3107,7 @@ function RevealPhase({
             </div>
             <div className="mt-4 text-sm text-ink-soft">{subtitle}</div>
             {pointsEarned > 0 && (
-              <div className="mt-5 inline-block border border-ink px-4 py-1 text-[10px] uppercase tracking-[0.3em] text-ink">
+              <div className="mt-5 inline-block border border-ink px-4 py-1 text-[11px] uppercase tracking-[0.2em] text-ink">
                 +{pointsEarned} point{pointsEarned === 1 ? "" : "s"}
               </div>
             )}
@@ -3116,7 +3116,7 @@ function RevealPhase({
       </AnimatePresence>
 
       <section className="border border-line bg-surface p-8 text-center">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           {multiImposter ? "The imposters were" : "The imposter was"}
         </div>
         <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl italic text-oxblood">
@@ -3139,7 +3139,7 @@ function RevealPhase({
                 )}
                 <span>{nicknameById.get(id) ?? "?"}</span>
                 {reveal.caughtImposterId === id && multiImposter && (
-                  <span className="text-[10px] uppercase tracking-[0.3em] text-accent">
+                  <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
                     caught
                   </span>
                 )}
@@ -3151,7 +3151,7 @@ function RevealPhase({
         </div>
 
         <div className="mt-6 border-t border-line-soft pt-6">
-          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
             Secret word
           </div>
           <div className="mt-2 flex min-h-[2.5rem] items-center justify-center font-serif text-3xl text-ink">
@@ -3181,7 +3181,7 @@ function RevealPhase({
 
         {reveal.guess && (
           <div className="mt-6 border-t border-line-soft pt-6">
-            <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+            <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
               Imposter guessed
             </div>
             <div className="mt-2 flex min-h-[2rem] items-center justify-center gap-3">
@@ -3200,7 +3200,7 @@ function RevealPhase({
                     {reveal.guess}
                   </span>
                   <span
-                    className={`rounded-sm px-2 py-0.5 text-[9px] uppercase tracking-[0.3em] ${
+                    className={`rounded-sm px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ${
                       reveal.guessOutcome === "exact"
                         ? "bg-leaf text-white"
                         : reveal.guessOutcome === "close"
@@ -3223,7 +3223,7 @@ function RevealPhase({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.15 }}
-            className="mt-5 text-[10px] uppercase tracking-[0.3em] text-ink-soft"
+            className="mt-5 text-[11px] uppercase tracking-[0.2em] text-ink-soft"
           >
             {outcomeLabel}
           </motion.div>
@@ -3241,7 +3241,7 @@ function RevealPhase({
           >
       {view.guessCandidates.length > 0 && (
         <section className="space-y-3">
-          <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
             The shortlist
           </div>
           <div className="flex flex-wrap gap-2">
@@ -3296,7 +3296,7 @@ function RevealPhase({
         <section className="space-y-3 border border-accent/30 bg-accent/5 p-5">
           <div className="flex items-baseline justify-between">
             <SectionLabel>Pot payout</SectionLabel>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-ink-faint">
+            <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
               {view.payouts[0].kind === "refund" ? "refunded" : "settled"}
             </span>
           </div>
@@ -3320,7 +3320,7 @@ function RevealPhase({
                       href={blockExplorerUrl(p.txHash)}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-[10px] uppercase tracking-[0.3em] text-accent hover:text-ink"
+                      className="text-[11px] uppercase tracking-[0.2em] text-accent hover:text-ink"
                     >
                       tx ↗
                     </a>
@@ -3345,19 +3345,19 @@ function RevealPhase({
           <button
             onClick={playAgain}
             disabled={restarting}
-            className="flex-1 rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex-1 rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
           >
             {restarting ? "..." : "Play again"}
           </button>
           <button
             onClick={() => router.push("/")}
-            className="rounded-sm border border-ink px-6 py-4 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page"
+            className="rounded-sm border border-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
           >
             Exit
           </button>
         </div>
       ) : (
-        <p className="text-center text-[11px] uppercase tracking-[0.3em] text-ink-faint">
+        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           Awaiting the host
         </p>
       )}

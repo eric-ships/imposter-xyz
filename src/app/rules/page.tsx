@@ -4,7 +4,7 @@ export default function RulesPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-10 px-8 py-12">
       <header className="text-center">
-        <div className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">
           Rule book
         </div>
         <h1 className="mt-2 font-serif text-4xl italic text-ink">
@@ -160,7 +160,7 @@ export default function RulesPage() {
       <div className="flex justify-center border-t border-line-soft pt-8">
         <Link
           href="/"
-          className="rounded-sm border border-ink px-6 py-3 text-[11px] uppercase tracking-[0.3em] text-ink transition hover:bg-ink hover:text-page"
+          className="rounded-sm border border-ink px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
         >
           Back to the table
         </Link>
@@ -178,10 +178,10 @@ function Section({
 }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-[10px] uppercase tracking-[0.4em] text-ink-faint">
+      <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">
         {label}
       </h2>
-      <div className="space-y-3 text-sm leading-relaxed text-ink-soft">
+      <div className="space-y-3 text-base leading-relaxed text-ink-soft">
         {children}
       </div>
     </section>
