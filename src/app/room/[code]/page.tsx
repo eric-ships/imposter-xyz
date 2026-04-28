@@ -2106,10 +2106,12 @@ function ClueReactions({
   );
   const visible = [...orderedActive, ...legacyActive];
 
+  const hasAnyReactions = visible.some((e) => effective(e).count > 0);
+
   return (
     <div
       ref={rootRef}
-      className="flex items-center gap-1.5 pt-1.5"
+      className="flex shrink-0 items-center gap-1"
     >
       <AnimatePresence initial={false}>
         {visible.map((emoji) => {
@@ -2148,15 +2150,17 @@ function ClueReactions({
         })}
       </AnimatePresence>
 
-      {/* Picker: a discreet "+" trigger that expands to show the 3
-          available emoji. Always available (so anyone can react to any
-          clue at any time). */}
+      {/* Picker trigger: hidden until you hover the clue (or always
+          visible once chips exist + once you're interacting). On touch
+          devices, opacity-30 keeps it discoverable without crowding. */}
       <div className="relative">
         <button
           onClick={() => setPickerOpen((o) => !o)}
           aria-label="Add reaction"
-          className={`flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-xs text-ink-faint/40 transition hover:border-line hover:bg-page hover:text-ink-faint ${
-            pickerOpen ? "border-line bg-page text-ink-faint" : ""
+          className={`flex h-6 w-6 items-center justify-center rounded-full border border-transparent text-xs text-ink-faint transition hover:border-line hover:bg-page hover:text-ink ${
+            pickerOpen || hasAnyReactions
+              ? "opacity-100"
+              : "opacity-30 group-hover/clue:opacity-100"
           }`}
         >
           +
@@ -2281,7 +2285,7 @@ function ClueLog({
                           }}
                           className="overflow-hidden"
                         >
-                          <div className="space-y-1 py-2.5">
+                          <div className="group/clue space-y-1 py-2.5">
                             <div className="flex items-center gap-2">
                               <div
                                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${color} ${
@@ -2299,17 +2303,19 @@ function ClueLog({
                                 {nickname}
                               </span>
                             </div>
-                            <div
-                              className="break-words font-serif text-lg italic leading-snug text-ink [overflow-wrap:anywhere]"
-                              title={c.word}
-                            >
-                              {c.word}
+                            <div className="flex items-baseline justify-between gap-3">
+                              <div
+                                className="min-w-0 break-words font-serif text-lg italic leading-snug text-ink [overflow-wrap:anywhere]"
+                                title={c.word}
+                              >
+                                {c.word}
+                              </div>
+                              <ClueReactions
+                                clue={c}
+                                code={code}
+                                playerId={playerId}
+                              />
                             </div>
-                            <ClueReactions
-                              clue={c}
-                              code={code}
-                              playerId={playerId}
-                            />
                           </div>
                         </motion.li>
                       );
