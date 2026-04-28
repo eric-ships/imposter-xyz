@@ -2030,10 +2030,12 @@ function ClueReactions({
   clue,
   code,
   playerId,
+  canReact,
 }: {
   clue: PublicRoomView["clues"][number];
   code: string;
   playerId: string;
+  canReact: boolean;
 }) {
   // Optimistic toggle so the chip flips instantly; the realtime view
   // refetch backfills the canonical state.
@@ -2079,6 +2081,7 @@ function ClueReactions({
   }
 
   async function tap(emoji: string) {
+    if (!canReact) return;
     const cur = effective(emoji);
     const delta = cur.mine ? -1 : 1;
     setPendingDelta((p) => ({ ...p, [emoji]: delta }));
@@ -2150,9 +2153,11 @@ function ClueReactions({
         })}
       </AnimatePresence>
 
-      {/* Picker trigger: hidden until you hover the clue (or always
-          visible once chips exist + once you're interacting). On touch
-          devices, opacity-30 keeps it discoverable without crowding. */}
+      {/* Picker trigger: only shown when reactions are still possible
+          (i.e. during the active clue/play phase). Once the round
+          progresses past play, existing chips remain visible but no
+          one can add new reactions. */}
+      {canReact && (
       <div className="relative">
         <button
           onClick={() => setPickerOpen((o) => !o)}
@@ -2193,6 +2198,7 @@ function ClueReactions({
           )}
         </AnimatePresence>
       </div>
+      )}
     </div>
   );
 }
@@ -2314,6 +2320,7 @@ function ClueLog({
                                 clue={c}
                                 code={code}
                                 playerId={playerId}
+                                canReact={view.state === "playing"}
                               />
                             </div>
                           </div>
