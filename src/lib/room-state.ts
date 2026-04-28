@@ -70,20 +70,31 @@ export async function fetchRoomView(
   const clueIds = (clues ?? []).map((c) => c.id as number);
   const reactionsByClue = new Map<
     number,
-    { emoji: string; count: number; mine: boolean }[]
+    { emoji: string; count: number; mine: boolean; reactors: string[] }[]
   >();
   if (clueIds.length > 0) {
     const { data: rxs, error: rxErr } = await supabaseAdmin
       .from("clue_reactions")
-      .select("clue_id, player_id, emoji")
-      .in("clue_id", clueIds);
+      .select("clue_id, player_id, emoji, created_at")
+      .in("clue_id", clueIds)
+      .order("created_at", { ascending: true });
     if (!rxErr && rxs) {
-      // Aggregate: per (clue, emoji) count + whether the requester reacted.
-      const agg = new Map<string, { count: number; mine: boolean }>();
+      // Aggregate: per (clue, emoji) count + whether the requester
+      // reacted + the nicknames in tap order. We pull nicknames from
+      // the players we already loaded.
+      const nickById = new Map(
+        (players ?? []).map((p) => [p.id as string, p.nickname as string])
+      );
+      const agg = new Map<
+        string,
+        { count: number; mine: boolean; reactors: string[] }
+      >();
       for (const r of rxs) {
         const key = `${r.clue_id}|${r.emoji}`;
-        const cur = agg.get(key) ?? { count: 0, mine: false };
+        const cur =
+          agg.get(key) ?? { count: 0, mine: false, reactors: [] };
         cur.count += 1;
+        cur.reactors.push(nickById.get(r.player_id as string) ?? "?");
         if (playerId && r.player_id === playerId) cur.mine = true;
         agg.set(key, cur);
       }
@@ -91,7 +102,12 @@ export async function fetchRoomView(
         const [cidStr, emoji] = key.split("|");
         const cid = Number(cidStr);
         const list = reactionsByClue.get(cid) ?? [];
-        list.push({ emoji, count: val.count, mine: val.mine });
+        list.push({
+          emoji,
+          count: val.count,
+          mine: val.mine,
+          reactors: val.reactors,
+        });
         reactionsByClue.set(cid, list);
       }
     }
@@ -159,6 +175,7 @@ export async function fetchRoomView(
     id: p.id as string,
     nickname: p.nickname as string,
     score: p.score as number,
+    lastRoundDelta: (p.last_round_delta as number | null) ?? 0,
     avatar: (p.avatar as string | null) ?? null,
     walletAddress: (p.wallet_address as string | null) ?? null,
     hasPermission: !!(p.spend_permission as unknown),

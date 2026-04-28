@@ -79,31 +79,38 @@ export async function POST(
   const imposters = players?.filter((p) => imposterSet.has(p.id)) ?? [];
   const crewmates = players?.filter((p) => !imposterSet.has(p.id)) ?? [];
 
+  // Reset everyone's last-round delta to 0 before applying this round's
+  // scores; nonzero deltas are then written below for the winners.
+  await supabaseAdmin
+    .from("players")
+    .update({ last_round_delta: 0 })
+    .eq("room_code", code);
+
   if (outcome === "exact") {
     for (const imp of imposters) {
       await supabaseAdmin
         .from("players")
-        .update({ score: imp.score + 2 })
+        .update({ score: imp.score + 2, last_round_delta: 2 })
         .eq("id", imp.id);
     }
   } else if (outcome === "close") {
     for (const imp of imposters) {
       await supabaseAdmin
         .from("players")
-        .update({ score: imp.score + 1 })
+        .update({ score: imp.score + 1, last_round_delta: 1 })
         .eq("id", imp.id);
     }
     for (const c of crewmates) {
       await supabaseAdmin
         .from("players")
-        .update({ score: c.score + 1 })
+        .update({ score: c.score + 1, last_round_delta: 1 })
         .eq("id", c.id);
     }
   } else {
     for (const c of crewmates) {
       await supabaseAdmin
         .from("players")
-        .update({ score: c.score + 1 })
+        .update({ score: c.score + 1, last_round_delta: 1 })
         .eq("id", c.id);
     }
   }

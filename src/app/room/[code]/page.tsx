@@ -1717,6 +1717,7 @@ function Scoreboard({
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {sorted.map((p) => {
           const isYou = p.id === playerId;
+          const delta = p.lastRoundDelta;
           return (
             <div key={p.id} className="flex items-baseline gap-1.5">
               <span
@@ -1729,6 +1730,21 @@ function Scoreboard({
               <span className="text-sm tabular-nums text-ink-faint">
                 {p.score}
               </span>
+              {delta > 0 && (
+                <motion.span
+                  key={`${p.id}-${p.score}`}
+                  initial={{ opacity: 0, y: -4, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 500,
+                    damping: 24,
+                  }}
+                  className="rounded-full bg-leaf/10 px-1.5 text-[10px] font-semibold tabular-nums text-leaf"
+                >
+                  +{delta}
+                </motion.span>
+              )}
             </div>
           );
         })}
@@ -2003,7 +2019,12 @@ function TurnStrip({
   );
 }
 
-const REACTION_EMOJI = ["👀", "🤔", "💀", "🔥"];
+const REACTION_EMOJI = ["🚩", "🎯", "😂"] as const;
+const REACTION_LABELS: Record<string, string> = {
+  "🚩": "sus",
+  "🎯": "nailed it",
+  "😂": "funny",
+};
 
 function ClueReactions({
   clue,
@@ -2017,23 +2038,51 @@ function ClueReactions({
   // Optimistic toggle so the chip flips instantly; the realtime view
   // refetch backfills the canonical state.
   const [pendingDelta, setPendingDelta] = useState<Record<string, number>>({});
-  const counts = new Map<string, { count: number; mine: boolean }>();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!pickerOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [pickerOpen]);
+  const data = new Map<
+    string,
+    { count: number; mine: boolean; reactors: string[] }
+  >();
   for (const r of clue.reactions) {
-    counts.set(r.emoji, { count: r.count, mine: r.mine });
+    data.set(r.emoji, {
+      count: r.count,
+      mine: r.mine,
+      reactors: r.reactors ?? [],
+    });
   }
 
   function effective(emoji: string) {
-    const base = counts.get(emoji) ?? { count: 0, mine: false };
+    const base = data.get(emoji) ?? {
+      count: 0,
+      mine: false,
+      reactors: [] as string[],
+    };
     const delta = pendingDelta[emoji] ?? 0;
     if (delta === 0) return base;
-    // Pending toggle in-flight: flip mine and adjust count by delta.
-    return { count: Math.max(0, base.count + delta), mine: !base.mine };
+    return {
+      count: Math.max(0, base.count + delta),
+      mine: !base.mine,
+      reactors: base.reactors,
+    };
   }
 
   async function tap(emoji: string) {
     const cur = effective(emoji);
     const delta = cur.mine ? -1 : 1;
     setPendingDelta((p) => ({ ...p, [emoji]: delta }));
+    setPickerOpen(false);
     try {
       await fetch(`/api/rooms/${code}/clues/${clue.id}/react`, {
         method: "POST",
@@ -2041,9 +2090,6 @@ function ClueReactions({
         body: JSON.stringify({ playerId, emoji }),
       });
     } finally {
-      // Clear pending — the realtime refetch will deliver the canonical
-      // state shortly after. Even if the request failed, retrying via
-      // another tap is cheap.
       setPendingDelta((p) => {
         const next = { ...p };
         delete next[emoji];
@@ -2052,27 +2098,97 @@ function ClueReactions({
     }
   }
 
+  // Render order: any emoji with reactions first (preserve REACTION_EMOJI
+  // order), then anything in the data we don't know about (legacy emoji).
+  const orderedActive = REACTION_EMOJI.filter((e) => effective(e).count > 0);
+  const legacyActive = Array.from(data.keys()).filter(
+    (e) => !REACTION_EMOJI.includes(e as (typeof REACTION_EMOJI)[number])
+  );
+  const visible = [...orderedActive, ...legacyActive];
+
   return (
-    <div className="flex items-center gap-1 pt-1">
-      {REACTION_EMOJI.map((emoji) => {
-        const { count, mine } = effective(emoji);
-        return (
-          <button
-            key={emoji}
-            onClick={() => tap(emoji)}
-            className={`flex h-6 items-center gap-1 rounded-full border px-2 text-[11px] transition ${
-              mine
-                ? "border-accent/60 bg-accent/10 text-accent"
-                : count > 0
-                  ? "border-line text-ink-soft hover:border-accent hover:text-accent"
-                  : "border-transparent text-ink-faint/40 hover:border-line hover:text-ink-faint"
-            }`}
-          >
-            <span>{emoji}</span>
-            {count > 0 && <span className="tabular-nums">{count}</span>}
-          </button>
-        );
-      })}
+    <div
+      ref={rootRef}
+      className="flex items-center gap-1.5 pt-1.5"
+    >
+      <AnimatePresence initial={false}>
+        {visible.map((emoji) => {
+          const { count, mine, reactors } = effective(emoji);
+          if (count === 0) return null;
+          const label = REACTION_LABELS[emoji] ?? "";
+          const tooltip = reactors.length
+            ? `${reactors.join(", ")}${label ? ` · ${label}` : ""}`
+            : label;
+          return (
+            <motion.button
+              key={emoji}
+              layout
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 600,
+                damping: 25,
+              }}
+              onClick={() => tap(emoji)}
+              title={tooltip}
+              className={`group/rx relative flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-sm transition ${
+                mine
+                  ? "border-accent bg-accent/15 text-accent hover:bg-accent/25"
+                  : "border-line bg-page text-ink hover:border-accent/60"
+              }`}
+            >
+              <span className="text-base leading-none">{emoji}</span>
+              <span className="text-xs font-semibold tabular-nums">
+                {count}
+              </span>
+            </motion.button>
+          );
+        })}
+      </AnimatePresence>
+
+      {/* Picker: a discreet "+" trigger that expands to show the 3
+          available emoji. Always available (so anyone can react to any
+          clue at any time). */}
+      <div className="relative">
+        <button
+          onClick={() => setPickerOpen((o) => !o)}
+          aria-label="Add reaction"
+          className={`flex h-7 w-7 items-center justify-center rounded-full border border-transparent text-xs text-ink-faint/40 transition hover:border-line hover:bg-page hover:text-ink-faint ${
+            pickerOpen ? "border-line bg-page text-ink-faint" : ""
+          }`}
+        >
+          +
+        </button>
+        <AnimatePresence>
+          {pickerOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8, y: 4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8, y: 4 }}
+              transition={{ duration: 0.12, ease: "easeOut" }}
+              className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-page p-1 shadow-md"
+            >
+              {REACTION_EMOJI.map((emoji) => {
+                const mine = effective(emoji).mine;
+                return (
+                  <button
+                    key={emoji}
+                    onClick={() => tap(emoji)}
+                    title={REACTION_LABELS[emoji]}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full text-lg transition hover:scale-110 hover:bg-surface ${
+                      mine ? "bg-accent/15" : ""
+                    }`}
+                  >
+                    {emoji}
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }

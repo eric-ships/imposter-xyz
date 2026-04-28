@@ -2,7 +2,10 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
 
-const ALLOWED_EMOJI = new Set(["👀", "🤔", "💀", "🔥"]);
+// Themed for the game: sus / nailed it / funny. Old reactions stored
+// under the previous emoji set are still rendered (they just can't be
+// added/toggled anymore).
+const ALLOWED_EMOJI = new Set(["🚩", "🎯", "😂"]);
 
 /**
  * Toggle a reaction. POST adds, second POST with the same emoji removes.

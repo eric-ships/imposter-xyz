@@ -11,6 +11,9 @@ export type Player = {
   id: string;
   nickname: string;
   score: number;
+  // Score earned in the most recent completed match (the round just
+  // played). Reset to 0 when a new match starts via /play-again.
+  lastRoundDelta: number;
   // Optional emoji or single character. Falls back to the nickname's
   // first letter when null.
   avatar: string | null;
@@ -42,8 +45,14 @@ export type Clue = {
   round: number;
   word: string;
   // Aggregate count per emoji + which emoji the requesting player has
-  // already tapped. Empty when no reactions yet. See /clues/[id]/react.
-  reactions: { emoji: string; count: number; mine: boolean }[];
+  // already tapped + the nicknames who reacted (in tap order). Empty
+  // when no reactions yet. See /clues/[id]/react.
+  reactions: {
+    emoji: string;
+    count: number;
+    mine: boolean;
+    reactors: string[];
+  }[];
 };
 
 export type Vote = {
