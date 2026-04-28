@@ -1621,7 +1621,7 @@ function LobbyPhase({
         </p>
       )}
 
-      <div className="flex justify-center border-t border-line-soft pt-6">
+      <div className="flex items-center justify-center gap-6 border-t border-line-soft pt-6">
         <Link
           href="/rules"
           target="_blank"
@@ -1630,8 +1630,82 @@ function LobbyPhase({
         >
           How to play
         </Link>
+        <span className="text-[10px] text-ink-faint/40">·</span>
+        <LeaveRoomButton code={code} playerId={playerId} isHost={isHost} />
       </div>
     </>
+  );
+}
+
+function LeaveRoomButton({
+  code,
+  playerId,
+  isHost,
+}: {
+  code: string;
+  playerId: string;
+  isHost: boolean;
+}) {
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
+
+  async function leave() {
+    setPending(true);
+    try {
+      await fetch(`/api/rooms/${code}/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId }),
+      });
+      // Clear local identity for this room so a re-visit shows the
+      // join screen instead of trying to fetch the (now-deleted) player.
+      try {
+        localStorage.removeItem(`ci:${code}:playerId`);
+        localStorage.removeItem(`ci:${code}:nickname`);
+      } catch {
+        /* ignore */
+      }
+      router.push("/");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  if (!confirming) {
+    return (
+      <button
+        onClick={() => setConfirming(true)}
+        className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-oxblood"
+      >
+        Leave room
+      </button>
+    );
+  }
+
+  return (
+    <span className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em]">
+      <button
+        onClick={leave}
+        disabled={pending}
+        className="text-oxblood transition hover:opacity-70"
+        title={
+          isHost
+            ? "Host will be transferred to the next player"
+            : "Leave the lobby"
+        }
+      >
+        {pending ? "Leaving…" : "Confirm leave"}
+      </button>
+      <span className="text-ink-faint/40">·</span>
+      <button
+        onClick={() => setConfirming(false)}
+        disabled={pending}
+        className="text-ink-faint transition hover:text-ink"
+      >
+        Cancel
+      </button>
+    </span>
   );
 }
 

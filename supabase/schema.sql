@@ -47,11 +47,13 @@ alter table rooms add column if not exists phase_deadline timestamptz;
 alter table rooms
   add column if not exists guess_candidates text[] not null default '{}';
 
--- Casual mode: when true, the candidate shortlist is generated at game
--- start and visible to everyone the whole match (not just during the
--- caught-imposter guess phase). Host toggles in the lobby.
+-- Shortlist mode: when true, the candidate shortlist is generated at
+-- game start and visible to everyone the whole match (not just during
+-- the caught-imposter guess phase). On by default; hosts can toggle.
 alter table rooms
-  add column if not exists show_candidates_always boolean not null default false;
+  add column if not exists show_candidates_always boolean not null default true;
+alter table rooms
+  alter column show_candidates_always set default true;
 
 -- "Moley moley mole" mode: when true, imposters know each other and
 -- crewmates are paired up at game start (each crewmate knows their
