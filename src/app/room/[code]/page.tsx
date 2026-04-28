@@ -3240,41 +3240,122 @@ function pickRevealLine({
 }
 
 function RevealConfetti({ variant }: { variant: "win" | "loss" | "draw" }) {
-  // Hand-rolled particle burst: avoids a runtime dep, plays nice with the
-  // existing motion library. Mounts once on reveal and self-removes after
-  // the animation. Loss variant skips fireworks intentionally — the
-  // muted screen IS the feedback.
-  const particles = useMemo(() => {
+  // Hand-rolled particle bursts: a primary radial burst from center,
+  // then a secondary "rain" wave drifting down from the top half.
+  // Win gets 80 burst + 50 rain; draw gets 24 burst only; loss is muted.
+  const burst = useMemo(() => {
     if (variant === "loss") return [];
-    const count = variant === "win" ? 36 : 18;
+    const count = variant === "win" ? 80 : 24;
     return Array.from({ length: count }, (_, i) => {
       const angle = (Math.PI * 2 * i) / count + Math.random() * 0.6;
-      const distance = 220 + Math.random() * 200;
+      const distance = 240 + Math.random() * 320;
       return {
         id: i,
         x: Math.cos(angle) * distance,
-        y: Math.sin(angle) * distance - 100, // bias upward
-        rotate: Math.random() * 540 - 270,
-        delay: Math.random() * 0.15,
-        size: 6 + Math.random() * 8,
+        y: Math.sin(angle) * distance - 80, // bias upward
+        rotate: Math.random() * 720 - 360,
+        delay: Math.random() * 0.18,
+        size: 6 + Math.random() * 10,
+        // Mix of palette: leaf (win) or accent (draw) plus a sprinkle
+        // of the alternate to keep it from looking monochrome.
+        alt: Math.random() < 0.25,
+        // Mix of shapes: most rectangles (confetti strips), some squares.
+        square: Math.random() < 0.22,
       };
     });
   }, [variant]);
 
+  const rain = useMemo(() => {
+    if (variant !== "win") return [];
+    const count = 50;
+    return Array.from({ length: count }, (_, i) => {
+      // Fan out across the viewport width, start above the screen.
+      const xStart = (Math.random() - 0.5) * 1100;
+      const drift = (Math.random() - 0.5) * 240;
+      return {
+        id: i,
+        xStart,
+        xEnd: xStart + drift,
+        rotate: Math.random() * 540 - 270,
+        delay: 0.4 + Math.random() * 1.2,
+        size: 5 + Math.random() * 9,
+        duration: 2.6 + Math.random() * 1.4,
+        alt: Math.random() < 0.25,
+        square: Math.random() < 0.22,
+      };
+    });
+  }, [variant]);
+
+  // Win celebration sound: a satisfying triad fanfare on top of the
+  // existing reveal-stage chime ladder. Fires once on mount.
+  useEffect(() => {
+    if (variant !== "win") return;
+    let cancelled = false;
+    const ctx = (() => {
+      if (typeof window === "undefined") return null;
+      try {
+        type WebkitWindow = Window & {
+          webkitAudioContext?: typeof AudioContext;
+        };
+        const AC =
+          window.AudioContext ?? (window as WebkitWindow).webkitAudioContext;
+        return AC ? new AC() : null;
+      } catch {
+        return null;
+      }
+    })();
+    if (!ctx) return;
+    if (typeof window !== "undefined" &&
+        window.localStorage?.getItem("imposter:muted") === "1") {
+      return;
+    }
+    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    const t0 = ctx.currentTime;
+    // C major triad arpeggio + held chord (C-E-G-C)
+    const ladder = [523.25, 659.25, 783.99, 1046.5];
+    const playTone = (
+      f: number,
+      start: number,
+      dur: number,
+      peak = 0.18
+    ) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = f;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(peak, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(start);
+      osc.stop(start + dur + 0.05);
+    };
+    ladder.forEach((f, i) => playTone(f, t0 + i * 0.09, 0.55, 0.16));
+    // Final held chord
+    playTone(523.25, t0 + 0.5, 1.2, 0.12);
+    playTone(659.25, t0 + 0.5, 1.2, 0.1);
+    playTone(783.99, t0 + 0.5, 1.2, 0.1);
+    return () => {
+      cancelled = true;
+      // Best-effort cleanup; chord is short.
+      void cancelled;
+    };
+  }, [variant]);
+
   if (variant === "loss") return null;
 
-  const colorClass =
-    variant === "win" ? "bg-leaf" : "bg-accent";
+  const primary = variant === "win" ? "bg-leaf" : "bg-accent";
+  const alt = variant === "win" ? "bg-accent" : "bg-leaf";
 
   return (
     <div
       aria-hidden
       className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
     >
-      {particles.map((p) => (
+      {burst.map((p) => (
         <motion.span
-          key={p.id}
-          initial={{ x: 0, y: 0, opacity: 1, scale: 0.6, rotate: 0 }}
+          key={`b-${p.id}`}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 0.5, rotate: 0 }}
           animate={{
             x: p.x,
             y: p.y,
@@ -3283,12 +3364,47 @@ function RevealConfetti({ variant }: { variant: "win" | "loss" | "draw" }) {
             rotate: p.rotate,
           }}
           transition={{
-            duration: 1.6,
+            duration: 1.8,
             delay: p.delay,
             ease: [0.16, 0.84, 0.3, 1],
           }}
-          className={`absolute rounded-sm ${colorClass}`}
-          style={{ width: p.size, height: p.size * 0.4 }}
+          className={`absolute ${
+            p.square ? "rounded-[2px]" : "rounded-sm"
+          } ${p.alt ? alt : primary}`}
+          style={{
+            width: p.size,
+            height: p.square ? p.size : p.size * 0.4,
+          }}
+        />
+      ))}
+      {rain.map((p) => (
+        <motion.span
+          key={`r-${p.id}`}
+          initial={{
+            x: p.xStart,
+            y: -600,
+            opacity: 0,
+            rotate: 0,
+          }}
+          animate={{
+            x: p.xEnd,
+            y: 700,
+            opacity: [0, 1, 1, 0],
+            rotate: p.rotate,
+          }}
+          transition={{
+            duration: p.duration,
+            delay: p.delay,
+            ease: "easeIn",
+            times: [0, 0.1, 0.85, 1],
+          }}
+          className={`absolute ${
+            p.square ? "rounded-[2px]" : "rounded-sm"
+          } ${p.alt ? alt : primary}`}
+          style={{
+            width: p.size,
+            height: p.square ? p.size : p.size * 0.4,
+          }}
         />
       ))}
     </div>
@@ -3484,13 +3600,30 @@ function RevealPhase({
                   : "border-oxblood bg-oxblood/5"
             }`}
           >
-            <div
+            <motion.div
+              animate={
+                youWon
+                  ? {
+                      scale: [1, 1.06, 1],
+                      textShadow: [
+                        "0 0 0px rgba(107,127,92,0)",
+                        "0 0 24px rgba(107,127,92,0.55)",
+                        "0 0 0px rgba(107,127,92,0)",
+                      ],
+                    }
+                  : { scale: 1 }
+              }
+              transition={
+                youWon
+                  ? { duration: 2.4, repeat: 2, ease: "easeInOut" }
+                  : { duration: 0 }
+              }
               className={`font-serif text-6xl italic ${
                 youDrew ? "text-accent" : youWon ? "text-leaf" : "text-oxblood"
               }`}
             >
               {youDrew ? "Split point" : youWon ? "You won" : "You lost"}
-            </div>
+            </motion.div>
             <div className="mt-4 text-sm text-ink-soft">{subtitle}</div>
             {pointsEarned > 0 && (
               <div className="mt-5 inline-block border border-ink px-4 py-1 text-[11px] uppercase tracking-[0.2em] text-ink">
