@@ -2936,15 +2936,32 @@ function VotingPhase({
               );
             })}
           </div>
-          {!alreadyVoted && (
-            <button
-              onClick={submit}
-              disabled={!target || submitting}
-              className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              {submitting ? "Submitting" : "Lock in vote"}
-            </button>
-          )}
+          {!alreadyVoted &&
+            (target ? (
+              <motion.button
+                key="lock-in"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 28,
+                }}
+                onClick={submit}
+                disabled={submitting}
+                className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {submitting
+                  ? "Submitting"
+                  : `Lock in vote · ${
+                      view.players.find((p) => p.id === target)?.nickname ?? ""
+                    }`}
+              </motion.button>
+            ) : (
+              <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                Pick someone above to lock your vote
+              </p>
+            ))}
           {error && (
             <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
               {error}
