@@ -2846,7 +2846,7 @@ function VotingPhase({
               );
             })}
           </div>
-          <div className="divide-y divide-line-soft border-y border-line-soft">
+          <div className="space-y-2">
             {view.players.map((p) => {
               const isYou = p.id === playerId;
               const selected = target === p.id;
@@ -2858,14 +2858,26 @@ function VotingPhase({
                 p.nickname,
                 p.avatar
               );
+              const disabled = alreadyVoted || isYou;
               return (
                 <button
                   key={p.id}
-                  onClick={() => !alreadyVoted && !isYou && setTarget(p.id)}
-                  disabled={alreadyVoted || isYou}
-                  className={`flex w-full items-center gap-4 px-3 py-5 text-left transition ${
-                    selected ? "bg-accent/10 ring-1 ring-accent/40" : ""
-                  } ${isYou || alreadyVoted ? "opacity-50" : "hover:bg-cream/40"}`}
+                  onClick={() => !disabled && setTarget(p.id)}
+                  disabled={disabled}
+                  title={
+                    isYou
+                      ? "You can't vote for yourself"
+                      : alreadyVoted
+                        ? "Vote locked"
+                        : `Vote for ${p.nickname}`
+                  }
+                  className={`group/voterow relative flex w-full items-center gap-4 rounded-md border-2 px-4 py-4 text-left transition active:scale-[0.99] ${
+                    selected
+                      ? "border-accent bg-accent/10 shadow-[0_0_0_4px_rgba(168,134,77,0.08)]"
+                      : disabled
+                        ? "cursor-not-allowed border-line-soft bg-line-soft/20 opacity-60"
+                        : "border-line bg-page hover:border-ink hover:bg-surface/60 hover:shadow-sm"
+                  }`}
                 >
                   <div className="relative">
                     <div
@@ -2913,6 +2925,11 @@ function VotingPhase({
                   {selected && !alreadyVoted && (
                     <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
                       Selected
+                    </span>
+                  )}
+                  {!selected && !disabled && (
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint opacity-0 transition group-hover/voterow:opacity-100">
+                      Tap to vote
                     </span>
                   )}
                 </button>
