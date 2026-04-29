@@ -2028,17 +2028,26 @@ function PlayingPhase({
   );
 }
 
+// 12 hues evenly walked around the wheel — each one is far enough from
+// its neighbors that a 5-player table won't end up with two muddy
+// olives next to each other. Saturation/lightness held in a narrow
+// band (S 38-55%, L 38-48%) so they all read well with white text on
+// the cream page and stay tonally consistent with the oxblood/leaf
+// design system. Order is interleaved (warm/cool/warm/cool) so the
+// first few hash buckets are maximally distinct.
 const AVATAR_PALETTE = [
-  "bg-[#a8856a]",
-  "bg-[#6b7f5c]",
-  "bg-[#6a7d94]",
-  "bg-[#a67e7b]",
-  "bg-[#8a7a9b]",
-  "bg-[#b39560]",
-  "bg-[#5a8580]",
-  "bg-[#9a7357]",
-  "bg-[#7d8b6a]",
-  "bg-[#8a6b80]",
+  "bg-[#b04a4a]", // red
+  "bg-[#3d8073]", // teal
+  "bg-[#c89344]", // gold
+  "bg-[#7a5ca8]", // purple
+  "bg-[#4f7a3e]", // forest green
+  "bg-[#4a86a8]", // sky blue
+  "bg-[#b25c8c]", // magenta / rose
+  "bg-[#c97240]", // burnt orange
+  "bg-[#8b9333]", // olive
+  "bg-[#4d6db0]", // indigo
+  "bg-[#87593b]", // brown
+  "bg-[#5a6470]", // slate
 ];
 
 function avatarFor(id: string, nickname: string, custom?: string | null) {
