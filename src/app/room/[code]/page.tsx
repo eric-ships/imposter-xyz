@@ -132,7 +132,7 @@ export default function RoomPage({
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-8 text-center">
         <h1 className="font-serif text-3xl italic text-ink">Room not found</h1>
         <p className="text-sm text-ink-soft">
-          Code <span className="font-serif italic">{code}</span> doesn&apos;t
+          Code <span className="font-serif font-semibold tracking-[0.15em]">{code}</span> doesn&apos;t
           exist.
         </p>
         <button
@@ -346,7 +346,7 @@ function RoomPlay({
                 view.players.find((p) => p.id === playerId)?.avatar ?? null
               }
             />
-            <span className="font-serif text-base italic text-ink normal-case tracking-normal">
+            <span className="font-serif text-base text-ink normal-case tracking-normal">
               {nicknameById.get(playerId)}
             </span>
             {you.isHost && (
@@ -932,7 +932,7 @@ function MoleModeBadge({
           >
             {av.initial}
           </span>
-          <span className="font-serif italic normal-case tracking-normal text-ink">
+          <span className="font-serif normal-case tracking-normal text-ink">
             {j.nickname}
           </span>
         </span>
@@ -969,7 +969,7 @@ function MoleModeBadge({
               >
                 {av.initial}
               </span>
-              <span className="font-serif italic normal-case tracking-normal text-ink">
+              <span className="font-serif normal-case tracking-normal text-ink">
                 {p.nickname}
               </span>
             </span>
@@ -997,7 +997,7 @@ function MoleModeBadge({
           >
             {av.initial}
           </span>
-          <span className="font-serif italic normal-case tracking-normal text-ink">
+          <span className="font-serif normal-case tracking-normal text-ink">
             {p.nickname}
           </span>
         </span>
@@ -1068,7 +1068,7 @@ function PlayerList({
         return (
           <li key={p.id} className="flex items-center gap-4 py-3">
             {showRank && (
-              <div className="w-4 text-right font-serif text-sm italic text-ink-faint tabular-nums">
+              <div className="w-4 text-right font-serif text-sm text-ink-faint tabular-nums">
                 {i + 1}
               </div>
             )}
@@ -1126,7 +1126,7 @@ function PlayerList({
             )}
             {showScores && (
               <div className="flex items-baseline gap-2">
-                <div className="font-serif text-lg italic text-ink-soft">
+                <div className="font-serif text-lg text-ink-soft tabular-nums">
                   {p.score}
                 </div>
                 {deltas && deltas[p.id] !== undefined && (
@@ -2086,7 +2086,7 @@ function CandidatesShowcase({ view }: { view: PublicRoomView }) {
           {view.guessCandidates.map((c) => (
             <span
               key={c}
-              className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm italic text-ink-soft"
+              className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm text-ink-soft"
             >
               {c}
             </span>
@@ -2139,8 +2139,8 @@ function Scoreboard({
           return (
             <div key={p.id} className="flex items-baseline gap-1.5">
               <span
-                className={`font-serif italic ${
-                  isYou ? "text-ink" : "text-ink-soft"
+                className={`font-serif ${
+                  isYou ? "font-semibold text-ink" : "text-ink-soft"
                 }`}
               >
                 {p.nickname}
@@ -2250,7 +2250,7 @@ function PotStatus({ view }: { view: PublicRoomView }) {
       <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         Pot
       </div>
-      <div className="font-serif text-xl italic leading-none text-ink">
+      <div className="font-serif text-xl leading-none text-ink tabular-nums">
         {formatUsdc(total)} USDC
       </div>
       <div className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
@@ -2717,7 +2717,7 @@ function ClueLog({
                                 type="button"
                                 onClick={() => speakText(c.word)}
                                 title={`Tap to hear · ${c.word}`}
-                                className="group/word inline-flex min-w-0 items-baseline gap-1.5 break-words text-left font-serif text-lg italic leading-snug text-ink transition hover:text-accent [overflow-wrap:anywhere]"
+                                className="group/word inline-flex min-w-0 items-baseline gap-1.5 break-words text-left font-serif text-lg leading-snug text-ink transition hover:text-accent [overflow-wrap:anywhere]"
                               >
                                 <span>{c.word}</span>
                                 <SpeakerIcon className="opacity-0 transition group-hover/word:opacity-60" />
@@ -2811,7 +2811,7 @@ function VotingPhase({
           {!you.isImposter && you.secretWord && (
             <span>
               Word
-              <span className="ml-2 font-serif text-sm italic text-ink normal-case tracking-normal">
+              <span className="ml-2 font-serif text-sm text-ink normal-case tracking-normal">
                 {you.secretWord}
               </span>
             </span>
@@ -2911,7 +2911,7 @@ function VotingPhase({
                       </span>
                     )}
                     {!hasCastVote && (
-                      <span className="font-sans text-[10px] italic tracking-normal text-ink-faint">
+                      <span className="font-sans text-[10px] tracking-normal text-ink-faint">
                         deciding
                         <ThinkingDots />
                       </span>
@@ -3066,7 +3066,7 @@ function GuessPhase({
                   "Pulling shortlist"
                 ) : candidates ? (
                   <>
-                    <span className="font-serif text-sm italic normal-case tracking-normal text-ink-soft">
+                    <span className="font-serif text-sm normal-case tracking-normal text-ink-soft">
                       {caughtNickname}
                     </span>{" "}
                     is choosing from
@@ -3078,7 +3078,7 @@ function GuessPhase({
                   {candidates.map((c) => (
                     <span
                       key={c}
-                      className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm italic text-ink-soft"
+                      className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm text-ink-soft"
                     >
                       {c}
                     </span>
@@ -3090,7 +3090,7 @@ function GuessPhase({
 
           <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             Awaiting{" "}
-            <span className="font-serif text-sm italic normal-case tracking-normal text-ink-soft">
+            <span className="font-serif text-sm normal-case tracking-normal text-ink-soft">
               {caughtNickname}
             </span>
             &apos;s guess
@@ -3165,7 +3165,7 @@ function GuessPhase({
                       key={c}
                       type="button"
                       onClick={() => setGuess(c)}
-                      className={`rounded-full border px-3 py-1 font-serif text-sm italic transition ${
+                      className={`rounded-full border px-3 py-1 font-serif text-sm transition ${
                         selected
                           ? "border-accent bg-accent text-page"
                           : "border-line bg-page text-ink hover:border-accent hover:text-accent"
@@ -3817,7 +3817,7 @@ function RevealPhase({
               return (
                 <span
                   key={c}
-                  className={`rounded-full border px-3 py-1 font-serif text-sm italic ${
+                  className={`rounded-full border px-3 py-1 font-serif text-sm ${
                     isSecret
                       ? "border-leaf bg-leaf/10 text-leaf"
                       : isGuess
@@ -3846,7 +3846,7 @@ function RevealPhase({
               <span className="text-ink-soft">
                 {nicknameById.get(v.voter_id)}
               </span>
-              <span className="font-serif italic text-ink">
+              <span className="font-serif text-ink">
                 → {nicknameById.get(v.target_id)}
               </span>
             </li>
@@ -3875,7 +3875,7 @@ function RevealPhase({
                 >
                   <span className="text-ink-soft">{label}</span>
                   <span className="flex items-baseline gap-3">
-                    <span className="font-serif italic text-ink">
+                    <span className="font-serif text-ink tabular-nums">
                       {formatUsdc(p.amount)} USDC
                     </span>
                     <a
