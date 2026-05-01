@@ -370,7 +370,7 @@ function RoomPlay({
       )}
       </div>
 
-      <div className="flex min-h-0 flex-col gap-7">
+      <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
         <AnimatePresence mode="wait">
           <motion.div
             key={view.state}
@@ -1947,18 +1947,18 @@ function PlayingPhase({
           </div>
         </section>
 
-        <section className="relative border-y-2 border-line bg-surface/70 px-6 py-10 text-center">
+        <section className="relative border-y-2 border-line bg-surface/70 px-6 py-5 text-center sm:py-10">
           <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[11px] uppercase tracking-[0.22em]">
             <span className={you.isImposter ? "text-oxblood" : "text-leaf"}>
               {you.isImposter ? "Imposter" : "Your word"}
             </span>
           </span>
           {you.isImposter ? (
-            <div className="font-serif text-3xl italic text-ink">
+            <div className="font-serif text-2xl italic text-ink sm:text-3xl">
               Bluff · Find the word
             </div>
           ) : (
-            <div className="font-serif text-5xl font-semibold leading-none tracking-tight text-ink">
+            <div className="font-serif text-4xl font-semibold leading-none tracking-tight text-ink sm:text-5xl">
               {you.secretWord}
             </div>
           )}
@@ -2275,13 +2275,13 @@ function ActivePlayerHero({
 }) {
   const { color, initial, isCustom } = avatarFor(playerId, nickname, avatar);
   return (
-    <div className="relative flex flex-col items-center gap-5 border border-line-soft bg-surface/30 px-6 py-10">
+    <div className="relative flex flex-col items-center gap-3 border border-line-soft bg-surface/30 px-6 py-5 sm:gap-5 sm:py-10">
       <div className="relative">
         <motion.span
           aria-hidden
           animate={{ scale: [1, 1.22, 1], opacity: [0.5, 0, 0.5] }}
           transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -inset-4 rounded-full ring-2 ring-accent"
+          className="absolute -inset-3 rounded-full ring-2 ring-accent sm:-inset-4"
         />
         <motion.span
           aria-hidden
@@ -2292,26 +2292,26 @@ function ActivePlayerHero({
             ease: "easeInOut",
             delay: 0.4,
           }}
-          className="absolute -inset-4 rounded-full ring-1 ring-accent/50"
+          className="absolute -inset-3 rounded-full ring-1 ring-accent/50 sm:-inset-4"
         />
         <div
-          className={`relative flex h-32 w-32 items-center justify-center rounded-full ${color} ${
+          className={`relative flex h-20 w-20 items-center justify-center rounded-full sm:h-32 sm:w-32 ${color} ${
             isCustom
-              ? "border border-line text-6xl"
-              : "text-5xl font-semibold text-white"
+              ? "border border-line text-3xl sm:text-6xl"
+              : "text-3xl font-semibold text-white sm:text-5xl"
           }`}
         >
           {initial}
         </div>
       </div>
-      <div className="space-y-1.5 text-center">
-        <div className="font-serif text-3xl italic text-ink">{nickname}</div>
+      <div className="space-y-1 text-center sm:space-y-1.5">
+        <div className="font-serif text-2xl italic text-ink sm:text-3xl">{nickname}</div>
         <div className="flex items-baseline justify-center gap-1 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span>is thinking</span>
           <ThinkingDots />
         </div>
         {iAmNext && (
-          <div className="pt-3 text-[11px] uppercase tracking-[0.22em] text-accent">
+          <div className="pt-2 text-[11px] uppercase tracking-[0.22em] text-accent sm:pt-3">
             You&apos;re up next
           </div>
         )}
@@ -2643,24 +2643,86 @@ function ClueLog({
         ? "lg:grid-cols-2"
         : "lg:grid-cols-1";
 
+  // On mobile, only the most recent round is auto-expanded; previous
+  // rounds collapse into a tap-to-expand summary. On lg+ the grid shows
+  // everything at once and these states are visually irrelevant
+  // (forceExpanded class below).
   return (
     <section className="space-y-4">
       <SectionLabel>Clues</SectionLabel>
       <div className={`grid grid-cols-1 gap-6 ${lgGridClass}`}>
-        {sortedRounds.map(([round, clues]) => {
+        {sortedRounds.map(([round, clues], roundIdx) => {
             const roundNum = Number(round);
             const isActive = activeRound === roundNum;
+            const isMostRecent = roundIdx === 0;
             return (
-              <div key={round}>
-                <div
-                  className={`mb-2 flex items-baseline justify-between text-[11px] uppercase tracking-[0.2em] ${
-                    isActive ? "text-accent" : "text-ink-faint"
-                  }`}
-                >
-                  <span>Round {round}</span>
-                  {isActive && <span>In progress</span>}
-                </div>
-                <ul className="flex flex-col divide-y divide-line-soft border-y border-line-soft">
+              <ClueRoundBlock
+                key={round}
+                round={round}
+                clues={clues}
+                isActive={isActive}
+                defaultOpen={isMostRecent || isActive}
+                nicknameById={nicknameById}
+                avatarById={avatarById}
+                code={code}
+                playerId={playerId}
+                viewState={view.state}
+              />
+            );
+          })}
+      </div>
+    </section>
+  );
+}
+
+function ClueRoundBlock({
+  round,
+  clues,
+  isActive,
+  defaultOpen,
+  nicknameById,
+  avatarById,
+  code,
+  playerId,
+  viewState,
+}: {
+  round: string;
+  clues: PublicRoomView["clues"];
+  isActive: boolean;
+  defaultOpen: boolean;
+  nicknameById: Map<string, string>;
+  avatarById: Map<string, string | null>;
+  code: string;
+  playerId: string;
+  viewState: PublicRoomView["state"];
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`mb-2 flex w-full items-baseline justify-between text-left text-[11px] uppercase tracking-[0.2em] transition lg:cursor-default ${
+          isActive ? "text-accent" : "text-ink-faint"
+        }`}
+      >
+        <span className="flex items-baseline gap-2">
+          <span>Round {round}</span>
+          <span className="text-ink-faint/60 lg:hidden">
+            · {clues.length} {clues.length === 1 ? "clue" : "clues"}
+          </span>
+        </span>
+        <span className="flex items-baseline gap-2">
+          {isActive && <span>In progress</span>}
+          <span className="text-ink-faint/60 lg:hidden">
+            {open ? "▾" : "▸"}
+          </span>
+        </span>
+      </button>
+      <div
+        className={`${open ? "" : "hidden"} lg:block`}
+      >
+        <ul className="flex flex-col divide-y divide-line-soft border-y border-line-soft">
                   <AnimatePresence initial={false}>
                     {[...clues].reverse().map((c) => {
                       const nickname = nicknameById.get(c.player_id) ?? "";
@@ -2728,7 +2790,7 @@ function ClueLog({
                                 clue={c}
                                 code={code}
                                 playerId={playerId}
-                                canReact={view.state === "playing"}
+                                canReact={viewState === "playing"}
                               />
                             </div>
                           </div>
@@ -2737,11 +2799,8 @@ function ClueLog({
                     })}
                   </AnimatePresence>
                 </ul>
-              </div>
-            );
-          })}
       </div>
-    </section>
+    </div>
   );
 }
 
