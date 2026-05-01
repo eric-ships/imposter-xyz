@@ -137,7 +137,7 @@ export default function RoomPage({
         </p>
         <button
           onClick={() => router.push("/")}
-          className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
+          className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
         >
           Back home
         </button>
@@ -167,7 +167,7 @@ export default function RoomPage({
           </p>
           <button
             onClick={() => router.push("/")}
-            className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
+            className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
           >
             Back home
           </button>
@@ -199,7 +199,7 @@ export default function RoomPage({
         <button
           onClick={doJoin}
           disabled={joining || joinNickname.trim().length === 0}
-          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {joining ? "Joining" : "Join"}
         </button>
@@ -629,7 +629,7 @@ function AvatarPicker({
       <button
         onClick={() => setOpen((o) => !o)}
         title="Pick your avatar"
-        className={`flex h-7 w-7 items-center justify-center rounded-full transition hover:ring-2 hover:ring-accent/50 ${color} ${
+        className={`flex h-7 w-7 items-center justify-center rounded-full transition-all duration-100 hover:ring-2 hover:ring-accent/50 active:scale-90 ${color} ${
           isCustom
             ? "border border-line text-base"
             : "text-xs font-semibold text-white"
@@ -648,7 +648,7 @@ function AvatarPicker({
                 key={emoji}
                 onClick={() => set(emoji)}
                 disabled={pending}
-                className={`flex h-8 w-8 items-center justify-center rounded-sm text-lg transition hover:bg-surface ${
+                className={`flex h-8 w-8 items-center justify-center rounded-sm text-lg transition-all duration-100 hover:bg-surface active:scale-90 ${
                   avatar === emoji ? "ring-2 ring-accent" : ""
                 }`}
               >
@@ -667,7 +667,7 @@ function AvatarPicker({
             <button
               onClick={() => custom.trim() && set(custom.trim())}
               disabled={pending || !custom.trim()}
-              className="flex-1 rounded-sm border border-ink px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page disabled:opacity-40"
+              className="flex-1 rounded-sm border border-ink px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
             >
               Use custom
             </button>
@@ -721,7 +721,7 @@ function CasualModeButton({
           ? "Shortlist: visible to all"
           : "Shortlist: off (host can enable)"
       }
-      className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] transition disabled:opacity-40 ${
+      className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] transition-all duration-100 active:scale-[0.95] disabled:opacity-40 disabled:active:scale-100 ${
         enabled
           ? "border-accent/60 bg-accent/10 text-accent hover:bg-accent hover:text-page"
           : "border-line text-ink-faint hover:border-ink hover:text-ink"
@@ -1247,7 +1247,7 @@ function PotPanel({
         <button
           onClick={() => toggle(true)}
           disabled={hostToggling}
-          className="w-full rounded-sm border border-ink px-4 py-3 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page disabled:opacity-40"
+          className="w-full rounded-sm border border-ink px-4 py-3 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
         >
           {hostToggling ? "Enabling..." : "Enable 1 USDC pot"}
         </button>
@@ -1326,7 +1326,7 @@ function PotPanel({
           <button
             onClick={doGrantPermission}
             disabled={granting || isConnecting}
-            className="w-full rounded-sm bg-ink px-4 py-3 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:opacity-40"
+            className="w-full rounded-sm bg-ink px-4 py-3 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:opacity-40"
           >
             {granting
               ? "Authorizing..."
@@ -1409,7 +1409,7 @@ function JesusModeToggle({
           <button
             onClick={toggle}
             disabled={pending}
-            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition disabled:opacity-40 ${
+            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
                 : "border border-ink text-ink hover:bg-ink hover:text-page"
@@ -1500,7 +1500,7 @@ function MoleModeToggle({
           <button
             onClick={toggle}
             disabled={pending}
-            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition disabled:opacity-40 ${
+            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
                 : "border border-ink text-ink hover:bg-ink hover:text-page"
@@ -1576,7 +1576,7 @@ function CandidatesModeToggle({
           <button
             onClick={toggle}
             disabled={pending}
-            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition disabled:opacity-40 ${
+            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
                 : "border border-ink text-ink hover:bg-ink hover:text-page"
@@ -1721,7 +1721,7 @@ function LobbyPhase({
         <button
           onClick={start}
           disabled={!startReady || starting}
-          className="rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {startLabel}
         </button>
@@ -2000,7 +2000,7 @@ function PlayingPhase({
                 <button
                   onClick={submit}
                   disabled={submitting || word.trim().length === 0}
-                  className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+                  className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   {submitting ? "..." : "Submit"}
                 </button>
@@ -2543,7 +2543,7 @@ function ClueReactions({
               }}
               onClick={() => tap(emoji)}
               title={tooltip}
-              className={`group/rx relative flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-sm transition ${
+              className={`group/rx relative flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-sm transition-all duration-100 active:scale-90 ${
                 mine
                   ? "border-accent bg-accent/15 text-accent hover:bg-accent/25"
                   : "border-line bg-page text-ink hover:border-accent/60"
@@ -2567,7 +2567,7 @@ function ClueReactions({
         <button
           onClick={() => setPickerOpen((o) => !o)}
           aria-label="Add reaction"
-          className={`flex h-6 w-6 items-center justify-center rounded-full border border-transparent text-xs text-ink-faint transition hover:border-line hover:bg-page hover:text-ink ${
+          className={`flex h-6 w-6 items-center justify-center rounded-full border border-transparent text-xs text-ink-faint transition-all duration-100 hover:border-line hover:bg-page hover:text-ink active:scale-90 ${
             pickerOpen || hasAnyReactions
               ? "opacity-100"
               : "opacity-30 group-hover/clue:opacity-100"
@@ -2591,7 +2591,7 @@ function ClueReactions({
                     key={emoji}
                     onClick={() => tap(emoji)}
                     title={REACTION_LABELS[emoji]}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full text-lg transition hover:scale-110 hover:bg-surface ${
+                    className={`flex h-9 w-9 items-center justify-center rounded-full text-lg transition-all duration-100 hover:scale-110 hover:bg-surface active:scale-95 ${
                       mine ? "bg-accent/15" : ""
                     }`}
                   >
@@ -3010,7 +3010,7 @@ function VotingPhase({
                 }}
                 onClick={submit}
                 disabled={submitting}
-                className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting
                   ? "Submitting"
@@ -3198,7 +3198,7 @@ function GuessPhase({
             <button
               onClick={submit}
               disabled={submitting || guess.trim().length === 0}
-              className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+              className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
             >
               {submitting ? "Judging" : "Submit"}
             </button>
@@ -3226,7 +3226,7 @@ function GuessPhase({
                       key={c}
                       type="button"
                       onClick={() => setGuess(c)}
-                      className={`rounded-full border px-3 py-1 font-serif text-sm transition ${
+                      className={`rounded-full border px-3 py-1 font-serif text-sm transition-all duration-100 active:scale-95 ${
                         selected
                           ? "border-accent bg-accent text-page"
                           : "border-line bg-page text-ink hover:border-accent hover:text-accent"
@@ -3968,13 +3968,13 @@ function RevealPhase({
           <button
             onClick={playAgain}
             disabled={restarting}
-            className="flex-1 rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex-1 rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
           >
             {restarting ? "..." : "Play again"}
           </button>
           <button
             onClick={() => router.push("/")}
-            className="rounded-sm border border-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
+            className="rounded-sm border border-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
           >
             Exit
           </button>

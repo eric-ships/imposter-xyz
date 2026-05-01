@@ -91,13 +91,13 @@ export default function HomePage() {
           <div className="space-y-3">
             <button
               onClick={() => setMode("create")}
-              className="w-full rounded-sm bg-ink px-6 py-4 text-sm font-medium tracking-wide text-page transition hover:bg-accent"
+              className="w-full rounded-sm bg-ink px-6 py-4 text-sm font-medium tracking-wide text-page transition-all duration-100 hover:bg-accent active:scale-[0.97]"
             >
               Create a room
             </button>
             <button
               onClick={() => setMode("join")}
-              className="w-full rounded-sm border border-ink px-6 py-4 text-sm font-medium tracking-wide text-ink transition hover:bg-ink hover:text-page"
+              className="w-full rounded-sm border border-ink px-6 py-4 text-sm font-medium tracking-wide text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
             >
               Join a room
             </button>
@@ -138,7 +138,7 @@ export default function HomePage() {
             <button
               onClick={mode === "create" ? createRoom : joinRoom}
               disabled={!canSubmit}
-              className="w-full rounded-sm bg-ink px-6 py-4 text-sm font-medium tracking-wide text-page transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-30"
+              className="w-full rounded-sm bg-ink px-6 py-4 text-sm font-medium tracking-wide text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
             >
               {submitting
                 ? mode === "create"
