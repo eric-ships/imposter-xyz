@@ -133,21 +133,16 @@ export async function POST(
   // EXCEPT:
   //   - mole mode: always 2 imposters (they know each other) and
   //     crewmates pair up
-  //   - jesus mode: always 1 imposter who knows 1 random crewmate
-  // The two are mutually exclusive at the toggle level, but if both
-  // are somehow on we let jesus take priority (it's the single-imp
-  // mode, simpler to reason about).
+  //   - jesus mode: standard scaling, but each imposter is assigned
+  //     a unique random crewmate they "know" is on the crew side.
+  //     They still don't know about each other — only their jesus.
   const isMoleMode = "mole_mode" in room && !!room.mole_mode;
   const isJesusMode = "jesus_mode" in room && !!room.jesus_mode;
-  const imposterCount = isJesusMode
-    ? 1
-    : isMoleMode
-      ? Math.min(2, ids.length - 1)
-      : ids.length >= 8
-        ? 3
-        : ids.length >= 5
-          ? 2
-          : 1;
+  const standardImposterCount =
+    ids.length >= 8 ? 3 : ids.length >= 5 ? 2 : 1;
+  const imposterCount = isMoleMode
+    ? Math.min(2, ids.length - 1)
+    : standardImposterCount;
   const imposterIds = shuffle(ids).slice(0, imposterCount);
   const imposterId = imposterIds[0]; // legacy singleton field
   const turnOrder = shuffle(ids);
@@ -250,14 +245,19 @@ export async function POST(
       .eq("room_code", code);
   }
 
-  // Jesus mode: pick a random crewmate and link the (single) imposter
-  // to them via partner_id. The crewmate's partner_id stays null —
-  // they don't know they've been outed.
-  if (isJesusMode && imposterIds.length === 1) {
-    const imp = imposterIds[0];
-    const crewIds = ids.filter((id) => id !== imp);
-    if (crewIds.length > 0) {
-      const jesus = crewIds[Math.floor(Math.random() * crewIds.length)];
+  // Jesus mode: each imposter gets their OWN unique jesus (a random
+  // crewmate they "know" is on the crew side). With 2 imposters in a
+  // 5-player game that means 2 different crewmates are quietly outed
+  // (each only to one imposter). Imposters still don't know each
+  // other — only their assigned jesus. Crewmates' partner_id stays
+  // null; they have no idea.
+  if (isJesusMode) {
+    const imposterSet = new Set(imposterIds);
+    const crewIds = shuffle(ids.filter((id) => !imposterSet.has(id)));
+    // shuffle returns a fresh ordered list; pop one per imposter.
+    for (let i = 0; i < imposterIds.length && i < crewIds.length; i++) {
+      const imp = imposterIds[i];
+      const jesus = crewIds[i];
       await supabaseAdmin
         .from("players")
         .update({ partner_id: jesus })

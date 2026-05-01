@@ -3,12 +3,13 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
 
 /**
- * Host-only: toggle "jesus christ" mode in the lobby. 1 imposter who
- * knows one randomly-chosen crewmate ("their jesus"). Lobby-only since
- * the assignment is baked in at /start.
+ * Host-only: toggle "jesus christ" mode in the lobby. Standard imposter
+ * scaling, but each imposter is privately told one randomly-chosen
+ * crewmate's identity (their jesus). Lobby-only since the assignment
+ * is baked in at /start.
  *
- * Turning this ON also turns OFF mole_mode (the two are mutually
- * exclusive: jesus is a single-imposter mode; mole is multi-imposter).
+ * Turning this ON also turns OFF mole_mode (the two have conflicting
+ * partner_id semantics — mole pairs crew, jesus pairs imposter↔crew).
  */
 export async function POST(
   request: Request,

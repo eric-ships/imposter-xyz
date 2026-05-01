@@ -1396,8 +1396,8 @@ function JesusModeToggle({
         <div>
           <SectionLabel>Jesus christ mode</SectionLabel>
           <p className="mt-1 text-[11px] text-ink-soft">
-            1 imposter who knows one random crewmate (their jesus). The
-            crewmate has no idea.
+            Each imposter gets their own random crewmate they know is
+            on the crew side (their jesus). The crewmates have no idea.
           </p>
           {view.moleMode && enabled && (
             <p className="mt-1 text-[11px] text-oxblood">
