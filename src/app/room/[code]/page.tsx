@@ -310,8 +310,9 @@ function RoomPlay({
 
   return (
     <main
-      className={`mx-auto grid min-h-screen w-full grid-rows-[auto_1fr_auto] gap-7 px-8 py-8 ${mainWidth}`}
+      className={`mx-auto grid min-h-screen w-full grid-rows-[auto_1fr_auto] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 ${mainWidth}`}
     >
+      <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
       <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         <span className="flex items-baseline gap-2">
           <span>Room</span>
@@ -358,17 +359,18 @@ function RoomPlay({
         </span>
       </header>
 
-      <div className="flex min-h-0 flex-col gap-7">
-        {timedState && view.phaseDeadline && (
-          <PhaseCountdown
-            code={code}
-            deadline={view.phaseDeadline}
-            state={timedState}
-            subject={timerSubject}
-            tickEnabled={timerTickEnabled}
-          />
-        )}
+      {timedState && view.phaseDeadline && (
+        <PhaseCountdown
+          code={code}
+          deadline={view.phaseDeadline}
+          state={timedState}
+          subject={timerSubject}
+          tickEnabled={timerTickEnabled}
+        />
+      )}
+      </div>
 
+      <div className="flex min-h-0 flex-col gap-7">
         <AnimatePresence mode="wait">
           <motion.div
             key={view.state}

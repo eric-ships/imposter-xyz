@@ -27,6 +27,38 @@ export function primeAudio() {
   if (c && c.state === "suspended") {
     c.resume().catch(() => {});
   }
+  startKeepAlive();
+}
+
+// iOS Safari (and some Android browsers) auto-suspend a silent
+// AudioContext after ~10s of no scheduled sound. Once suspended,
+// resume() outside a user gesture is a no-op — so the next
+// playTurnChime() / playRevealStageChime() silently drops or fires
+// late when the user finally taps. Workaround: schedule an inaudible
+// (gain=0) ping every ~4s, which keeps the context "live" indefinitely.
+let keepAliveTimer: ReturnType<typeof setInterval> | null = null;
+function startKeepAlive() {
+  if (typeof window === "undefined") return;
+  if (keepAliveTimer) return;
+  keepAliveTimer = setInterval(() => {
+    const c = getCtx();
+    if (!c) return;
+    if (c.state === "suspended") {
+      c.resume().catch(() => {});
+      return;
+    }
+    try {
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      gain.gain.setValueAtTime(0, c.currentTime);
+      osc.frequency.value = 440;
+      osc.connect(gain).connect(c.destination);
+      osc.start(c.currentTime);
+      osc.stop(c.currentTime + 0.02);
+    } catch {
+      /* ignore */
+    }
+  }, 4000);
 }
 
 export function isMuted(): boolean {
@@ -43,8 +75,32 @@ export function playTurnChime() {
   if (isMuted()) return;
   const c = getCtx();
   if (!c) return;
-  if (c.state === "suspended") c.resume().catch(() => {});
 
+  // If the context was suspended (iOS likes to do this between chimes),
+  // try to resume and *retry* once after the resume settles. Without the
+  // retry the chime gets dropped — which is the "your turn sound didn't
+  // fire, fired later" bug.
+  if (c.state === "suspended") {
+    c.resume()
+      .then(() => fireTurnChime(c))
+      .catch(() => fireTurnChime(c));
+    return;
+  }
+  fireTurnChime(c);
+}
+
+function fireTurnChime(c: AudioContext) {
+  // If still suspended after the resume attempt, schedule one more retry
+  // on the next animation frame (gives Safari a tick to actually wake up
+  // the context). Last resort: drop and rely on keep-alive next time.
+  if (c.state === "suspended") {
+    if (typeof requestAnimationFrame !== "undefined") {
+      requestAnimationFrame(() => {
+        if (c.state !== "suspended") fireTurnChime(c);
+      });
+    }
+    return;
+  }
   const now = c.currentTime;
   // Three-tone arpeggio (E5 -> A5 -> C#6) at higher volume so it carries
   // over a noisy room. Longer total envelope (~600ms) makes it feel like
