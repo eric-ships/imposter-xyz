@@ -238,7 +238,7 @@ export async function POST(
   // Only write phase_deadline if the column is migrated. Without it, the
   // timer quietly no-ops but the game still works end-to-end.
   if ("phase_deadline" in room) {
-    update.phase_deadline = deadlineFor("playing");
+    update.phase_deadline = deadlineFor("playing", players.length);
   }
 
   const { error } = await supabaseAdmin

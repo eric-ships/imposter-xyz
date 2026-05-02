@@ -29,7 +29,7 @@ import {
   setMuted as audioSetMuted,
   speakText,
 } from "@/lib/audio";
-import { TIMER_DURATIONS_MS, TIMER_GRACE_MS } from "@/lib/timer";
+import { TIMER_GRACE_MS, timerDurationsFor } from "@/lib/timer";
 
 export default function RoomPage({
   params,
@@ -366,6 +366,7 @@ function RoomPlay({
           state={timedState}
           subject={timerSubject}
           tickEnabled={timerTickEnabled}
+          playerCount={view.players.length}
         />
       )}
       </div>
@@ -437,6 +438,7 @@ function PhaseCountdown({
   state,
   subject,
   tickEnabled,
+  playerCount,
 }: {
   code: string;
   deadline: string;
@@ -446,6 +448,7 @@ function PhaseCountdown({
   // clock (current clue-giver, not-yet-voted, caught imposter). Everyone
   // else watches silently.
   tickEnabled: boolean;
+  playerCount: number;
 }) {
   const [now, setNow] = useState(() => Date.now());
   const firedForRef = useRef<string | null>(null);
@@ -471,7 +474,7 @@ function PhaseCountdown({
   // They watch the number hit 0, and a last-second submission in the
   // grace window still succeeds because the server hasn't expired yet.
   const displayRemainingMs = Math.max(0, realRemainingMs - TIMER_GRACE_MS);
-  const totalMs = TIMER_DURATIONS_MS[state];
+  const totalMs = timerDurationsFor(playerCount)[state];
   const seconds = Math.ceil(displayRemainingMs / 1000);
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
@@ -2891,17 +2894,15 @@ function ClueLog({
     <section className="space-y-4">
       <SectionLabel>Clues</SectionLabel>
       <div className={`grid grid-cols-1 gap-6 ${lgGridClass}`}>
-        {sortedRounds.map(([round, clues], roundIdx) => {
+        {sortedRounds.map(([round, clues]) => {
             const roundNum = Number(round);
             const isActive = activeRound === roundNum;
-            const isMostRecent = roundIdx === 0;
             return (
               <ClueRoundBlock
                 key={round}
                 round={round}
                 clues={clues}
                 isActive={isActive}
-                defaultOpen={isMostRecent || isActive}
                 nicknameById={nicknameById}
                 avatarById={avatarById}
                 code={code}
@@ -2919,7 +2920,6 @@ function ClueRoundBlock({
   round,
   clues,
   isActive,
-  defaultOpen,
   nicknameById,
   avatarById,
   code,
@@ -2929,39 +2929,28 @@ function ClueRoundBlock({
   round: string;
   clues: PublicRoomView["clues"];
   isActive: boolean;
-  defaultOpen: boolean;
   nicknameById: Map<string, string>;
   avatarById: Map<string, string | null>;
   code: string;
   playerId: string;
   viewState: PublicRoomView["state"];
 }) {
-  const [open, setOpen] = useState(defaultOpen);
   return (
     <div>
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className={`mb-2 flex w-full items-baseline justify-between text-left text-[11px] uppercase tracking-[0.2em] transition lg:cursor-default ${
+      <div
+        className={`mb-2 flex items-baseline justify-between text-[11px] uppercase tracking-[0.2em] ${
           isActive ? "text-accent" : "text-ink-faint"
         }`}
       >
         <span className="flex items-baseline gap-2">
           <span>Round {round}</span>
-          <span className="text-ink-faint/60 lg:hidden">
+          <span className="text-ink-faint/60">
             · {clues.length} {clues.length === 1 ? "clue" : "clues"}
           </span>
         </span>
-        <span className="flex items-baseline gap-2">
-          {isActive && <span>In progress</span>}
-          <span className="text-ink-faint/60 lg:hidden">
-            {open ? "▾" : "▸"}
-          </span>
-        </span>
-      </button>
-      <div
-        className={`${open ? "" : "hidden"} lg:block`}
-      >
+        {isActive && <span>In progress</span>}
+      </div>
+      <div>
         <ul className="flex flex-col divide-y divide-line-soft border-y border-line-soft">
                   <AnimatePresence initial={false}>
                     {[...clues].reverse().map((c) => {
@@ -3043,7 +3032,10 @@ function ClueRoundBlock({
                                 clue={c}
                                 code={code}
                                 playerId={playerId}
-                                canReact={viewState === "playing"}
+                                canReact={
+                                  viewState === "playing" ||
+                                  viewState === "voting"
+                                }
                               />
                             </div>
                           </div>

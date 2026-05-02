@@ -103,7 +103,7 @@ async function expirePlaying(code: string, room: Room) {
       turn_index: nextTurnIndex,
       round: nextRound,
       state: nextState,
-      phase_deadline: deadlineFor(nextState),
+      phase_deadline: deadlineFor(nextState, turnOrder.length),
       updated_at: new Date().toISOString(),
     })
     .eq("code", code)

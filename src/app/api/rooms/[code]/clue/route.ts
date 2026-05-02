@@ -69,7 +69,7 @@ export async function POST(
     updated_at: new Date().toISOString(),
   };
   if ("phase_deadline" in room) {
-    clueUpdate.phase_deadline = deadlineFor(nextState);
+    clueUpdate.phase_deadline = deadlineFor(nextState, turnOrder.length);
   }
 
   // CAS-claim the turn advance before inserting. If /expire (the timer
