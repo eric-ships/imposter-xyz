@@ -2972,6 +2972,19 @@ function ClueRoundBlock({
                         nickname,
                         avatar
                       );
+                      // Sus highlight: clues with 🚩 reactions get a left
+                      // border + tint so the log is scannable for "what's
+                      // the table flagging". Tier scales with count.
+                      const susCount =
+                        c.reactions.find((r) => r.emoji === "🚩")?.count ?? 0;
+                      const susTier =
+                        susCount >= 3
+                          ? "border-l-4 border-oxblood bg-oxblood/10 pl-3"
+                          : susCount >= 2
+                            ? "border-l-4 border-oxblood/70 bg-oxblood/5 pl-3"
+                            : susCount >= 1
+                              ? "border-l-2 border-oxblood/40 pl-3"
+                              : "";
                       // Stable key across optimistic -> real swap: clues are
                       // unique per (player, round). Using this key lets React
                       // reuse the DOM node so the optimistic -> server
@@ -2998,7 +3011,7 @@ function ClueRoundBlock({
                           }}
                           className="overflow-hidden"
                         >
-                          <div className="group/clue space-y-1 py-2.5">
+                          <div className={`group/clue space-y-1 py-2.5 transition-colors ${susTier}`}>
                             <div className="flex items-center gap-2">
                               <div
                                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${color} ${
