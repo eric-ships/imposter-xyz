@@ -130,7 +130,7 @@ export default function RoomPage({
   if (notFound) {
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-8 text-center">
-        <h1 className="font-serif text-3xl italic text-ink">Room not found</h1>
+        <h1 className="font-serif text-3xl  text-ink">Room not found</h1>
         <p className="text-sm text-ink-soft">
           Code <span className="font-serif font-semibold tracking-[0.15em]">{code}</span> doesn&apos;t
           exist.
@@ -159,7 +159,7 @@ export default function RoomPage({
     if (view.state !== "lobby") {
       return (
         <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-8 text-center">
-          <h1 className="font-serif text-3xl italic text-ink">
+          <h1 className="font-serif text-3xl  text-ink">
             Game in progress
           </h1>
           <p className="text-sm text-ink-soft">
@@ -512,7 +512,7 @@ function PhaseCountdown({
       className="relative overflow-hidden border-y border-line bg-surface/60 px-5 py-3"
     >
       <div className="flex items-baseline justify-center gap-3 text-center">
-        <span className="font-serif text-base italic text-ink-soft">
+        <span className="font-serif text-base  text-ink-soft">
           {headline}
         </span>
         <span className="text-ink-faint">·</span>
@@ -524,7 +524,7 @@ function PhaseCountdown({
               ? { duration: 0.9, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.18 }
           }
-          className={`font-serif text-2xl italic tabular-nums leading-none transition-colors ${
+          className={`font-serif text-2xl  tabular-nums leading-none transition-colors ${
             critical ? "text-oxblood" : warn ? "text-oxblood" : "text-ink"
           }`}
         >
@@ -1366,7 +1366,8 @@ function JesusModeToggle({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isHost && !enabled) return null;
+  // Everyone sees the option panel so the table knows what mode might
+  // get turned on. Only the host can actually flip it.
 
   async function toggle() {
     setError(null);
@@ -1418,8 +1419,15 @@ function JesusModeToggle({
             {pending ? "..." : enabled ? "On" : "Off"}
           </button>
         ) : (
-          <span className="shrink-0 rounded-sm border border-accent/60 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-accent">
-            On
+          <span
+            className={`shrink-0 rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${
+              enabled
+                ? "border-accent/60 text-accent"
+                : "border-line text-ink-faint"
+            }`}
+            title="Only the host can change this"
+          >
+            {enabled ? "On" : "Off"}
           </span>
         )}
       </div>
@@ -1446,7 +1454,8 @@ function MoleModeToggle({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (!isHost && !enabled) return null;
+  // Everyone sees the option panel so the table knows what mode might
+  // get turned on. Only the host can actually flip it.
 
   async function toggle() {
     setError(null);
@@ -1509,8 +1518,15 @@ function MoleModeToggle({
             {pending ? "..." : enabled ? "On" : "Off"}
           </button>
         ) : (
-          <span className="shrink-0 rounded-sm border border-accent/60 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-accent">
-            On
+          <span
+            className={`shrink-0 rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${
+              enabled
+                ? "border-accent/60 text-accent"
+                : "border-line text-ink-faint"
+            }`}
+            title="Only the host can change this"
+          >
+            {enabled ? "On" : "Off"}
           </span>
         )}
       </div>
@@ -1537,9 +1553,8 @@ function CandidatesModeToggle({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Non-hosts only see the panel when the mode is on (so they know what
-  // they signed up for). Hosts see it always so they can flip the toggle.
-  if (!isHost && !enabled) return null;
+  // Everyone sees the option panel so the table knows what mode might
+  // get turned on. Only the host can actually flip it.
 
   async function toggle() {
     setError(null);
@@ -1585,8 +1600,15 @@ function CandidatesModeToggle({
             {pending ? "..." : enabled ? "On" : "Off"}
           </button>
         ) : (
-          <span className="shrink-0 rounded-sm border border-accent/60 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-accent">
-            On
+          <span
+            className={`shrink-0 rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${
+              enabled
+                ? "border-accent/60 text-accent"
+                : "border-line text-ink-faint"
+            }`}
+            title="Only the host can change this"
+          >
+            {enabled ? "On" : "Off"}
           </span>
         )}
       </div>
@@ -1938,7 +1960,7 @@ function PlayingPhase({
             Category
           </div>
           <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-serif text-3xl italic leading-none text-ink">
+            <h2 className="font-serif text-3xl  leading-none text-ink">
               {view.category}
             </h2>
             <span className="shrink-0 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -1954,7 +1976,7 @@ function PlayingPhase({
             </span>
           </span>
           {you.isImposter ? (
-            <div className="font-serif text-2xl italic text-ink sm:text-3xl">
+            <div className="font-serif text-2xl  text-ink sm:text-3xl">
               Bluff · Find the word
             </div>
           ) : (
@@ -1992,7 +2014,7 @@ function PlayingPhase({
                   maxLength={24}
                   placeholder="e.g. syrup"
                   autoFocus
-                  className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl italic text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
+                  className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl  text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && word.trim() && !submitting) submit();
                   }}
@@ -2079,7 +2101,7 @@ function CandidatesShowcase({ view }: { view: PublicRoomView }) {
         </span>
       </div>
       {empty ? (
-        <p className="text-sm italic text-ink-faint">
+        <p className="text-sm  text-ink-faint">
           Pulling the shortlist from Claude
           <ThinkingDots />
         </p>
@@ -2305,7 +2327,7 @@ function ActivePlayerHero({
         </div>
       </div>
       <div className="space-y-1 text-center sm:space-y-1.5">
-        <div className="font-serif text-2xl italic text-ink sm:text-3xl">{nickname}</div>
+        <div className="font-serif text-2xl  text-ink sm:text-3xl">{nickname}</div>
         <div className="flex items-baseline justify-center gap-1 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span>is thinking</span>
           <ThinkingDots />
@@ -2781,7 +2803,7 @@ function ClueRoundBlock({
                                 type="button"
                                 onClick={() => speakText(c.word)}
                                 title={`Tap to hear · ${c.word}`}
-                                className="group/word inline-flex min-w-0 items-baseline gap-1.5 break-words text-left font-serif text-lg leading-snug text-ink transition hover:text-accent [overflow-wrap:anywhere]"
+                                className="group/word inline-flex min-w-0 items-baseline gap-1.5 break-words text-left font-serif text-lg italic leading-snug text-ink transition hover:text-accent [overflow-wrap:anywhere]"
                               >
                                 <span>{c.word}</span>
                                 <SpeakerIcon className="opacity-0 transition group-hover/word:opacity-60" />
@@ -2866,7 +2888,7 @@ function VotingPhase({
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
       <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
         <section className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-          <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
+          <span className="font-serif text-sm  text-ink-soft normal-case tracking-normal">
             {view.category}
           </span>
           {!you.isImposter && you.secretWord && (
@@ -2884,7 +2906,7 @@ function VotingPhase({
 
         <section className="space-y-4">
           <div className="text-center">
-            <div className="font-serif text-3xl italic text-ink">
+            <div className="font-serif text-3xl  text-ink">
               Who is the imposter?
             </div>
             <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -3112,7 +3134,7 @@ function GuessPhase({
             <div className="text-[11px] uppercase tracking-[0.22em] text-accent">
               Caught
             </div>
-            <div className="mt-3 font-serif text-3xl italic text-ink">
+            <div className="mt-3 font-serif text-3xl  text-ink">
               One last chance
             </div>
             <div className="mt-4 text-sm leading-relaxed text-ink-soft">
@@ -3172,7 +3194,7 @@ function GuessPhase({
           <div className="text-[11px] uppercase tracking-[0.22em] text-accent">
             You were caught
           </div>
-          <div className="mt-3 font-serif text-3xl italic text-ink">
+          <div className="mt-3 font-serif text-3xl  text-ink">
             One last chance
           </div>
           <div className="mt-4 text-sm leading-relaxed text-ink-soft">
@@ -3190,7 +3212,7 @@ function GuessPhase({
               maxLength={80}
               placeholder="e.g. Medusa"
               autoFocus
-              className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl italic text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+              className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl  text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && guess.trim() && !submitting) submit();
               }}
@@ -3243,7 +3265,7 @@ function GuessPhase({
 
         <section className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span>Category</span>
-          <span className="font-serif text-sm italic text-ink-soft normal-case tracking-normal">
+          <span className="font-serif text-sm  text-ink-soft normal-case tracking-normal">
             {view.category}
           </span>
         </section>
@@ -3722,7 +3744,7 @@ function RevealPhase({
                   ? { duration: 2.4, repeat: 2, ease: "easeInOut" }
                   : { duration: 0 }
               }
-              className={`font-serif text-6xl italic ${
+              className={`font-serif text-6xl  ${
                 youDrew ? "text-accent" : youWon ? "text-leaf" : "text-oxblood"
               }`}
             >
@@ -3742,7 +3764,7 @@ function RevealPhase({
         <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           {multiImposter ? "The imposters were" : "The imposter was"}
         </div>
-        <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl italic text-oxblood">
+        <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl  text-oxblood">
           {stage >= 1 ? (
             reveal.imposterIds.map((id, i) => (
               <motion.span
@@ -3819,7 +3841,7 @@ function RevealPhase({
                   }}
                   className="flex items-center gap-3"
                 >
-                  <span className="font-serif text-2xl italic text-ink">
+                  <span className="font-serif text-2xl  text-ink">
                     {reveal.guess}
                   </span>
                   <span
