@@ -1,32 +1,78 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-page: #f5f0e6;
-  --color-surface: #ffffff;
-  --color-cream: #ece4d1;
-  --color-ink: #1a1815;
-  --color-ink-soft: #5a5349;
-  --color-ink-faint: #8b8275;
-  --color-line: #ddd3c0;
-  --color-line-soft: #e8e0cf;
-  --color-accent: #8b7355;
-  --color-accent-soft: #c4a882;
-  --color-leaf: #4a5d3a;
-  --color-oxblood: #8b3a3a;
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-cream: var(--cream);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-leaf: var(--leaf);
+  --color-oxblood: var(--oxblood);
   --font-serif: var(--font-fraunces);
   --font-sans: var(--font-inter);
 }
 
+/* Light (default) — original parlor-game palette. */
+:root,
+[data-theme="light"] {
+  --page: #f5f0e6;
+  --surface: #ffffff;
+  --cream: #ece4d1;
+  --ink: #1a1815;
+  --ink-soft: #5a5349;
+  --ink-faint: #8b8275;
+  --line: #ddd3c0;
+  --line-soft: #e8e0cf;
+  --accent: #8b7355;
+  --accent-soft: #c4a882;
+  --leaf: #4a5d3a;
+  --oxblood: #8b3a3a;
+  color-scheme: light;
+}
+
+/* Dark — warm ink instead of pure black; same tonal family, inverted
+   lightness. Accent / leaf / oxblood get a subtle brightness bump so
+   they read against the dark surface. */
+[data-theme="dark"] {
+  --page: #15130f;
+  --surface: #1f1c17;
+  --cream: #25221c;
+  --ink: #f0e8d8;
+  --ink-soft: #b8ad96;
+  --ink-faint: #80776a;
+  --line: #3a342b;
+  --line-soft: #2c2820;
+  --accent: #c4a882;
+  --accent-soft: #d8bf94;
+  --leaf: #7e9d63;
+  --oxblood: #c8615b;
+  color-scheme: dark;
+}
+
 html,
 body {
-  background: var(--color-page);
-  color: var(--color-ink);
+  background: var(--page);
+  color: var(--ink);
   font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth theme switch — but only on actual color/border properties so
+   we don't accidentally animate layout. */
+html {
+  transition:
+    background-color 200ms ease,
+    color 200ms ease;
 }
 
 .font-serif {
   font-family: var(--font-fraunces), "Iowan Old Style", "Hoefler Text", Georgia, serif;
   font-feature-settings: "liga", "dlig";
 }
+
