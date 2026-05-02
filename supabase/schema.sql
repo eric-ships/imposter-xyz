@@ -70,6 +70,15 @@ alter table rooms
 alter table rooms
   add column if not exists jesus_mode boolean not null default false;
 
+-- "Police" mode: when true, one random crewmate is secretly assigned
+-- the cop role at game start. They get one investigation per match —
+-- pick any other player to learn whether that player is an imposter.
+-- Their identity is private; the result is shown only to them.
+alter table rooms
+  add column if not exists police_mode boolean not null default false;
+alter table rooms add column if not exists police_id uuid;
+alter table players add column if not exists investigated_id uuid;
+
 -- Multi-imposter support. For 5-player rooms we seat 2 imposters; 3-4
 -- stays at 1. imposter_id (singular, older column) stays populated with
 -- the *first* imposter so legacy reads still work. caught_imposter_id

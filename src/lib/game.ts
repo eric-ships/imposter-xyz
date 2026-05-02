@@ -97,11 +97,18 @@ export type PublicRoomView = {
     // sizes where pairing isn't possible.
     teammateIds: string[];
     partnerId: string | null;
+    // Police mode: true if you are the secret cop for this match.
+    isPolice: boolean;
+    // If you've already used your one investigation, this carries the
+    // result so you can re-read it across refreshes.
+    investigation: { targetId: string; isImposter: boolean } | null;
   } | null;
   // Mole mode toggle (host-controlled, lobby only).
   moleMode: boolean;
   // Jesus christ mode toggle (host-controlled, lobby only).
   jesusMode: boolean;
+  // Police mode toggle (host-controlled, lobby only).
+  policeMode: boolean;
   // Only populated during reveal:
   reveal: {
     imposterIds: string[];

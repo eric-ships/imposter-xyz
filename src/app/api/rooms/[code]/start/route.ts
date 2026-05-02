@@ -138,6 +138,7 @@ export async function POST(
   //     They still don't know about each other — only their jesus.
   const isMoleMode = "mole_mode" in room && !!room.mole_mode;
   const isJesusMode = "jesus_mode" in room && !!room.jesus_mode;
+  const isPoliceMode = "police_mode" in room && !!room.police_mode;
   const standardImposterCount =
     ids.length >= 8 ? 3 : ids.length >= 5 ? 2 : 1;
   const imposterCount = isMoleMode
@@ -199,6 +200,19 @@ export async function POST(
   if ("caught_imposter_id" in room) {
     update.caught_imposter_id = null;
   }
+  if ("police_id" in room) {
+    // Pick a random crewmate as the cop, or null if police mode is off.
+    if (isPoliceMode) {
+      const imposterSet = new Set(imposterIds);
+      const crewIds = ids.filter((id) => !imposterSet.has(id));
+      update.police_id =
+        crewIds.length > 0
+          ? crewIds[Math.floor(Math.random() * crewIds.length)]
+          : null;
+    } else {
+      update.police_id = null;
+    }
+  }
   if ("guess_candidates" in room) {
     // Always store the candidate list now — the secret was picked from
     // it, so the shortlist is always consistent. The casual-mode toggle
@@ -236,14 +250,12 @@ export async function POST(
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // Clear partner_id for everyone first (defensive in case a previous
-  // match left stale data; both modes below assume a clean slate).
-  if (isMoleMode || isJesusMode) {
-    await supabaseAdmin
-      .from("players")
-      .update({ partner_id: null })
-      .eq("room_code", code);
-  }
+  // Clear partner_id + investigated_id for everyone first (defensive
+  // in case a previous match left stale data).
+  await supabaseAdmin
+    .from("players")
+    .update({ partner_id: null, investigated_id: null })
+    .eq("room_code", code);
 
   // Jesus mode: each imposter gets their OWN unique jesus (a random
   // crewmate they "know" is on the crew side). With 2 imposters in a

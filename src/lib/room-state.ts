@@ -169,6 +169,26 @@ export async function fetchRoomView(
     ? imposterIds.filter((id) => id !== playerId)
     : [];
 
+  // Police mode: am I the cop, and have I already investigated?
+  const policeMode = "police_mode" in room && !!room.police_mode;
+  const policeId = ("police_id" in room ? room.police_id : null) as
+    | string
+    | null;
+  const isPolice =
+    !!playerId && policeMode && state !== "lobby" && policeId === playerId;
+  let myInvestigation: { targetId: string; isImposter: boolean } | null =
+    null;
+  if (isPolice) {
+    const me = (players ?? []).find((p) => p.id === playerId);
+    const targetId = (me?.investigated_id as string | null) ?? null;
+    if (targetId) {
+      myInvestigation = {
+        targetId,
+        isImposter: imposterIds.includes(targetId),
+      };
+    }
+  }
+
   const you = playerId
     ? {
         id: playerId,
@@ -178,6 +198,8 @@ export async function fetchRoomView(
         secretWord: isImposter ? null : room.secret_word,
         teammateIds: myTeammateIds,
         partnerId: myPartnerId,
+        isPolice,
+        investigation: myInvestigation,
       }
     : null;
 
@@ -263,6 +285,7 @@ export async function fetchRoomView(
     showCandidatesAlways,
     moleMode,
     jesusMode,
+    policeMode,
     you,
     reveal,
   };

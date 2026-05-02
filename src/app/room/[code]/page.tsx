@@ -903,6 +903,140 @@ function VoidGameButton({
   );
 }
 
+function PoliceBadge({
+  view,
+  code,
+  you,
+}: {
+  view: PublicRoomView;
+  code: string;
+  you: NonNullable<PublicRoomView["you"]>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!view.policeMode || !you.isPolice) return null;
+  // Only meaningful during clue + vote phases; once we hit guessing or
+  // reveal, the role is moot.
+  const usable = view.state === "playing" || view.state === "voting";
+
+  const playerById = new Map(view.players.map((p) => [p.id, p]));
+  const investigation = you.investigation;
+  const target = investigation
+    ? playerById.get(investigation.targetId)
+    : null;
+
+  async function pick(targetId: string) {
+    if (pending) return;
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/investigate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId: you.id, targetId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      setOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  // Already used → permanent result chip.
+  if (investigation && target) {
+    const av = avatarFor(target.id, target.nickname, target.avatar);
+    const isImp = investigation.isImposter;
+    return (
+      <div
+        className={`mt-5 inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] ${
+          isImp
+            ? "border-oxblood/50 bg-oxblood/10 text-oxblood"
+            : "border-leaf/50 bg-leaf/10 text-leaf"
+        }`}
+      >
+        <span>You investigated</span>
+        <span className="inline-flex items-center gap-1.5">
+          <span
+            className={`flex h-5 w-5 items-center justify-center rounded-full ${av.color} ${
+              av.isCustom
+                ? "border border-line text-xs"
+                : "text-[10px] font-semibold text-white"
+            }`}
+          >
+            {av.initial}
+          </span>
+          <span className="font-serif normal-case tracking-normal text-ink">
+            {target.nickname}
+          </span>
+        </span>
+        <span className="text-ink-faint">·</span>
+        <span>{isImp ? "Imposter" : "Crew"}</span>
+      </div>
+    );
+  }
+
+  // Not yet used → trigger a picker modal (reused inline panel).
+  return (
+    <div className="mt-5 flex flex-col items-center gap-2">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        disabled={!usable}
+        className="rounded-sm border border-accent/60 bg-accent/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-accent transition-all duration-100 hover:bg-accent hover:text-page active:scale-[0.97] disabled:opacity-40"
+        title={
+          usable
+            ? "You're the cop. Investigate one player."
+            : "Investigation locked — already past voting"
+        }
+      >
+        Investigate · 1 use left
+      </button>
+      {open && usable && (
+        <div className="w-full max-w-xs space-y-1 rounded-sm border border-line bg-page p-2 text-left shadow-md">
+          <div className="px-1 pb-1 text-[10px] uppercase tracking-[0.22em] text-ink-faint">
+            Pick a player to investigate
+          </div>
+          {view.players
+            .filter((p) => p.id !== you.id)
+            .map((p) => {
+              const av = avatarFor(p.id, p.nickname, p.avatar);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => pick(p.id)}
+                  disabled={pending}
+                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left transition hover:bg-surface disabled:opacity-40"
+                >
+                  <span
+                    className={`flex h-6 w-6 items-center justify-center rounded-full ${av.color} ${
+                      av.isCustom
+                        ? "border border-line text-xs"
+                        : "text-[10px] font-semibold text-white"
+                    }`}
+                  >
+                    {av.initial}
+                  </span>
+                  <span className="font-serif text-sm text-ink">
+                    {p.nickname}
+                  </span>
+                </button>
+              );
+            })}
+          {error && (
+            <p className="px-1 text-xs text-oxblood">{error}</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function MoleModeBadge({
   view,
   you,
@@ -1352,6 +1486,87 @@ function PotPanel({
   );
 }
 
+function PoliceModeToggle({
+  view,
+  playerId,
+  code,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+}) {
+  const isHost = playerId === view.hostId;
+  const enabled = view.policeMode;
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function toggle() {
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/police-mode`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, enabled: !enabled }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <section
+      className={`space-y-2 border p-4 ${
+        enabled ? "border-accent/40 bg-accent/5" : "border-line"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <SectionLabel>Police mode</SectionLabel>
+          <p className="mt-1 text-[11px] text-ink-soft">
+            One random crewmate is the secret cop. They get one
+            investigation per match — pick anyone to learn if they&apos;re
+            the imposter.
+          </p>
+        </div>
+        {isHost ? (
+          <button
+            onClick={toggle}
+            disabled={pending}
+            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.97] disabled:opacity-40 ${
+              enabled
+                ? "bg-accent text-page hover:bg-ink"
+                : "border border-ink text-ink hover:bg-ink hover:text-page"
+            }`}
+          >
+            {pending ? "..." : enabled ? "On" : "Off"}
+          </button>
+        ) : (
+          <span
+            className={`shrink-0 rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${
+              enabled
+                ? "border-accent/60 text-accent"
+                : "border-line text-ink-faint"
+            }`}
+            title="Only the host can change this"
+          >
+            {enabled ? "On" : "Off"}
+          </span>
+        )}
+      </div>
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 function JesusModeToggle({
   view,
   playerId,
@@ -1718,6 +1933,8 @@ function LobbyPhase({
 
       <JesusModeToggle view={view} playerId={playerId} code={code} />
 
+      <PoliceModeToggle view={view} playerId={playerId} code={code} />
+
       <section className="space-y-3">
         <SectionLabel>Invite</SectionLabel>
         <div className="flex gap-2">
@@ -1985,6 +2202,7 @@ function PlayingPhase({
             </div>
           )}
           <MoleModeBadge view={view} you={you} />
+          <PoliceBadge view={view} code={code} you={you} />
         </section>
 
         {isMyTurn ? (
