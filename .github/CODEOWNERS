@@ -1,0 +1,21 @@
+# GitHub CODEOWNERS — controls who must review changes to which paths.
+# https://docs.github.com/en/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+#
+# To make this load-bearing, also enable in GitHub repo settings:
+#   Settings → Branches → Branch protection rules → main
+#     ☑ Require a pull request before merging
+#     ☑ Require approvals (1)
+#     ☑ Require review from Code Owners
+#     ☑ Restrict who can push to matching branches (optional, lets only
+#       owner push directly; everyone else must PR)
+#
+# With those settings on, every PR needs a code-owner approval. The
+# default rule below makes the repo owner the code owner for everything;
+# the categories.json override delegates that one path to a collaborator.
+
+# Default owner: everything not matched by a more specific rule below.
+*                                @eric-ships
+
+# Categories — collaborators can self-approve PRs that only touch this file.
+# Add more usernames space-separated as additional collaborators are added.
+/src/data/categories.json        @eric-ships
