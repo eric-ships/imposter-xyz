@@ -2286,6 +2286,20 @@ function PlayingPhase({
                   maxLength={24}
                   placeholder="e.g. syrup"
                   autoFocus
+                  // Bare <input> with no name + a serif font triggers
+                  // browser/password-manager autofill heuristics that
+                  // mistake it for a credit-card cardholder field. The
+                  // attrs below opt out across Chrome, Safari, 1Password
+                  // and LastPass.
+                  type="text"
+                  name="clue-word"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  data-form-type="other"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
                   className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl  text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && word.trim() && !submitting) submit();
@@ -3481,6 +3495,15 @@ function GuessPhase({
               maxLength={80}
               placeholder="e.g. Medusa"
               autoFocus
+              type="text"
+              name="imposter-guess"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              data-form-type="other"
+              data-1p-ignore="true"
+              data-lpignore="true"
               className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl  text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && guess.trim() && !submitting) submit();
