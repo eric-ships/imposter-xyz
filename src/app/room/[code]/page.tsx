@@ -2800,12 +2800,19 @@ function ClueReactions({
     setPendingDelta((p) => ({ ...p, [emoji]: delta }));
     setPickerOpen(false);
     try {
-      await fetch(`/api/rooms/${code}/clues/${clue.id}/react`, {
+      const res = await fetch(`/api/rooms/${code}/clues/${clue.id}/react`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ playerId, emoji }),
       });
-    } finally {
+      if (!res.ok) throw new Error("react failed");
+      // Don't clear pendingDelta here. There's a gap between fetch
+      // resolving and the realtime view refresh arriving with the
+      // updated reaction count. Clearing now would briefly drop the
+      // chip back to 0 (exit anim) and then re-add it on realtime
+      // (entry anim) — a visible double flash. The reconcile effect
+      // below clears the delta only once data actually reflects it.
+    } catch {
       setPendingDelta((p) => {
         const next = { ...p };
         delete next[emoji];
@@ -2813,6 +2820,30 @@ function ClueReactions({
       });
     }
   }
+
+  // Reconcile: drop pending deltas whose effect is now visible in the
+  // server-backed `clue.reactions` (i.e. realtime caught up). Compares
+  // the optimistic-mine state with the server-mine state per emoji.
+  useEffect(() => {
+    setPendingDelta((p) => {
+      const keys = Object.keys(p);
+      if (keys.length === 0) return p;
+      const next: Record<string, number> = {};
+      let changed = false;
+      for (const emoji of keys) {
+        const delta = p[emoji];
+        const serverMine = data.get(emoji)?.mine ?? false;
+        const optimisticMine = delta > 0;
+        if (serverMine === optimisticMine) {
+          changed = true; // server caught up; drop the delta
+        } else {
+          next[emoji] = delta;
+        }
+      }
+      return changed ? next : p;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clue.reactions]);
 
   // Render order: any emoji with reactions first (preserve REACTION_EMOJI
   // order), then anything in the data we don't know about (legacy emoji).
@@ -2841,13 +2872,19 @@ function ClueReactions({
             <motion.button
               key={emoji}
               layout
-              initial={{ scale: 0, opacity: 0 }}
+              // Enter from a smaller-but-visible scale rather than 0 so the
+              // chip never materializes from a singularity at the layout
+              // origin (which under flex + gap looked like a glitch). Soft
+              // spring: snappy but no overshoot wobble while the picker is
+              // still mid-exit on the same frame.
+              initial={{ scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0, opacity: 0 }}
+              exit={{ scale: 0.6, opacity: 0 }}
               transition={{
                 type: "spring",
-                stiffness: 600,
-                damping: 25,
+                stiffness: 420,
+                damping: 28,
+                mass: 0.55,
               }}
               onClick={() => tap(emoji)}
               title={tooltip}
