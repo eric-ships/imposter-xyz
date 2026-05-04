@@ -232,6 +232,36 @@ export function playRevealStageChime(stage: number) {
   }
 }
 
+// Soft "ballot drop" thunk fired when another player casts a vote.
+// Two stacked low tones with a fast decay — distinct from the timer
+// tick (sharp/clicky) and the reveal chime (tonal/ringing). Quiet by
+// design so back-to-back votes don't pile up into noise.
+export function playVoteCast() {
+  if (isMuted()) return;
+  const c = getCtx();
+  if (!c) return;
+  if (c.state === "suspended") c.resume().catch(() => {});
+
+  const now = c.currentTime;
+  // Triangle wave + low frequencies = wood-block-ish "thunk" (rather
+  // than the ringing sine of the reveal chime).
+  const drop = (freq: number, peak: number, dur: number) => {
+    const osc = c.createOscillator();
+    const gain = c.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq * 1.4, now);
+    osc.frequency.exponentialRampToValueAtTime(freq, now + 0.04);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(peak, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    osc.connect(gain).connect(c.destination);
+    osc.start(now);
+    osc.stop(now + dur + 0.02);
+  };
+  drop(180, 0.14, 0.16);
+  drop(110, 0.10, 0.22);
+}
+
 // One tick per second of the final countdown. `urgent` raises the pitch
 // a little so the last few seconds read as extra pressure.
 export function playTimerTick(urgent: boolean) {

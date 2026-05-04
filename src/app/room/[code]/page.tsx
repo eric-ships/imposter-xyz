@@ -25,6 +25,7 @@ import {
   playRevealStageChime,
   playTimerTick,
   playTurnChime,
+  playVoteCast,
   primeAudio,
   setMuted as audioSetMuted,
   speakText,
@@ -3204,6 +3205,39 @@ function VotingPhase({
   const totalPlayers = view.players.length;
   const you = view.you!;
 
+  // Toast + sound when someone else casts a vote. Initial-mount snapshot
+  // prevents existing votes (e.g. on a refresh) from firing toasts. Own
+  // vote is silent — the user already knows they voted.
+  const seenVoterIds = useRef<Set<string> | null>(null);
+  const [voteToasts, setVoteToasts] = useState<
+    { id: number; nickname: string }[]
+  >([]);
+  const toastIdRef = useRef(0);
+  useEffect(() => {
+    if (!seenVoterIds.current) {
+      seenVoterIds.current = new Set(view.votes.map((v) => v.voter_id));
+      return;
+    }
+    const fresh: string[] = [];
+    for (const v of view.votes) {
+      if (!seenVoterIds.current.has(v.voter_id)) {
+        seenVoterIds.current.add(v.voter_id);
+        if (v.voter_id !== playerId) fresh.push(v.voter_id);
+      }
+    }
+    if (fresh.length === 0) return;
+    playVoteCast();
+    for (const voterId of fresh) {
+      const nickname =
+        view.players.find((p) => p.id === voterId)?.nickname ?? "?";
+      const id = ++toastIdRef.current;
+      setVoteToasts((prev) => [...prev, { id, nickname }]);
+      setTimeout(() => {
+        setVoteToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 2400);
+    }
+  }, [view.votes, view.players, playerId]);
+
   return (
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
       <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
@@ -3375,6 +3409,34 @@ function VotingPhase({
 
       <div className="min-w-0 lg:col-span-2">
         <ClueLog view={view} code={code} playerId={playerId} />
+      </div>
+
+      {/* Vote-cast toasts: pinned to bottom-center of viewport, stack up
+          newest-on-top, auto-dismiss after ~2.4s. Fixed so they're
+          visible regardless of scroll position. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex flex-col items-center gap-2">
+        <AnimatePresence initial={false}>
+          {voteToasts.map((t) => (
+            <motion.div
+              key={t.id}
+              layout
+              initial={{ opacity: 0, y: 16, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+              transition={{
+                type: "spring",
+                stiffness: 380,
+                damping: 28,
+              }}
+              className="rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink shadow-lg"
+            >
+              <span className="font-serif text-ink">{t.nickname}</span>
+              <span className="ml-2 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                voted
+              </span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
     </div>
   );
