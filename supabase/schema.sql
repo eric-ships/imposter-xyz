@@ -79,6 +79,16 @@ alter table rooms
 alter table rooms add column if not exists police_id uuid;
 alter table players add column if not exists investigated_id uuid;
 
+-- Lobby-scoped match history. Each completed match (when a host hits
+-- "Play again") appends a JSON snapshot of the round's outcome:
+--   { matchNumber, category, secretWord, imposterIds, caughtImposterId,
+--     guess, guessOutcome, winner, endedAt, perPlayer: [{playerId,
+--     wasImposter, delta}] }
+-- Lives only as long as the room (cascade-deleted on room delete).
+-- Powers the lobby Stats panel (per-player W/L by role).
+alter table rooms
+  add column if not exists match_history jsonb not null default '[]'::jsonb;
+
 -- Multi-imposter support. For 5-player rooms we seat 2 imposters; 3-4
 -- stays at 1. imposter_id (singular, older column) stays populated with
 -- the *first* imposter so legacy reads still work. caught_imposter_id

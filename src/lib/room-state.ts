@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type { GuessOutcome, PublicRoomView, RoomState } from "@/lib/game";
+import type { MatchHistoryEntry } from "@/lib/match-history";
 
 export async function notifyRoom(code: string, kind: string) {
   await supabaseAdmin.from("room_events").insert({ room_code: code, kind });
@@ -256,6 +257,14 @@ export async function fetchRoomView(
   const showCandidatesAlways: boolean =
     "show_candidates_always" in room && !!room.show_candidates_always;
 
+  // Match history is jsonb on the room. Defensive: pre-migration rooms
+  // won't have the column, so default to []. Trust the shape that
+  // play-again writes (we control both sides).
+  const matchHistory: MatchHistoryEntry[] =
+    "match_history" in room && Array.isArray(room.match_history)
+      ? (room.match_history as MatchHistoryEntry[])
+      : [];
+
   return {
     code: room.code,
     hostId: room.host_id,
@@ -288,5 +297,6 @@ export async function fetchRoomView(
     policeMode,
     you,
     reveal,
+    matchHistory,
   };
 }

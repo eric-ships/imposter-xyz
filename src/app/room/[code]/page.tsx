@@ -1232,6 +1232,91 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Lobby-scoped match history panel. Renders nothing when no completed
+// matches exist. One row per match, newest first. Falls back to the
+// snapshotted nickname if the player has since left the room.
+function LobbyMatchHistoryPanel({ view }: { view: PublicRoomView }) {
+  const history = view.matchHistory;
+  if (!history || history.length === 0) return null;
+
+  const liveNicknameById = new Map(
+    view.players.map((p) => [p.id, p.nickname])
+  );
+
+  return (
+    <section className="space-y-3">
+      <SectionLabel>Past matches · {history.length}</SectionLabel>
+      <div className="space-y-2">
+        {history.map((m) => {
+          const nameFor = (id: string) =>
+            liveNicknameById.get(id) ??
+            m.perPlayer.find((p) => p.playerId === id)?.nickname ??
+            "?";
+          const imposters = m.imposterIds.map(nameFor).join(" & ");
+          const winnerLabel =
+            m.winner === "imposter"
+              ? "Imposter wins"
+              : m.winner === "crewmates"
+                ? "Crewmates win"
+                : "Split point";
+          const winnerColor =
+            m.winner === "imposter"
+              ? "text-oxblood"
+              : m.winner === "crewmates"
+                ? "text-leaf"
+                : "text-accent";
+          // Wall-clock end time avoids any "X minutes ago" hydration
+          // mismatch — this component renders during a stable moment
+          // (the lobby) and the absolute time is fine for a session log.
+          let endedTime = "";
+          try {
+            endedTime = new Date(m.endedAt).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit",
+            });
+          } catch {
+            /* ignore */
+          }
+          return (
+            <div
+              key={m.matchNumber}
+              className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                  Match {m.matchNumber}
+                  {endedTime && <> · {endedTime}</>}
+                </div>
+                <div
+                  className={`text-[11px] uppercase tracking-[0.18em] ${winnerColor}`}
+                >
+                  {winnerLabel}
+                </div>
+              </div>
+              <div className="mt-1 text-sm text-ink">
+                <span className="text-ink-faint">{m.category}</span>
+                <span className="mx-1.5 text-ink-faint">·</span>
+                <span className="font-semibold">{m.secretWord}</span>
+              </div>
+              <div className="mt-0.5 text-xs text-ink-soft">
+                Imposter <span className="text-ink">{imposters}</span>
+                {m.guess ? (
+                  <span>
+                    {" "}· guessed <span className="text-ink">{m.guess}</span>
+                    {m.guessOutcome && <> ({m.guessOutcome})</>}
+                  </span>
+                ) : (
+                  <span className="text-ink-faint"> · slipped away</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function PlayerList({
   view,
   showScores = true,
@@ -1979,6 +2064,8 @@ function LobbyPhase({
           showRank={anyScore}
         />
       </section>
+
+      <LobbyMatchHistoryPanel view={view} />
 
       <PotPanel view={view} playerId={playerId} code={code} />
 

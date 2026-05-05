@@ -1,3 +1,5 @@
+import type { MatchHistoryEntry } from "@/lib/match-history";
+
 export type RoomState =
   | "lobby"
   | "playing"
@@ -56,6 +58,10 @@ export type Vote = {
   voter_id: string;
   target_id: string;
 };
+
+// Re-export so consumers can import everything from "@/lib/game" without
+// reaching into the helper module.
+export type { MatchHistoryEntry } from "@/lib/match-history";
 
 export type PublicRoomView = {
   code: string;
@@ -118,4 +124,8 @@ export type PublicRoomView = {
     guess: string | null;
     guessOutcome: GuessOutcome | null;
   } | null;
+  // Lobby-scoped match history. Newest first. Appended on play-again
+  // from the just-finished match. Capped at MATCH_HISTORY_CAP entries.
+  // Empty when no completed matches yet.
+  matchHistory: MatchHistoryEntry[];
 };

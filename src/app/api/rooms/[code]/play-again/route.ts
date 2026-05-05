@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
+import {
+  MATCH_HISTORY_CAP,
+  snapshotMatch,
+  type MatchHistoryEntry,
+} from "@/lib/match-history";
+import type { GuessOutcome } from "@/lib/game";
 
 export async function POST(
   request: Request,
@@ -35,6 +41,51 @@ export async function POST(
     return NextResponse.json({ error: "not in reveal" }, { status: 400 });
   }
 
+  // Snapshot the just-finished match into match_history before we wipe
+  // the room state. Need players for nickname/avatar capture (so the
+  // history entry doesn't break if someone leaves or renames later).
+  const { data: playersForSnapshot } = await supabaseAdmin
+    .from("players")
+    .select("id, nickname, avatar")
+    .eq("room_code", code)
+    .order("joined_at", { ascending: true });
+
+  const existingHistory: MatchHistoryEntry[] =
+    "match_history" in room && Array.isArray(room.match_history)
+      ? (room.match_history as MatchHistoryEntry[])
+      : [];
+
+  // Skip if we somehow got into reveal without the data we need
+  // (defensive — shouldn't happen, but don't crash play-again on it).
+  const imposterIdsForSnap: string[] = Array.isArray(room.imposter_ids)
+    ? (room.imposter_ids as string[]).filter(Boolean)
+    : room.imposter_id
+      ? [room.imposter_id as string]
+      : [];
+
+  let nextHistory = existingHistory;
+  if (room.category && room.secret_word && imposterIdsForSnap.length > 0) {
+    const snap = snapshotMatch({
+      matchNumber: existingHistory.length + 1,
+      category: room.category as string,
+      secretWord: room.secret_word as string,
+      imposterIds: imposterIdsForSnap,
+      caughtImposterId:
+        ("caught_imposter_id" in room
+          ? (room.caught_imposter_id as string | null)
+          : null) ?? null,
+      guess: (room.imposter_guess as string | null) ?? null,
+      guessOutcome: (room.guess_outcome as GuessOutcome | null) ?? null,
+      players: (playersForSnapshot ?? []).map((p) => ({
+        id: p.id as string,
+        nickname: p.nickname as string,
+        avatar: (p.avatar as string | null) ?? null,
+      })),
+    });
+    // Newest first; cap so a long lobby session doesn't grow unbounded.
+    nextHistory = [snap, ...existingHistory].slice(0, MATCH_HISTORY_CAP);
+  }
+
   await Promise.all([
     supabaseAdmin.from("clues").delete().eq("room_code", code),
     supabaseAdmin.from("votes").delete().eq("room_code", code),
@@ -56,6 +107,10 @@ export async function POST(
     turn_order: [],
     updated_at: new Date().toISOString(),
   };
+  // Defensive: only set match_history if the column exists on this row.
+  // Pre-migration DBs don't have it; writing the field would error on
+  // the update.
+  if ("match_history" in room) update.match_history = nextHistory;
   if ("phase_deadline" in room) update.phase_deadline = null;
   if ("imposter_ids" in room) update.imposter_ids = [];
   if ("caught_imposter_id" in room) update.caught_imposter_id = null;
