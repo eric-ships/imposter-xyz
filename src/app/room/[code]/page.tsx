@@ -108,6 +108,28 @@ export default function RoomPage({
     };
   }, [code, refetch]);
 
+  // Kick detection: if we have a stored playerId but the latest view
+  // no longer lists us as a player, the host kicked us. Clear local
+  // identity, drop a flag for the home page to show a banner, and
+  // bounce. Guard with hydrated + view + playerId so we don't trigger
+  // during the join flow (player exists locally but hasn't been
+  // server-acknowledged yet).
+  useEffect(() => {
+    if (!hydrated || !view || !playerId) return;
+    if (view.players.some((p) => p.id === playerId)) return;
+    try {
+      localStorage.removeItem(`ci:${code}:playerId`);
+      localStorage.removeItem(`ci:${code}:nickname`);
+      sessionStorage.setItem(
+        "imposter:lastKick",
+        JSON.stringify({ code, ts: Date.now() })
+      );
+    } catch {
+      /* ignore */
+    }
+    router.push("/");
+  }, [code, hydrated, playerId, view, router]);
+
   async function doJoin() {
     setJoinError(null);
     setJoining(true);
@@ -349,6 +371,7 @@ function RoomPlay({
               avatar={
                 view.players.find((p) => p.id === playerId)?.avatar ?? null
               }
+              players={view.players}
             />
             <span className="text-base text-ink normal-case tracking-normal">
               {nicknameById.get(playerId)}
@@ -590,17 +613,24 @@ function AvatarPicker({
   playerId,
   nickname,
   avatar,
+  players,
 }: {
   code: string;
   playerId: string;
   nickname: string;
   avatar: string | null;
+  players: PublicRoomView["players"];
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [custom, setCustom] = useState("");
   const popRef = useRef<HTMLDivElement | null>(null);
-  const { color, initial, isCustom } = avatarFor(playerId, nickname, avatar);
+  const { color, initial, isCustom } = avatarFor(
+    playerId,
+    nickname,
+    avatar,
+    players
+  );
 
   // Close on outside click.
   useEffect(() => {
@@ -1004,7 +1034,12 @@ function PoliceBadge({
 
   // Already used → permanent result chip.
   if (investigation && target) {
-    const av = avatarFor(target.id, target.nickname, target.avatar);
+    const av = avatarFor(
+      target.id,
+      target.nickname,
+      target.avatar,
+      view.players
+    );
     const isImp = investigation.isImposter;
     return (
       <div
@@ -1059,7 +1094,7 @@ function PoliceBadge({
           {view.players
             .filter((p) => p.id !== you.id)
             .map((p) => {
-              const av = avatarFor(p.id, p.nickname, p.avatar);
+              const av = avatarFor(p.id, p.nickname, p.avatar, view.players);
               return (
                 <button
                   key={p.id}
@@ -1109,7 +1144,7 @@ function MoleModeBadge({
     if (!you.partnerId) return null;
     const j = playerById.get(you.partnerId);
     if (!j) return null;
-    const av = avatarFor(j.id, j.nickname, j.avatar);
+    const av = avatarFor(j.id, j.nickname, j.avatar, view.players);
     return (
       <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-leaf/40 bg-leaf/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-leaf">
         <span>Your jesus:</span>
@@ -1147,7 +1182,7 @@ function MoleModeBadge({
       <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-oxblood/40 bg-oxblood/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-oxblood">
         <span>Your {teammates.length === 1 ? "partner" : "team"}:</span>
         {teammates.map((p, i) => {
-          const av = avatarFor(p.id, p.nickname, p.avatar);
+          const av = avatarFor(p.id, p.nickname, p.avatar, view.players);
           return (
             <span key={p.id} className="inline-flex items-center gap-1.5">
               {i > 0 && <span className="text-ink-faint">·</span>}
@@ -1174,7 +1209,7 @@ function MoleModeBadge({
   if (you.partnerId) {
     const p = playerById.get(you.partnerId);
     if (!p) return null;
-    const av = avatarFor(p.id, p.nickname, p.avatar);
+    const av = avatarFor(p.id, p.nickname, p.avatar, view.players);
     return (
       <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-leaf/40 bg-leaf/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-leaf">
         <span>Your partner:</span>
@@ -1323,6 +1358,8 @@ function PlayerList({
   showAnte = false,
   showRank = false,
   deltas,
+  kick,
+  displayPlayers,
 }: {
   view: PublicRoomView;
   showScores?: boolean;
@@ -1332,14 +1369,25 @@ function PlayerList({
   // the score. Used on the reveal screen to highlight what was just
   // earned this round.
   deltas?: Record<string, number>;
+  // When set, render a kick "×" next to each row that's neither the
+  // host nor the viewer. Endpoint-side check still enforces lobby-only
+  // and host-only — this just gates the UI.
+  kick?: { code: string; viewerId: string };
+  // Optional display ordering override. When passed, render in this
+  // order (e.g. score-sorted leaderboard) but keep avatar color
+  // assignment tied to the canonical joined-order in view.players —
+  // otherwise colors would shuffle as scores change.
+  displayPlayers?: PublicRoomView["players"];
 }) {
+  const rows = displayPlayers ?? view.players;
   return (
     <ul className="divide-y divide-line-soft border-y border-line-soft">
-      {view.players.map((p, i) => {
+      {rows.map((p, i) => {
         const { color, initial, isCustom } = avatarFor(
           p.id,
           p.nickname,
-          p.avatar
+          p.avatar,
+          view.players
         );
         return (
           <li key={p.id} className="flex items-center gap-4 py-3">
@@ -1426,10 +1474,101 @@ function PlayerList({
                 )}
               </div>
             )}
+            {kick &&
+              p.id !== view.hostId &&
+              p.id !== kick.viewerId && (
+                <KickButton
+                  code={kick.code}
+                  viewerId={kick.viewerId}
+                  targetId={p.id}
+                  targetNickname={p.nickname}
+                />
+              )}
           </li>
         );
       })}
     </ul>
+  );
+}
+
+// Two-step inline kick. First tap arms ("Kick?"); a 4s timeout reverts
+// it. Second tap commits. Matches LeaveRoomButton's pattern so the
+// table feels consistent. Hidden (no native confirm dialog) per the
+// global "no native dialogs" rule.
+function KickButton({
+  code,
+  viewerId,
+  targetId,
+  targetNickname,
+}: {
+  code: string;
+  viewerId: string;
+  targetId: string;
+  targetNickname: string;
+}) {
+  const [armed, setArmed] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Auto-disarm so an idle "Kick?" doesn't sit there until the next tap.
+  useEffect(() => {
+    if (!armed) return;
+    const t = setTimeout(() => setArmed(false), 4000);
+    return () => clearTimeout(t);
+  }, [armed]);
+
+  async function commit() {
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/kick`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId: viewerId, targetId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "kick failed");
+      // No state reset needed — the next view refresh will drop the
+      // row and unmount this component.
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "kick failed");
+      setArmed(false);
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-end">
+      <button
+        type="button"
+        disabled={pending}
+        onClick={() => {
+          if (!armed) {
+            setArmed(true);
+            return;
+          }
+          void commit();
+        }}
+        title={
+          armed
+            ? `Confirm kick ${targetNickname}`
+            : `Kick ${targetNickname}`
+        }
+        aria-label={`Kick ${targetNickname}`}
+        className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] transition-all duration-100 active:scale-[0.97] disabled:opacity-50 ${
+          armed
+            ? "border-oxblood bg-oxblood text-white hover:bg-oxblood/90"
+            : "border-line text-ink-faint hover:border-oxblood hover:text-oxblood"
+        }`}
+      >
+        {pending ? "…" : armed ? "Confirm?" : "Kick"}
+      </button>
+      {error && (
+        <span className="mt-1 max-w-[160px] text-right text-[10px] text-oxblood">
+          {error}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -2058,10 +2197,16 @@ function LobbyPhase({
           )}
         </div>
         <PlayerList
-          view={{ ...view, players: rankedPlayers }}
+          view={view}
+          displayPlayers={rankedPlayers}
           showScores={anyScore}
           showAnte={potEnabled}
           showRank={anyScore}
+          kick={
+            isHost && view.state === "lobby"
+              ? { code, viewerId: playerId }
+              : undefined
+          }
         />
       </section>
 
@@ -2414,6 +2559,7 @@ function PlayingPhase({
             nickname={waitingForPlayer?.nickname ?? "?"}
             avatar={waitingForPlayer?.avatar ?? null}
             iAmNext={iAmNext}
+            players={view.players}
           />
         )}
         </div>
@@ -2448,12 +2594,36 @@ const AVATAR_PALETTE = [
   "bg-[#5a6470]", // slate
 ];
 
-function avatarFor(id: string, nickname: string, custom?: string | null) {
+// Hash an id to a stable palette slot. Used as a fallback when we don't
+// have the room's player list (top-level chrome paths) and as the seed
+// offset for unique assignment when we do.
+function hashIndex(id: string): number {
   let hash = 0;
   for (let i = 0; i < id.length; i++) {
     hash = (hash * 31 + id.charCodeAt(i)) | 0;
   }
-  const color = AVATAR_PALETTE[Math.abs(hash) % AVATAR_PALETTE.length];
+  return Math.abs(hash) % AVATAR_PALETTE.length;
+}
+
+function avatarFor(
+  id: string,
+  nickname: string,
+  custom?: string | null,
+  // Optional roster: if passed, the player's color comes from their
+  // joined-order index, guaranteeing every player in the room gets a
+  // distinct color (capped at 8 players, 12 palette slots — always
+  // collision-free in practice). Without the roster we fall back to a
+  // per-id hash, which can collide but stays stable across rooms.
+  players?: { id: string }[]
+) {
+  let colorIndex: number;
+  if (players && players.length > 0) {
+    const idx = players.findIndex((p) => p.id === id);
+    colorIndex = idx >= 0 ? idx % AVATAR_PALETTE.length : hashIndex(id);
+  } else {
+    colorIndex = hashIndex(id);
+  }
+  const color = AVATAR_PALETTE[colorIndex];
   const fallback = nickname.trim().charAt(0).toUpperCase() || "?";
   const initial = custom?.trim() || fallback;
   // Custom emoji avatars hide the bg color (the emoji renders as its own
@@ -2663,13 +2833,20 @@ function ActivePlayerHero({
   nickname,
   avatar,
   iAmNext,
+  players,
 }: {
   playerId: string;
   nickname: string;
   avatar: string | null;
   iAmNext: boolean;
+  players: PublicRoomView["players"];
 }) {
-  const { color, initial, isCustom } = avatarFor(playerId, nickname, avatar);
+  const { color, initial, isCustom } = avatarFor(
+    playerId,
+    nickname,
+    avatar,
+    players
+  );
   return (
     <div className="relative flex flex-col items-center gap-3 border border-line-soft bg-surface/30 px-6 py-5 sm:gap-5 sm:py-10">
       <div className="relative">
@@ -2767,7 +2944,8 @@ function TurnStrip({
         const { color, initial, isCustom } = avatarFor(
           id,
           p.nickname,
-          p.avatar
+          p.avatar,
+          view.players
         );
 
         return (
@@ -3098,6 +3276,7 @@ function ClueLog({
                 code={code}
                 playerId={playerId}
                 viewState={view.state}
+                players={view.players}
               />
             );
           })}
@@ -3115,6 +3294,7 @@ function ClueRoundBlock({
   code,
   playerId,
   viewState,
+  players,
 }: {
   round: string;
   clues: PublicRoomView["clues"];
@@ -3124,6 +3304,7 @@ function ClueRoundBlock({
   code: string;
   playerId: string;
   viewState: PublicRoomView["state"];
+  players: PublicRoomView["players"];
 }) {
   return (
     <div>
@@ -3149,7 +3330,8 @@ function ClueRoundBlock({
                       const { color, initial, isCustom } = avatarFor(
                         c.player_id,
                         nickname,
-                        avatar
+                        avatar,
+                        players
                       );
                       // Sus highlight: clues with 🚩 reactions get a left
                       // border + tint so the log is scannable for "what's
@@ -3380,7 +3562,8 @@ function VotingPhase({
               const { color, initial, isCustom } = avatarFor(
                 p.id,
                 p.nickname,
-                p.avatar
+                p.avatar,
+                view.players
               );
               const disabled = alreadyVoted || isYou;
               return (
@@ -4474,7 +4657,8 @@ function RevealPhase({
       <section className="space-y-4">
         <SectionLabel>Scoreboard</SectionLabel>
         <PlayerList
-          view={{ ...view, players: sortedPlayers }}
+          view={view}
+          displayPlayers={sortedPlayers}
           deltas={roundDeltas}
         />
       </section>
