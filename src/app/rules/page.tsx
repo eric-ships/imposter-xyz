@@ -198,7 +198,7 @@ function Section({
 function Outcome({ label, detail }: { label: string; detail: string }) {
   return (
     <li className="flex items-baseline justify-between gap-4 border-b border-line-soft pb-2 last:border-none last:pb-0">
-      <span className="font-serif text-base italic text-ink">{label}</span>
+      <span className="text-base text-ink">{label}</span>
       <span className="text-right text-[11px] uppercase tracking-[0.2em] text-ink-soft">
         {detail}
       </span>
@@ -210,7 +210,7 @@ function Timer({ label, value }: { label: string; value: string }) {
   return (
     <li className="flex items-baseline justify-between gap-4 border-b border-line-soft pb-2 last:border-none last:pb-0">
       <span className="text-sm text-ink">{label}</span>
-      <span className="font-serif text-base italic tabular-nums text-ink">
+      <span className="text-base tabular-nums text-ink">
         {value}
       </span>
     </li>

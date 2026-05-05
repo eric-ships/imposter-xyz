@@ -134,7 +134,7 @@ export default function RoomPage({
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-8 text-center">
         <h1 className="font-serif text-3xl  text-ink">Room not found</h1>
         <p className="text-sm text-ink-soft">
-          Code <span className="font-serif font-semibold tracking-[0.15em]">{code}</span> doesn&apos;t
+          Code <span className="font-semibold tracking-[0.15em]">{code}</span> doesn&apos;t
           exist.
         </p>
         <button
@@ -318,7 +318,7 @@ function RoomPlay({
       <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         <span className="flex items-baseline gap-2">
           <span>Room</span>
-          <span className="font-serif text-base tracking-[0.25em] text-ink normal-case">
+          <span className="text-base tracking-[0.25em] text-ink normal-case">
             {code}
           </span>
         </span>
@@ -350,7 +350,7 @@ function RoomPlay({
                 view.players.find((p) => p.id === playerId)?.avatar ?? null
               }
             />
-            <span className="font-serif text-base text-ink normal-case tracking-normal">
+            <span className="text-base text-ink normal-case tracking-normal">
               {nicknameById.get(playerId)}
             </span>
             {you.isHost && (
@@ -518,7 +518,7 @@ function PhaseCountdown({
       className="relative overflow-hidden border-y border-line bg-surface/60 px-5 py-3"
     >
       <div className="flex items-baseline justify-center gap-3 text-center">
-        <span className="font-serif text-base  text-ink-soft">
+        <span className="text-base text-ink-soft">
           {headline}
         </span>
         <span className="text-ink-faint">·</span>
@@ -530,7 +530,7 @@ function PhaseCountdown({
               ? { duration: 0.9, repeat: Infinity, ease: "easeInOut" }
               : { duration: 0.18 }
           }
-          className={`font-serif text-2xl  tabular-nums leading-none transition-colors ${
+          className={`text-2xl font-semibold tabular-nums leading-none transition-colors ${
             critical ? "text-oxblood" : warn ? "text-oxblood" : "text-ink"
           }`}
         >
@@ -1025,7 +1025,7 @@ function PoliceBadge({
           >
             {av.initial}
           </span>
-          <span className="font-serif normal-case tracking-normal text-ink">
+          <span className="normal-case tracking-normal text-ink">
             {target.nickname}
           </span>
         </span>
@@ -1077,7 +1077,7 @@ function PoliceBadge({
                   >
                     {av.initial}
                   </span>
-                  <span className="font-serif text-sm text-ink">
+                  <span className="text-sm text-ink">
                     {p.nickname}
                   </span>
                 </button>
@@ -1123,7 +1123,7 @@ function MoleModeBadge({
           >
             {av.initial}
           </span>
-          <span className="font-serif normal-case tracking-normal text-ink">
+          <span className="normal-case tracking-normal text-ink">
             {j.nickname}
           </span>
         </span>
@@ -1160,7 +1160,7 @@ function MoleModeBadge({
               >
                 {av.initial}
               </span>
-              <span className="font-serif normal-case tracking-normal text-ink">
+              <span className="normal-case tracking-normal text-ink">
                 {p.nickname}
               </span>
             </span>
@@ -1188,7 +1188,7 @@ function MoleModeBadge({
           >
             {av.initial}
           </span>
-          <span className="font-serif normal-case tracking-normal text-ink">
+          <span className="normal-case tracking-normal text-ink">
             {p.nickname}
           </span>
         </span>
@@ -1259,7 +1259,7 @@ function PlayerList({
         return (
           <li key={p.id} className="flex items-center gap-4 py-3">
             {showRank && (
-              <div className="w-4 text-right font-serif text-sm text-ink-faint tabular-nums">
+              <div className="w-4 text-right text-sm text-ink-faint tabular-nums">
                 {i + 1}
               </div>
             )}
@@ -1317,7 +1317,7 @@ function PlayerList({
             )}
             {showScores && (
               <div className="flex items-baseline gap-2">
-                <div className="font-serif text-lg text-ink-soft tabular-nums">
+                <div className="text-lg text-ink-soft tabular-nums">
                   {p.score}
                 </div>
                 {deltas && deltas[p.id] !== undefined && (
@@ -1472,7 +1472,7 @@ function PotPanel({
       </div>
       <div className="flex items-baseline justify-between">
         <div>
-          <div className="font-serif text-3xl text-ink">
+          <div className="text-3xl font-semibold text-ink tabular-nums">
             {formatUsdc(totalPot)} USDC
           </div>
           <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -2397,7 +2397,7 @@ function CandidatesShowcase({ view }: { view: PublicRoomView }) {
           {view.guessCandidates.map((c) => (
             <span
               key={c}
-              className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm text-ink-soft"
+              className="rounded-full border border-line bg-page px-3 py-1 text-sm text-ink-soft"
             >
               {c}
             </span>
@@ -2450,7 +2450,7 @@ function Scoreboard({
           return (
             <div key={p.id} className="flex items-baseline gap-1.5">
               <span
-                className={`font-serif ${
+                className={`${
                   isYou ? "font-semibold text-ink" : "text-ink-soft"
                 }`}
               >
@@ -2561,7 +2561,7 @@ function PotStatus({ view }: { view: PublicRoomView }) {
       <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         Pot
       </div>
-      <div className="font-serif text-xl leading-none text-ink tabular-nums">
+      <div className="text-xl font-semibold leading-none text-ink tabular-nums">
         {formatUsdc(total)} USDC
       </div>
       <div className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
@@ -3242,13 +3242,13 @@ function VotingPhase({
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
       <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
         <section className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-          <span className="font-serif text-sm  text-ink-soft normal-case tracking-normal">
+          <span className="text-sm text-ink-soft normal-case tracking-normal">
             {view.category}
           </span>
           {!you.isImposter && you.secretWord && (
             <span>
               Word
-              <span className="ml-2 font-serif text-sm text-ink normal-case tracking-normal">
+              <span className="ml-2 text-sm text-ink normal-case tracking-normal">
                 {you.secretWord}
               </span>
             </span>
@@ -3335,7 +3335,7 @@ function VotingPhase({
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-1 items-baseline gap-2 font-serif text-xl text-ink">
+                  <div className="flex flex-1 items-baseline gap-2 text-xl text-ink">
                     <span>{p.nickname}</span>
                     {isYou && (
                       <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -3430,7 +3430,7 @@ function VotingPhase({
               }}
               className="rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink shadow-lg"
             >
-              <span className="font-serif text-ink">{t.nickname}</span>
+              <span className="font-semibold text-ink">{t.nickname}</span>
               <span className="ml-2 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
                 voted
               </span>
@@ -3531,7 +3531,7 @@ function GuessPhase({
                   "Pulling shortlist"
                 ) : candidates ? (
                   <>
-                    <span className="font-serif text-sm normal-case tracking-normal text-ink-soft">
+                    <span className="text-sm normal-case tracking-normal text-ink-soft">
                       {caughtNickname}
                     </span>{" "}
                     is choosing from
@@ -3543,7 +3543,7 @@ function GuessPhase({
                   {candidates.map((c) => (
                     <span
                       key={c}
-                      className="rounded-full border border-line bg-page px-3 py-1 font-serif text-sm text-ink-soft"
+                      className="rounded-full border border-line bg-page px-3 py-1 text-sm text-ink-soft"
                     >
                       {c}
                     </span>
@@ -3555,7 +3555,7 @@ function GuessPhase({
 
           <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             Awaiting{" "}
-            <span className="font-serif text-sm normal-case tracking-normal text-ink-soft">
+            <span className="text-sm normal-case tracking-normal text-ink-soft">
               {caughtNickname}
             </span>
             &apos;s guess
@@ -3639,7 +3639,7 @@ function GuessPhase({
                       key={c}
                       type="button"
                       onClick={() => setGuess(c)}
-                      className={`rounded-full border px-3 py-1 font-serif text-sm transition-all duration-100 active:scale-95 ${
+                      className={`rounded-full border px-3 py-1 text-sm transition-all duration-100 active:scale-95 ${
                         selected
                           ? "border-accent bg-accent text-page"
                           : "border-line bg-page text-ink hover:border-accent hover:text-accent"
@@ -3656,7 +3656,7 @@ function GuessPhase({
 
         <section className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span>Category</span>
-          <span className="font-serif text-sm  text-ink-soft normal-case tracking-normal">
+          <span className="text-sm text-ink-soft normal-case tracking-normal">
             {view.category}
           </span>
         </section>
@@ -4306,7 +4306,7 @@ function RevealPhase({
               return (
                 <span
                   key={c}
-                  className={`rounded-full border px-3 py-1 font-serif text-sm ${
+                  className={`rounded-full border px-3 py-1 text-sm ${
                     isSecret
                       ? "border-leaf bg-leaf/10 text-leaf"
                       : isGuess
@@ -4335,7 +4335,7 @@ function RevealPhase({
               <span className="text-ink-soft">
                 {nicknameById.get(v.voter_id)}
               </span>
-              <span className="font-serif text-ink">
+              <span className="font-semibold text-ink">
                 → {nicknameById.get(v.target_id)}
               </span>
             </li>
@@ -4364,7 +4364,7 @@ function RevealPhase({
                 >
                   <span className="text-ink-soft">{label}</span>
                   <span className="flex items-baseline gap-3">
-                    <span className="font-serif text-ink tabular-nums">
+                    <span className="font-semibold text-ink tabular-nums">
                       {formatUsdc(p.amount)} USDC
                     </span>
                     <a
