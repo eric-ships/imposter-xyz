@@ -4060,18 +4060,19 @@ function RevealPhase({
   const outcome = reveal.guessOutcome;
 
   // Tiered reveal: unspool the round resolution over a few seconds
-  // instead of dumping everything at once. Order builds tension toward
-  // the actual word (the dramatic finish):
+  // instead of dumping everything at once. Order: set the stage, then
+  // accuse, then drop the answer, then show how the imposter did.
   //   stage 0:  card frame, all rows placeholder
-  //   stage 1:  imposter name(s) appear         (chime)
-  //   stage 2:  imposter's guess appears        (chime, only if hasGuess)
-  //   stage 3:  category appears                (chime)  - shifts to 2 if no guess
-  //   stage 4:  secret word appears             (chime)  - shifts to 3 if no guess
+  //   stage 1:  category appears                (chime)
+  //   stage 2:  imposter name(s) appear         (chime)
+  //   stage 3:  secret word appears             (chime)
+  //   stage 4:  imposter's guess appears        (chime, only if hasGuess)
   //   stage 5:  outcome banner + confetti        - shifts to 4 if no guess
   const hasGuess = !!reveal.guess;
-  const guessStage = 2;
-  const categoryStage = hasGuess ? 3 : 2;
-  const wordStage = hasGuess ? 4 : 3;
+  const categoryStage = 1;
+  const imposterStage = 2;
+  const wordStage = 3;
+  const guessStage = 4;
   const finalStage = hasGuess ? 5 : 4;
   const [stage, setStage] = useState(0);
   useEffect(() => {
@@ -4085,15 +4086,15 @@ function RevealPhase({
       );
     };
     let t = 1400;
-    advance(1, t);
-    if (hasGuess) advance(guessStage, (t += 1400));
-    advance(categoryStage, (t += 1400));
+    advance(categoryStage, t);
+    advance(imposterStage, (t += 1400));
     advance(wordStage, (t += 1400));
+    if (hasGuess) advance(guessStage, (t += 1400));
     advance(finalStage, (t += 1400));
     return () => {
       for (const x of timers) clearTimeout(x);
     };
-  }, [hasGuess, guessStage, categoryStage, wordStage, finalStage]);
+  }, [hasGuess, categoryStage, imposterStage, wordStage, guessStage, finalStage]);
   const multiImposter = reveal.imposterIds.length > 1;
 
   type Side = "imposter" | "crewmates" | "draw";
@@ -4246,37 +4247,75 @@ function RevealPhase({
 
       <section className="border border-line bg-surface p-8 text-center">
         <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-          {multiImposter ? "The imposters were" : "The imposter was"}
+          Category
         </div>
-        <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl  text-oxblood">
-          {stage >= 1 ? (
-            reveal.imposterIds.map((id, i) => (
-              <motion.span
-                key={id}
-                initial={{ opacity: 0, y: -8, scale: 0.85, rotateX: -60 }}
-                animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 360,
-                  damping: 24,
-                  delay: i * 0.18,
-                }}
-                className="inline-flex items-baseline gap-3"
-              >
-                {i > 0 && (
-                  <span className="text-lg text-ink-faint">&</span>
-                )}
-                <span>{nicknameById.get(id) ?? "?"}</span>
-                {reveal.caughtImposterId === id && multiImposter && (
-                  <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
-                    caught
-                  </span>
-                )}
-              </motion.span>
-            ))
+        <div className="mt-2 flex min-h-[2rem] items-center justify-center font-serif text-2xl text-ink">
+          {stage >= categoryStage ? (
+            <motion.span
+              initial={{ opacity: 0, y: -8, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ type: "spring", stiffness: 360, damping: 24 }}
+            >
+              {view.category}
+            </motion.span>
           ) : (
             <RevealEllipsis />
           )}
+        </div>
+
+        <div className="mt-6 border-t border-line-soft pt-6">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+            {multiImposter ? "The imposters were" : "The imposter was"}
+          </div>
+          <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl  text-oxblood">
+            {stage >= imposterStage ? (
+              reveal.imposterIds.map((id, i) => (
+                <motion.span
+                  key={id}
+                  initial={{ opacity: 0, y: -8, scale: 0.85, rotateX: -60 }}
+                  animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 360,
+                    damping: 24,
+                    delay: i * 0.18,
+                  }}
+                  className="inline-flex items-baseline gap-3"
+                >
+                  {i > 0 && (
+                    <span className="text-lg text-ink-faint">&</span>
+                  )}
+                  <span>{nicknameById.get(id) ?? "?"}</span>
+                  {reveal.caughtImposterId === id && multiImposter && (
+                    <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
+                      caught
+                    </span>
+                  )}
+                </motion.span>
+              ))
+            ) : (
+              <RevealEllipsis />
+            )}
+          </div>
+        </div>
+
+        <div className="mt-6 border-t border-line-soft pt-6">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+            Secret word
+          </div>
+          <div className="mt-2 flex min-h-[2.5rem] items-center justify-center font-serif text-3xl text-ink">
+            {stage >= wordStage ? (
+              <motion.span
+                initial={{ opacity: 0, y: -8, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 360, damping: 24 }}
+              >
+                {reveal.secretWord}
+              </motion.span>
+            ) : (
+              <RevealEllipsis />
+            )}
+          </div>
         </div>
 
         {reveal.guess && (
@@ -4317,44 +4356,6 @@ function RevealPhase({
             </div>
           </div>
         )}
-
-        <div className="mt-6 border-t border-line-soft pt-6">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-            Category
-          </div>
-          <div className="mt-2 flex min-h-[2rem] items-center justify-center font-serif text-2xl text-ink">
-            {stage >= categoryStage ? (
-              <motion.span
-                initial={{ opacity: 0, y: -8, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: "spring", stiffness: 360, damping: 24 }}
-              >
-                {view.category}
-              </motion.span>
-            ) : (
-              <RevealEllipsis />
-            )}
-          </div>
-        </div>
-
-        <div className="mt-6 border-t border-line-soft pt-6">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-            Secret word
-          </div>
-          <div className="mt-2 flex min-h-[2.5rem] items-center justify-center font-serif text-3xl text-ink">
-            {stage >= wordStage ? (
-              <motion.span
-                initial={{ opacity: 0, y: -8, scale: 0.9 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: "spring", stiffness: 360, damping: 24 }}
-              >
-                {reveal.secretWord}
-              </motion.span>
-            ) : (
-              <RevealEllipsis />
-            )}
-          </div>
-        </div>
 
         {showFinal && (
           <motion.div
