@@ -370,7 +370,7 @@ function RoomPlay({
             />
           )}
           <Link
-            href="/rules"
+            href="/rules#imposter"
             target="_blank"
             rel="noreferrer"
             className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
@@ -781,7 +781,7 @@ function WavelengthRoomShell({
           </span>
           <span className="flex items-center gap-3">
             <Link
-              href="/rules"
+              href="/rules#wavelength"
               target="_blank"
               rel="noreferrer"
               className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
@@ -2414,7 +2414,7 @@ function LobbyPhase({
 
       <div className="flex items-center justify-center gap-6 border-t border-line-soft pt-6">
         <Link
-          href="/rules"
+          href="/rules#imposter"
           target="_blank"
           rel="noreferrer"
           className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"

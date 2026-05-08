@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function RulesPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-10 px-8 py-12">
+    <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-12 px-8 py-12">
       <header className="text-center">
         <div className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">
           Rule book
@@ -10,159 +10,275 @@ export default function RulesPage() {
         <h1 className="mt-2 font-serif text-4xl italic text-ink">
           How to play
         </h1>
-        <p className="mt-4 text-sm leading-relaxed text-ink-soft">
-          A short parlor game of bluffs and close reads.
-          <br />
-          Three to eight players. Ten to fifteen minutes.
-        </p>
+        <nav className="mt-6 flex justify-center gap-2">
+          <a
+            href="#imposter"
+            className="rounded-full border border-line px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+          >
+            Imposter
+          </a>
+          <a
+            href="#wavelength"
+            className="rounded-full border border-line px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+          >
+            Wavelength
+          </a>
+        </nav>
       </header>
 
-      <Section label="Setup">
-        <p>
-          One person creates a room and shares the four-letter code. Everyone
-          joins with a nickname. Rooms hold three to eight players; the host
-          starts the round once at least three are in.
-        </p>
-        <p>
-          When the round begins, players are secretly chosen as the{" "}
-          <em>imposter</em>. The count scales with the table:
-        </p>
-        <ul className="space-y-1 pl-0">
-          <li>3-4 players → 1 imposter</li>
-          <li>5-7 players → 2 imposters</li>
-          <li>8 players → 3 imposters</li>
-        </ul>
-        <p>
-          Imposters don&apos;t know who else is on their team. Everyone
-          else is a <em>crewmate</em>.
-        </p>
-      </Section>
+      {/* ───────────────────── Imposter ───────────────────── */}
+      <article id="imposter" className="scroll-mt-12 space-y-10">
+        <header className="border-b border-line pb-4">
+          <h2 className="font-serif text-3xl italic text-ink">Imposter</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            A short parlor game of bluffs and close reads.
+            <br />
+            Three to eight players. Ten to fifteen minutes.
+          </p>
+        </header>
 
-      <Section label="What each side sees">
-        <ul className="space-y-2 pl-0">
-          <li>
-            <span className="text-leaf">Crewmates</span> see the category and
-            the secret word.
-          </li>
-          <li>
-            <span className="text-oxblood">Imposter</span> sees only the
-            category. They do not know the word.
-          </li>
-        </ul>
-      </Section>
+        <Section label="Setup">
+          <p>
+            One person creates a room and shares the four-letter code.
+            Everyone joins with a nickname. Rooms hold three to eight
+            players; the host starts the round once at least three are in.
+          </p>
+          <p>
+            When the round begins, players are secretly chosen as the{" "}
+            <em>imposter</em>. The count scales with the table:
+          </p>
+          <ul className="space-y-1 pl-0">
+            <li>3-4 players → 1 imposter</li>
+            <li>5-7 players → 2 imposters</li>
+            <li>8 players → 3 imposters</li>
+          </ul>
+          <p>
+            Imposters don&apos;t know who else is on their team. Everyone
+            else is a <em>crewmate</em>.
+          </p>
+        </Section>
 
-      <Section label="The clue phase">
-        <p>
-          Players take turns in a random order. On your turn you give one
-          one-word clue that hints at the secret word.
-        </p>
-        <p>
-          Crewmates want to signal enough that the group knows they&apos;re
-          real, without making it trivial for the imposter to piece together
-          the word. The imposter has to bluff a clue that fits the category
-          convincingly enough to pass as a crewmate.
-        </p>
-        <p>
-          Each player gives one clue per round. The table plays three full
-          rounds of clues before voting.
-        </p>
-      </Section>
+        <Section label="What each side sees">
+          <ul className="space-y-2 pl-0">
+            <li>
+              <span className="text-leaf">Crewmates</span> see the category
+              and the secret word.
+            </li>
+            <li>
+              <span className="text-oxblood">Imposter</span> sees only the
+              category. They do not know the word.
+            </li>
+          </ul>
+        </Section>
 
-      <Section label="The vote">
-        <p>
-          After the clues, everyone votes for who they think is the imposter.
-          You can&apos;t vote for yourself. Votes are locked in once cast.
-        </p>
-        <p>
-          If one player has a clear plurality and they were an imposter,{" "}
-          <span className="text-ink">that imposter is caught</span> and gets
-          one last chance to guess the word. When there are multiple
-          imposters at the table, the others stay hidden — their fate
-          is tied to the caught imposter&apos;s guess.
-        </p>
-        <p>
-          A tie still counts as a catch if every top-tied target is an
-          imposter (e.g. a 2-2 split between two imposters) — one of
-          them takes the guess. But if the tie includes any crewmate,
-          or the plurality lands on a crewmate,{" "}
-          <span className="text-oxblood">the imposter team escapes</span> and
-          wins the round outright.
-        </p>
-      </Section>
+        <Section label="The clue phase">
+          <p>
+            Players take turns in a random order. On your turn you give one
+            one-word clue that hints at the secret word.
+          </p>
+          <p>
+            Crewmates want to signal enough that the group knows
+            they&apos;re real, without making it trivial for the imposter
+            to piece together the word. The imposter has to bluff a clue
+            that fits the category convincingly enough to pass as a
+            crewmate.
+          </p>
+          <p>
+            Each player gives one clue per round. The table plays three
+            full rounds of clues before voting.
+          </p>
+        </Section>
 
-      <Section label="The final guess">
-        <p>
-          The caught imposter sees the category and every clue that was given,
-          and submits one guess at the secret word. The system judges exact
-          vs. close matches. If there&apos;s a second imposter at the table,
-          they can only watch.
-        </p>
-      </Section>
+        <Section label="The vote">
+          <p>
+            After the clues, everyone votes for who they think is the
+            imposter. You can&apos;t vote for yourself. Votes are locked
+            in once cast.
+          </p>
+          <p>
+            If one player has a clear plurality and they were an imposter,{" "}
+            <span className="text-ink">that imposter is caught</span> and
+            gets one last chance to guess the word. When there are
+            multiple imposters at the table, the others stay hidden —
+            their fate is tied to the caught imposter&apos;s guess.
+          </p>
+          <p>
+            A tie still counts as a catch if every top-tied target is an
+            imposter (e.g. a 2-2 split between two imposters) — one of
+            them takes the guess. But if the tie includes any crewmate, or
+            the plurality lands on a crewmate,{" "}
+            <span className="text-oxblood">the imposter team escapes</span>{" "}
+            and wins the round outright.
+          </p>
+        </Section>
 
-      <Section label="Scoring">
-        <ul className="space-y-2">
-          <Outcome
-            label="Imposter escapes"
-            detail="+2 each imposter · 0 crewmates"
-          />
-          <Outcome
-            label="Caught, guessed exactly"
-            detail="+2 each imposter · 0 crewmates"
-          />
-          <Outcome
-            label="Caught, close guess"
-            detail="+1 each imposter · +1 each crewmate"
-          />
-          <Outcome
-            label="Caught, wrong guess"
-            detail="0 imposters · +1 each crewmate"
-          />
-        </ul>
-      </Section>
+        <Section label="The final guess">
+          <p>
+            The caught imposter sees the category and every clue that was
+            given, and submits one guess at the secret word. The system
+            judges exact vs. close matches. If there&apos;s a second
+            imposter at the table, they can only watch.
+          </p>
+        </Section>
 
-      <Section label="Timers">
-        <p>
-          Every phase has a clock so the room doesn&apos;t stall on a
-          disconnected or distracted player.
-        </p>
-        <ul className="space-y-2">
-          <Timer label="Clue (per turn)" value="45 seconds" />
-          <Timer label="Vote" value="3 minutes" />
-          <Timer label="Imposter&rsquo;s guess" value="90 seconds" />
-        </ul>
-        <p>
-          If the clock runs out on a clue, the player is skipped with a blank
-          clue and the turn passes. If the vote timer expires, the room tallies
-          whatever votes were cast. If the imposter doesn&apos;t submit a
-          guess, it counts as a wrong guess.
-        </p>
-      </Section>
+        <Section label="Scoring">
+          <ul className="space-y-2">
+            <Outcome
+              label="Imposter escapes"
+              detail="+2 each imposter · 0 crewmates"
+            />
+            <Outcome
+              label="Caught, guessed exactly"
+              detail="+2 each imposter · 0 crewmates"
+            />
+            <Outcome
+              label="Caught, close guess"
+              detail="+1 each imposter · +1 each crewmate"
+            />
+            <Outcome
+              label="Caught, wrong guess"
+              detail="0 imposters · +1 each crewmate"
+            />
+          </ul>
+        </Section>
 
-      <Section label="Playing for a pot">
-        <p>
-          The host can optionally turn on a pot in the lobby. Every player
-          antes one USDC on Base; the contract holds it until the round is
-          resolved.
-        </p>
-        <ul className="space-y-2">
-          <Outcome
-            label="Imposter wins"
-            detail="imposter takes the entire pot"
-          />
-          <Outcome
-            label="Crewmates win"
-            detail="pot is split evenly among crewmates"
-          />
-          <Outcome
-            label="Close guess"
-            detail="pot is split across the whole table"
-          />
-        </ul>
-        <p>
-          If the host voids the game mid-round, every ante is refunded to its
-          original wallet.
-        </p>
-      </Section>
+        <Section label="Timers">
+          <p>
+            Every phase has a clock so the room doesn&apos;t stall on a
+            disconnected or distracted player.
+          </p>
+          <ul className="space-y-2">
+            <Timer label="Clue (per turn)" value="45 seconds" />
+            <Timer label="Vote" value="3 minutes" />
+            <Timer label="Imposter&rsquo;s guess" value="90 seconds" />
+          </ul>
+          <p>
+            If the clock runs out on a clue, the player is skipped with a
+            blank clue and the turn passes. If the vote timer expires, the
+            room tallies whatever votes were cast. If the imposter
+            doesn&apos;t submit a guess, it counts as a wrong guess.
+          </p>
+        </Section>
+
+        <Section label="Playing for a pot">
+          <p>
+            The host can optionally turn on a pot in the lobby. Every
+            player antes one USDC on Base; the contract holds it until the
+            round is resolved.
+          </p>
+          <ul className="space-y-2">
+            <Outcome
+              label="Imposter wins"
+              detail="imposter takes the entire pot"
+            />
+            <Outcome
+              label="Crewmates win"
+              detail="pot is split evenly among crewmates"
+            />
+            <Outcome
+              label="Close guess"
+              detail="pot is split across the whole table"
+            />
+          </ul>
+          <p>
+            If the host voids the game mid-round, every ante is refunded to
+            its original wallet.
+          </p>
+        </Section>
+      </article>
+
+      {/* ───────────────────── Wavelength ───────────────────── */}
+      <article
+        id="wavelength"
+        className="scroll-mt-12 space-y-10 border-t border-line pt-12"
+      >
+        <header className="border-b border-line pb-4">
+          <h2 className="font-serif text-3xl italic text-ink">Wavelength</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            A spectrum-guessing game of clue-giving and close calls.
+            <br />
+            Three to six players. Ten to twenty minutes.
+          </p>
+        </header>
+
+        <Section label="Setup">
+          <p>
+            One person creates a Wavelength room and shares the
+            four-letter code. Players join with a nickname. Three to six
+            players is the sweet spot. The host starts the match once at
+            least three are in.
+          </p>
+          <p>
+            A match is five rounds. Each round, one player is the{" "}
+            <em>psychic</em>; the role rotates so everyone gets at least
+            one turn at it.
+          </p>
+        </Section>
+
+        <Section label="What the psychic sees">
+          <p>
+            The psychic gets a <em>concept pair</em> like &ldquo;Cold ↔
+            Hot&rdquo; or &ldquo;Boring ↔ Exciting&rdquo;, plus a hidden
+            target band on the dial. The rest of the table sees only the
+            concept — never the target.
+          </p>
+          <p>
+            The psychic picks a clue word that they think lands on the
+            target. Examples for &ldquo;Cold ↔ Hot&rdquo; with a target on
+            the warm side: &ldquo;coffee&rdquo;, &ldquo;jacuzzi&rdquo;,
+            &ldquo;August&rdquo;.
+          </p>
+        </Section>
+
+        <Section label="The guess phase">
+          <p>
+            Once the psychic submits the clue, every other player drags
+            their dial to where they think the target is. Guesses are
+            independent — no coordinating. When the last guess locks in,
+            the round resolves automatically.
+          </p>
+        </Section>
+
+        <Section label="Scoring">
+          <p>
+            Each guesser earns points based on how close their dial
+            landed:
+          </p>
+          <ul className="space-y-2">
+            <Outcome label="Bullseye" detail="+4 points" />
+            <Outcome label="Inner band" detail="+3 points" />
+            <Outcome label="Outer band" detail="+2 points" />
+            <Outcome label="Off the band" detail="0 points" />
+          </ul>
+          <p>
+            The psychic earns the average of their guessers&apos;
+            scores — rewards good clue-giving without making the role
+            inherently better or worse than guessing.
+          </p>
+        </Section>
+
+        <Section label="Winning">
+          <p>
+            After all five rounds, whoever has the most cumulative points
+            wins. Ties are real ties — multiple winners on the
+            scoreboard. The host can hit Play Again to reset scores and
+            shuffle the psychic order for a fresh match.
+          </p>
+        </Section>
+
+        <Section label="Timers">
+          <ul className="space-y-2">
+            <Timer label="Clue (psychic)" value="60 seconds" />
+            <Timer label="Guess" value="45 seconds" />
+          </ul>
+          <p>
+            If the psychic runs out of clue time, a blank clue is locked
+            in and the round still plays out. If a guesser runs out of
+            time, the middle of the dial is locked as their guess (which
+            usually means zero points).
+          </p>
+        </Section>
+      </article>
 
       <div className="flex justify-center border-t border-line-soft pt-8">
         <Link
@@ -185,9 +301,9 @@ function Section({
 }) {
   return (
     <section className="space-y-3">
-      <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">
+      <h3 className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">
         {label}
-      </h2>
+      </h3>
       <div className="space-y-3 text-base leading-relaxed text-ink-soft">
         {children}
       </div>
@@ -210,9 +326,7 @@ function Timer({ label, value }: { label: string; value: string }) {
   return (
     <li className="flex items-baseline justify-between gap-4 border-b border-line-soft pb-2 last:border-none last:pb-0">
       <span className="text-sm text-ink">{label}</span>
-      <span className="text-base tabular-nums text-ink">
-        {value}
-      </span>
+      <span className="text-base tabular-nums text-ink">{value}</span>
     </li>
   );
 }
