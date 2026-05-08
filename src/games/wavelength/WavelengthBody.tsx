@@ -388,20 +388,21 @@ function WavelengthMatch({
 
   return (
     <div className="space-y-6">
-      {/* Round + psychic header */}
-      <div className="flex items-baseline justify-between text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-        <span>
-          Round {state.round} of {state.totalRounds}
-        </span>
-        <span className="flex items-baseline gap-3">
-          <CountdownPill deadline={state.deadline} />
-          <span>
+      {/* Round + psychic header. Timer is the dominant element on the
+          right; round and psychic stack as small chrome on the left. */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col gap-0.5">
+          <span className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+            Round {state.round} of {state.totalRounds}
+          </span>
+          <span className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
             Psychic ·{" "}
             <span className="text-accent">
               {isPsychic ? "you" : psychicName}
             </span>
           </span>
-        </span>
+        </div>
+        <CountdownPill deadline={state.deadline} />
       </div>
 
       {/* Concept pair */}
@@ -1075,14 +1076,24 @@ function CountdownPill({ deadline }: { deadline: string | null }) {
   const urgent = remaining <= 10;
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
+  // Big tabular-nums readout. Pulses gently when under 10s so the
+  // pressure is felt at a glance from across the room.
   return (
-    <span
-      className={`tabular-nums ${
-        urgent ? "text-oxblood" : "text-ink-soft"
+    <motion.span
+      animate={
+        urgent ? { scale: [1, 1.08, 1] } : { scale: 1 }
+      }
+      transition={
+        urgent
+          ? { duration: 1, repeat: Infinity, ease: "easeInOut" }
+          : { duration: 0 }
+      }
+      className={`text-4xl font-semibold leading-none tabular-nums ${
+        urgent ? "text-oxblood" : "text-ink"
       }`}
     >
       {mins}:{secs.toString().padStart(2, "0")}
-    </span>
+    </motion.span>
   );
 }
 
