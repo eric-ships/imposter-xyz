@@ -791,12 +791,24 @@ function RevealPhase({
 
   const target = state.target ?? 50;
   const isLastRound = state.round >= state.totalRounds;
-  // Decorate guesses with nicknames for the dial pins.
-  const decoratedGuesses = state.guesses.map((g) => ({
-    ...g,
-    nickname: nicknameById.get(g.playerId) ?? "?",
-    score: scoreGuess(g.position, target, state.targetWidth),
-  }));
+  // Decorate guesses with nickname + avatar so the dial pins can
+  // render the player's circle. avatarFor uses joined-order indexing
+  // off view.players so colors match the rest of the room chrome.
+  const decoratedGuesses = state.guesses.map((g) => {
+    const p = view.players.find((vp) => vp.id === g.playerId);
+    const av = avatarFor(
+      g.playerId,
+      p?.nickname ?? "?",
+      p?.avatar ?? null,
+      view.players
+    );
+    return {
+      ...g,
+      nickname: p?.nickname ?? "?",
+      avatar: av,
+      score: scoreGuess(g.position, target, state.targetWidth),
+    };
+  });
 
   return (
     <div className="space-y-5">
@@ -1198,7 +1210,13 @@ function SpectrumDial({
   onChange?: (v: number) => void;
   target?: number;
   targetWidth: number;
-  guesses?: { playerId: string; position: number; nickname: string; score: number }[];
+  guesses?: {
+    playerId: string;
+    position: number;
+    nickname: string;
+    score: number;
+    avatar: { color: string; initial: string; isCustom: boolean };
+  }[];
   concept: { left: string; right: string } | null;
 }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
@@ -1293,7 +1311,11 @@ function SpectrumDial({
           ))}
         </div>
 
-        {/* Reveal-phase guess pins */}
+        {/* Reveal-phase guess pins. Avatar circle floats above the
+             pin so the dial doesn't get visually cluttered with
+             nicknames at every position. Hover the circle for the
+             name + score via the title attr; the per-guess scoring
+             list below the dial covers the explicit detail. */}
         {mode === "reveal" &&
           guesses?.map((g) => (
             <div
@@ -1303,8 +1325,14 @@ function SpectrumDial({
               title={`${g.nickname}: +${g.score}`}
             >
               <div className="h-16 w-px bg-ink-soft" />
-              <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-ink-soft">
-                {g.nickname}
+              <div
+                className={`absolute -top-7 left-1/2 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full border border-page ${g.avatar.color} ${
+                  g.avatar.isCustom
+                    ? "text-xs"
+                    : "text-[10px] font-semibold text-white"
+                }`}
+              >
+                {g.avatar.initial}
               </div>
             </div>
           ))}
