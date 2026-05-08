@@ -170,6 +170,13 @@ function WavelengthLobby({
 
   return (
     <div className="space-y-7">
+      <GameKindSwitcher
+        code={code}
+        playerId={playerId}
+        isHost={isHost}
+        currentKind={view.kind}
+      />
+
       <section className="space-y-4">
         <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           Players · {view.players.length} of 6
@@ -238,13 +245,6 @@ function WavelengthLobby({
           {error}
         </p>
       )}
-
-      <GameKindSwitcher
-        code={code}
-        playerId={playerId}
-        isHost={isHost}
-        currentKind={view.kind}
-      />
 
       <WavelengthHistoryPanel history={view.matchHistory ?? []} />
     </div>

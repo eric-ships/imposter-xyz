@@ -2342,6 +2342,13 @@ function LobbyPhase({
 
   return (
     <>
+      <GameKindSwitcher
+        code={code}
+        playerId={playerId}
+        isHost={isHost}
+        currentKind={view.kind}
+      />
+
       <section className="space-y-4">
         <div className="flex items-baseline justify-between">
           <SectionLabel>
@@ -2368,13 +2375,6 @@ function LobbyPhase({
           }
         />
       </section>
-
-      <GameKindSwitcher
-        code={code}
-        playerId={playerId}
-        isHost={isHost}
-        currentKind={view.kind}
-      />
 
       <LobbyMatchHistoryPanel view={view} />
 
