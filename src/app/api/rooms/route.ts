@@ -43,14 +43,19 @@ export async function POST(request: Request) {
 
   // Default new rooms to shortlist mode (show_candidates_always = true).
   // Hosts can flip it off in the lobby or via the header pill mid-game.
+  // Only pass `kind` when it's a non-default value so pre-migration
+  // databases (no kind column yet) keep working for imposter rooms.
+  // Wavelength still requires the migration; that's enforced by the
+  // failure of this insert on a pre-migration DB, which is correct.
+  const insertRow: Record<string, unknown> = {
+    code,
+    host_id: hostId,
+    show_candidates_always: true,
+  };
+  if (roomKind !== "imposter") insertRow.kind = roomKind;
   const { error: roomErr } = await supabaseAdmin
     .from("rooms")
-    .insert({
-      code,
-      host_id: hostId,
-      kind: roomKind,
-      show_candidates_always: true,
-    });
+    .insert(insertRow);
   if (roomErr) {
     return NextResponse.json({ error: roomErr.message }, { status: 500 });
   }
