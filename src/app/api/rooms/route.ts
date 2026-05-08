@@ -3,12 +3,21 @@ import { randomUUID } from "crypto";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { generateRoomCode } from "@/lib/room-code";
 
+// Whitelist of game kinds the create-room endpoint will accept. Keep
+// in lockstep with GameKind in @/lib/game. Anything not in this list
+// (or omitted) falls back to imposter so existing clients keep working.
+const VALID_KINDS = new Set(["imposter", "wavelength"]);
+
 export async function POST(request: Request) {
-  const { nickname } = (await request.json()) as { nickname?: string };
+  const { nickname, kind } = (await request.json()) as {
+    nickname?: string;
+    kind?: string;
+  };
   const trimmed = nickname?.trim();
   if (!trimmed) {
     return NextResponse.json({ error: "nickname required" }, { status: 400 });
   }
+  const roomKind = kind && VALID_KINDS.has(kind) ? kind : "imposter";
 
   let code = "";
   for (let attempt = 0; attempt < 8; attempt++) {
@@ -36,7 +45,12 @@ export async function POST(request: Request) {
   // Hosts can flip it off in the lobby or via the header pill mid-game.
   const { error: roomErr } = await supabaseAdmin
     .from("rooms")
-    .insert({ code, host_id: hostId, show_candidates_always: true });
+    .insert({
+      code,
+      host_id: hostId,
+      kind: roomKind,
+      show_candidates_always: true,
+    });
   if (roomErr) {
     return NextResponse.json({ error: roomErr.message }, { status: 500 });
   }

@@ -40,6 +40,11 @@ export default function HomePage() {
   const [joinCode, setJoinCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Game picker. Defaults to imposter so existing UX is unchanged for
+  // anyone who lands on the page and just hits "Create".
+  const [gameKind, setGameKind] = useState<"imposter" | "wavelength">(
+    "imposter"
+  );
 
   function savePlayer(code: string, playerId: string, nickname: string) {
     localStorage.setItem(`ci:${code}:playerId`, playerId);
@@ -53,7 +58,7 @@ export default function HomePage() {
       const res = await fetch("/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: nickname.trim() }),
+        body: JSON.stringify({ nickname: nickname.trim(), kind: gameKind }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
