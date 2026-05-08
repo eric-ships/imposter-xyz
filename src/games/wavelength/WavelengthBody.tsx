@@ -21,6 +21,7 @@ import {
   playVoteCast,
 } from "@/lib/audio";
 import type { MatchHistoryEntry } from "@/lib/match-history";
+import { avatarFor } from "@/lib/avatar";
 
 // Per-viewer audio cues. Watches state transitions and fires chimes
 // for the local player based on what just changed:
@@ -173,21 +174,30 @@ function WavelengthLobby({
           Players · {view.players.length} of 6
         </h2>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
-          {view.players.map((p) => (
-            <li key={p.id} className="flex items-center gap-3 py-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/20 text-sm font-semibold text-ink">
-                {p.nickname.charAt(0).toUpperCase()}
-              </div>
-              <span className="text-sm text-ink">
-                {p.nickname}
-                {p.id === view.hostId && (
-                  <span className="ml-2 text-[10px] uppercase tracking-[0.18em] text-accent">
-                    Host
-                  </span>
-                )}
-              </span>
-            </li>
-          ))}
+          {view.players.map((p) => {
+            const av = avatarFor(p.id, p.nickname, p.avatar, view.players);
+            return (
+              <li key={p.id} className="flex items-center gap-3 py-3">
+                <div
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${av.color} ${
+                    av.isCustom
+                      ? "border border-line text-base"
+                      : "text-sm font-semibold text-white"
+                  }`}
+                >
+                  {av.initial}
+                </div>
+                <span className="text-sm text-ink">
+                  {p.nickname}
+                  {p.id === view.hostId && (
+                    <span className="ml-2 text-[10px] uppercase tracking-[0.18em] text-accent">
+                      Host
+                    </span>
+                  )}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
@@ -446,7 +456,7 @@ function WavelengthMatch({
         roundScores={
           state.phase === "reveal" ? state.roundScores : undefined
         }
-        nicknameById={nicknameById}
+        players={view.players}
         psychicId={state.psychicId}
       />
     </div>
@@ -870,27 +880,45 @@ function WavelengthFinal({
           Final scoreboard
         </h2>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
-          {sorted.map((p, i) => (
-            <li
-              key={p.id}
-              className="flex items-baseline justify-between gap-3 py-3"
-            >
-              <span className="flex items-baseline gap-3">
-                <span className="w-4 text-right text-sm text-ink-faint tabular-nums">
-                  {i + 1}
-                </span>
-                <span className="text-sm text-ink">{p.nickname}</span>
-                {p.id === playerId && (
-                  <span className="text-[10px] uppercase tracking-[0.2em] text-ink-faint">
-                    you
+          {sorted.map((p, i) => {
+            const playerRow = view.players.find((vp) => vp.id === p.id);
+            const av = avatarFor(
+              p.id,
+              p.nickname,
+              playerRow?.avatar ?? null,
+              view.players
+            );
+            return (
+              <li
+                key={p.id}
+                className="flex items-center justify-between gap-3 py-3"
+              >
+                <span className="flex items-center gap-3">
+                  <span className="w-4 text-right text-sm text-ink-faint tabular-nums">
+                    {i + 1}
                   </span>
-                )}
-              </span>
-              <span className="text-lg text-ink-soft tabular-nums">
-                {p.score}
-              </span>
-            </li>
-          ))}
+                  <div
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${av.color} ${
+                      av.isCustom
+                        ? "border border-line text-sm"
+                        : "text-xs font-semibold text-white"
+                    }`}
+                  >
+                    {av.initial}
+                  </div>
+                  <span className="text-sm text-ink">{p.nickname}</span>
+                  {p.id === playerId && (
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+                      you
+                    </span>
+                  )}
+                </span>
+                <span className="text-lg text-ink-soft tabular-nums">
+                  {p.score}
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
@@ -991,21 +1019,22 @@ function ClueDisplay({ clue }: { clue: string }) {
 function ScoreBoard({
   scores,
   roundScores,
-  nicknameById,
+  players,
   psychicId,
 }: {
   scores: Record<string, number>;
   roundScores?: Record<string, number>;
-  nicknameById: Map<string, string>;
+  players: PublicRoomView["players"];
   psychicId: string | null;
 }) {
-  const entries = Object.entries(scores)
-    .map(([id, total]) => ({
-      id,
-      total,
-      delta: roundScores?.[id] ?? 0,
-      nickname: nicknameById.get(id) ?? "?",
-      isPsychic: id === psychicId,
+  const entries = players
+    .map((p) => ({
+      id: p.id,
+      nickname: p.nickname,
+      avatar: p.avatar,
+      total: scores[p.id] ?? 0,
+      delta: roundScores?.[p.id] ?? 0,
+      isPsychic: p.id === psychicId,
     }))
     .sort((a, b) => b.total - a.total);
   if (entries.length === 0) return null;
@@ -1015,31 +1044,45 @@ function ScoreBoard({
         Scoreboard
       </h3>
       <ul className="divide-y divide-line-soft">
-        {entries.map((e) => (
-          <li
-            key={e.id}
-            className="flex items-baseline justify-between py-1.5"
-          >
-            <span className="text-sm text-ink">
-              {e.nickname}
-              {e.isPsychic && (
-                <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-accent">
-                  psychic
+        {entries.map((e) => {
+          const av = avatarFor(e.id, e.nickname, e.avatar, players);
+          return (
+            <li
+              key={e.id}
+              className="flex items-center justify-between py-1.5"
+            >
+              <span className="flex items-center gap-2.5">
+                <div
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${av.color} ${
+                    av.isCustom
+                      ? "border border-line text-xs"
+                      : "text-[10px] font-semibold text-white"
+                  }`}
+                >
+                  {av.initial}
+                </div>
+                <span className="text-sm text-ink">
+                  {e.nickname}
+                  {e.isPsychic && (
+                    <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-accent">
+                      psychic
+                    </span>
+                  )}
                 </span>
-              )}
-            </span>
-            <span className="flex items-baseline gap-2">
-              {roundScores && e.delta > 0 && (
-                <span className="rounded-full bg-leaf/10 px-1.5 text-[10px] font-semibold tabular-nums text-leaf">
-                  +{e.delta}
-                </span>
-              )}
-              <span className="text-base tabular-nums text-ink-soft">
-                {e.total}
               </span>
-            </span>
-          </li>
-        ))}
+              <span className="flex items-baseline gap-2">
+                {roundScores && e.delta > 0 && (
+                  <span className="rounded-full bg-leaf/10 px-1.5 text-[10px] font-semibold tabular-nums text-leaf">
+                    +{e.delta}
+                  </span>
+                )}
+                <span className="text-base tabular-nums text-ink-soft">
+                  {e.total}
+                </span>
+              </span>
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
