@@ -89,6 +89,17 @@ alter table players add column if not exists investigated_id uuid;
 alter table rooms
   add column if not exists match_history jsonb not null default '[]'::jsonb;
 
+-- Multi-game support. 'imposter' is the only kind today; 'wavelength'
+-- and others will be added as game modules ship. game_state holds
+-- per-game scratch state — anything game-specific that doesn't warrant
+-- a dedicated column (e.g. wavelength's target band, current psychic
+-- index, dial guesses). Imposter's own state still lives in dedicated
+-- columns above for now and may migrate into game_state opportunistically.
+alter table rooms
+  add column if not exists kind text not null default 'imposter';
+alter table rooms
+  add column if not exists game_state jsonb not null default '{}'::jsonb;
+
 -- Multi-imposter support. For 5-player rooms we seat 2 imposters; 3-4
 -- stays at 1. imposter_id (singular, older column) stays populated with
 -- the *first* imposter so legacy reads still work. caught_imposter_id

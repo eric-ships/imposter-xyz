@@ -63,9 +63,21 @@ export type Vote = {
 // reaching into the helper module.
 export type { MatchHistoryEntry } from "@/lib/match-history";
 
+// Game kind discriminator. Lives on rooms.kind so a single rooms table
+// can host multiple game types — each game module reads room.kind to
+// decide whether to render its own UI / accept its own actions.
+export type GameKind = "imposter" | "wavelength";
+
 export type PublicRoomView = {
   code: string;
   hostId: string;
+  // 'imposter' for any room created before the multi-game refactor
+  // (column default). New rooms set this explicitly at create time.
+  kind: GameKind;
+  // Per-game scratch state. Shape is decided by the game module that
+  // owns this kind. Empty object for legacy imposter rooms (which keep
+  // their state in dedicated columns above).
+  gameState: Record<string, unknown>;
   state: RoomState;
   category: string | null;
   round: number;

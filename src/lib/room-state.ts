@@ -1,5 +1,10 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
-import type { GuessOutcome, PublicRoomView, RoomState } from "@/lib/game";
+import type {
+  GameKind,
+  GuessOutcome,
+  PublicRoomView,
+  RoomState,
+} from "@/lib/game";
 import type { MatchHistoryEntry } from "@/lib/match-history";
 
 export async function notifyRoom(code: string, kind: string) {
@@ -265,9 +270,26 @@ export async function fetchRoomView(
       ? (room.match_history as MatchHistoryEntry[])
       : [];
 
+  // Multi-game discriminator. Defaults to 'imposter' for any room
+  // created before the multi-game schema migration ran (the column
+  // either doesn't exist or holds the default). Anything we don't
+  // recognize falls back to 'imposter' so legacy data is never broken.
+  const rawKind = "kind" in room ? (room.kind as string) : "imposter";
+  const kind: GameKind =
+    rawKind === "wavelength" ? "wavelength" : "imposter";
+  const gameState: Record<string, unknown> =
+    "game_state" in room &&
+    room.game_state &&
+    typeof room.game_state === "object" &&
+    !Array.isArray(room.game_state)
+      ? (room.game_state as Record<string, unknown>)
+      : {};
+
   return {
     code: room.code,
     hostId: room.host_id,
+    kind,
+    gameState,
     state,
     category: room.category,
     round: room.round,
