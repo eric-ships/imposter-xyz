@@ -34,6 +34,7 @@ import { TIMER_GRACE_MS, timerDurationsFor } from "@/lib/timer";
 import { useTheme } from "@/lib/theme";
 import { WavelengthBody } from "@/games/wavelength/WavelengthBody";
 import { avatarFor } from "@/lib/avatar";
+import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 
 export default function RoomPage({
   params,
@@ -2367,6 +2368,13 @@ function LobbyPhase({
           }
         />
       </section>
+
+      <GameKindSwitcher
+        code={code}
+        playerId={playerId}
+        isHost={isHost}
+        currentKind={view.kind}
+      />
 
       <LobbyMatchHistoryPanel view={view} />
 

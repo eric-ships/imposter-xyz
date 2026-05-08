@@ -22,6 +22,7 @@ import {
 } from "@/lib/audio";
 import type { MatchHistoryEntry } from "@/lib/match-history";
 import { avatarFor } from "@/lib/avatar";
+import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 
 // Per-viewer audio cues. Watches state transitions and fires chimes
 // for the local player based on what just changed:
@@ -237,6 +238,13 @@ function WavelengthLobby({
           {error}
         </p>
       )}
+
+      <GameKindSwitcher
+        code={code}
+        playerId={playerId}
+        isHost={isHost}
+        currentKind={view.kind}
+      />
 
       <WavelengthHistoryPanel history={view.matchHistory ?? []} />
     </div>
