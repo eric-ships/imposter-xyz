@@ -6,6 +6,8 @@ import type {
   RoomState,
 } from "@/lib/game";
 import type { MatchHistoryEntry } from "@/lib/match-history";
+import { redactForViewer as redactWavelength } from "@/games/wavelength/state";
+import type { WavelengthState } from "@/games/wavelength/types";
 
 export async function notifyRoom(code: string, kind: string) {
   await supabaseAdmin.from("room_events").insert({ room_code: code, kind });
@@ -277,13 +279,23 @@ export async function fetchRoomView(
   const rawKind = "kind" in room ? (room.kind as string) : "imposter";
   const kind: GameKind =
     rawKind === "wavelength" ? "wavelength" : "imposter";
-  const gameState: Record<string, unknown> =
+  let gameState: Record<string, unknown> =
     "game_state" in room &&
     room.game_state &&
     typeof room.game_state === "object" &&
     !Array.isArray(room.game_state)
       ? (room.game_state as Record<string, unknown>)
       : {};
+
+  // Per-game viewer redaction. Wavelength hides the target from
+  // non-psychic viewers during clue/guessing — server-side so the
+  // client can't peek by inspecting the network response.
+  if (kind === "wavelength" && Object.keys(gameState).length > 0) {
+    gameState = redactWavelength(
+      gameState as unknown as WavelengthState,
+      playerId
+    ) as unknown as Record<string, unknown>;
+  }
 
   return {
     code: room.code,
