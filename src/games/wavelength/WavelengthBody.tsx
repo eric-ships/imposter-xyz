@@ -252,6 +252,11 @@ function WavelengthMatch({
     ? (nicknameById.get(state.psychicId) ?? "?")
     : "?";
 
+  // Countdown drives the deadline-driven expiry. Hits 0 → the local
+  // tab pokes /expire (idempotent on the server). Any tab can fire
+  // it; the server-side deadline check is the source of truth.
+  useDeadlineExpire(state.deadline, code);
+
   if (state.phase === "final") {
     return (
       <WavelengthFinal
@@ -272,10 +277,13 @@ function WavelengthMatch({
         <span>
           Round {state.round} of {state.totalRounds}
         </span>
-        <span>
-          Psychic ·{" "}
-          <span className="text-accent">
-            {isPsychic ? "you" : psychicName}
+        <span className="flex items-baseline gap-3">
+          <CountdownPill deadline={state.deadline} />
+          <span>
+            Psychic ·{" "}
+            <span className="text-accent">
+              {isPsychic ? "you" : psychicName}
+            </span>
           </span>
         </span>
       </div>
@@ -810,6 +818,61 @@ function WavelengthFinal({
         {nicknameById.size}
       </span>
     </div>
+  );
+}
+
+// Polls /expire when the local clock crosses the deadline. Server is
+// idempotent (re-checks the actual deadline) so racing tabs are fine.
+// One-shot per deadline: ref tracks the deadline string we last fired
+// for so a stale "still past deadline" view doesn't spam the route.
+function useDeadlineExpire(deadline: string | null, code: string) {
+  const firedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!deadline) return;
+    if (firedFor.current === deadline) return;
+    const ms = new Date(deadline).getTime() - Date.now();
+    if (ms <= 0) {
+      firedFor.current = deadline;
+      fetch(`/api/rooms/${code}/wavelength/expire`, {
+        method: "POST",
+      }).catch(() => {});
+      return;
+    }
+    const timer = setTimeout(() => {
+      firedFor.current = deadline;
+      fetch(`/api/rooms/${code}/wavelength/expire`, {
+        method: "POST",
+      }).catch(() => {});
+    }, ms + 250); // 250ms grace so client clock skew doesn't fire early
+    return () => clearTimeout(timer);
+  }, [deadline, code]);
+}
+
+// Small "0:32" countdown pill. Re-renders every second. Hidden when
+// no deadline (reveal/final/lobby phases). Goes oxblood under 10s.
+function CountdownPill({ deadline }: { deadline: string | null }) {
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    if (!deadline) return;
+    const id = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [deadline]);
+  if (!deadline) return null;
+  const remaining = Math.max(
+    0,
+    Math.ceil((new Date(deadline).getTime() - now) / 1000)
+  );
+  const urgent = remaining <= 10;
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  return (
+    <span
+      className={`tabular-nums ${
+        urgent ? "text-oxblood" : "text-ink-soft"
+      }`}
+    >
+      {mins}:{secs.toString().padStart(2, "0")}
+    </span>
   );
 }
 

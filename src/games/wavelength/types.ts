@@ -44,10 +44,30 @@ export type WavelengthState = {
   // Score deltas from the most recent round, cleared at next-round
   // advance. Drives the "+4" / "+2" badges in the reveal UI.
   roundScores: Record<string, number>;
+  // ISO timestamp for the current phase's auto-advance deadline.
+  // Set on entering clue / guessing phases; null in reveal/final/lobby
+  // (those advance on host action, no clock pressure).
+  deadline: string | null;
 };
 
 export const WAVELENGTH_DEFAULT_ROUNDS = 5;
 export const WAVELENGTH_TARGET_WIDTH = 5; // bullseye is target ± 5 of 100
+
+// Per-phase auto-advance durations. Picked to feel snappy without
+// being punishing — psychic gets a generous minute to think of a
+// clue, guessers get under a minute since they only need to drag a
+// dial. Reveal + final wait on the host (no countdown).
+export const WAVELENGTH_CLUE_MS = 60_000;
+export const WAVELENGTH_GUESS_MS = 45_000;
+
+// Default forfeit position when a guesser runs out the clock. Middle
+// of the dial — neutral, not punishing-extra past missing the round.
+export const WAVELENGTH_FORFEIT_POSITION = 50;
+export const WAVELENGTH_FORFEIT_CLUE = "—";
+
+export function deadlineFromNow(ms: number): string {
+  return new Date(Date.now() + ms).toISOString();
+}
 
 // Scoring bands (mirroring the physical game):
 //   bullseye   (within 1× width):   4 points

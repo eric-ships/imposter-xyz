@@ -3,8 +3,13 @@
 // easy to unit-test and reason about.
 import { CONCEPT_PAIRS } from "./concepts";
 import {
+  WAVELENGTH_CLUE_MS,
   WAVELENGTH_DEFAULT_ROUNDS,
+  WAVELENGTH_FORFEIT_CLUE,
+  WAVELENGTH_FORFEIT_POSITION,
+  WAVELENGTH_GUESS_MS,
   WAVELENGTH_TARGET_WIDTH,
+  deadlineFromNow,
   scoreGuess,
   type WavelengthGuess,
   type WavelengthState,
@@ -58,6 +63,7 @@ export function initMatch(
     guesses: [],
     scores,
     roundScores: {},
+    deadline: deadlineFromNow(WAVELENGTH_CLUE_MS),
   };
 }
 
@@ -70,6 +76,7 @@ export function applyClue(
     ...prev,
     phase: "guessing",
     clue: word,
+    deadline: deadlineFromNow(WAVELENGTH_GUESS_MS),
   };
 }
 
@@ -123,6 +130,8 @@ export function applyGuess(
     guesses,
     roundScores,
     scores: nextScores,
+    // Reveal waits on host action — no clock.
+    deadline: null,
   };
 }
 
@@ -141,6 +150,7 @@ export function advanceRound(
       clue: null,
       guesses: [],
       roundScores: {},
+      deadline: null,
     };
   }
   const nextRound = prev.round + 1;
@@ -155,6 +165,7 @@ export function advanceRound(
     clue: null,
     guesses: [],
     roundScores: {},
+    deadline: deadlineFromNow(WAVELENGTH_CLUE_MS),
   };
 }
 
@@ -164,6 +175,45 @@ export function replayMatch(
   totalRounds: number = WAVELENGTH_DEFAULT_ROUNDS
 ): WavelengthState {
   return initMatch(playerIds, totalRounds);
+}
+
+// Expire helper: forces the current phase to advance past its
+// deadline. Idempotent — if the deadline isn't reached or the phase
+// has already moved on, returns the state unchanged. Called by the
+// /expire route, which any client can poke when their local
+// countdown hits 0.
+//
+//   clue phase forfeit:    psychic stalled → use placeholder clue,
+//                          advance to guessing with a fresh clock.
+//   guessing phase forfeit: any non-guesser auto-submits the middle
+//                          (50). The applyGuess auto-scoring kicks
+//                          in once the last placeholder lands.
+export function expireMatch(
+  prev: WavelengthState,
+  guesserIds: string[]
+): WavelengthState {
+  if (!prev.deadline) return prev;
+  if (Date.now() < new Date(prev.deadline).getTime()) return prev;
+  if (prev.phase === "clue") {
+    return applyClue(prev, WAVELENGTH_FORFEIT_CLUE);
+  }
+  if (prev.phase === "guessing") {
+    // Find missing guessers, auto-submit middle for each. Walk through
+    // applyGuess so the round auto-scores when the last lands.
+    let s = prev;
+    const guessed = new Set(prev.guesses.map((g) => g.playerId));
+    const missing = guesserIds.filter(
+      (id) => id !== prev.psychicId && !guessed.has(id)
+    );
+    for (const id of missing) {
+      s = applyGuess(s, guesserIds, {
+        playerId: id,
+        position: WAVELENGTH_FORFEIT_POSITION,
+      });
+    }
+    return s;
+  }
+  return prev;
 }
 
 // View-side redaction: hide the target from non-psychic viewers during
