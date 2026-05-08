@@ -139,6 +139,54 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="space-y-6">
+            {mode === "create" && (
+              <div>
+                <span className="mb-2 block text-sm text-ink-soft">
+                  Pick a game
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  {(
+                    [
+                      {
+                        kind: "imposter" as const,
+                        title: "Imposter",
+                        sub: "3–8 · social deduction",
+                      },
+                      {
+                        kind: "wavelength" as const,
+                        title: "Wavelength",
+                        sub: "3–6 · spectrum guessing",
+                      },
+                    ]
+                  ).map((g) => {
+                    const selected = gameKind === g.kind;
+                    return (
+                      <button
+                        key={g.kind}
+                        type="button"
+                        onClick={() => setGameKind(g.kind)}
+                        className={`flex flex-col items-start gap-1 rounded-sm border px-3 py-3 text-left transition-all duration-100 active:scale-[0.98] ${
+                          selected
+                            ? "border-accent bg-accent/10"
+                            : "border-line text-ink-soft hover:border-ink hover:text-ink"
+                        }`}
+                      >
+                        <span
+                          className={`font-serif text-base ${
+                            selected ? "text-ink" : ""
+                          }`}
+                        >
+                          {g.title}
+                        </span>
+                        <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+                          {g.sub}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <label className="block">
               <span className="mb-2 block text-sm text-ink-soft">
                 Your name
