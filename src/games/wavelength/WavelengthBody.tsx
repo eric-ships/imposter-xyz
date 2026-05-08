@@ -11,7 +11,7 @@
 //   reveal    — target shown, scores update
 //   final     — full match scoreboard, host can replay
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import type { PublicRoomView } from "@/lib/game";
 import type { WavelengthPhase, WavelengthState } from "./types";
 import { scoreGuess } from "./types";
@@ -368,6 +368,11 @@ function WavelengthMatch({
   // it; the server-side deadline check is the source of truth.
   useDeadlineExpire(state.deadline, code);
 
+  // Pop a small toast at the bottom of the viewport when someone
+  // else's guess lands, so the table feels the lock-ins land in real
+  // time. Skips the local player (they already know they pressed it).
+  const toasts = useGuessLockToasts(state, view.players, playerId);
+
   if (state.phase === "final") {
     return (
       <WavelengthFinal
@@ -459,8 +464,84 @@ function WavelengthMatch({
         players={view.players}
         psychicId={state.psychicId}
       />
+
+      {/* Guess-lock toasts: pinned to bottom-center, auto-dismiss in
+           ~2.4s. Stacks if multiple guesses land in the same render. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex flex-col items-center gap-2">
+        <AnimatePresence initial={false}>
+          {toasts.map((t) => (
+            <motion.div
+              key={t.id}
+              layout
+              initial={{ opacity: 0, y: 16, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.96 }}
+              transition={{ type: "spring", stiffness: 380, damping: 28 }}
+              className="rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink shadow-lg"
+            >
+              <span className="font-semibold text-ink">{t.nickname}</span>
+              <span className="ml-2 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                locked in
+              </span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
     </div>
   );
+}
+
+// Watches state.guesses; on each new entry that isn't the local
+// player, drops a "X locked in" toast at the bottom of the screen.
+// Initial mount seeds the seen set with whatever guesses already
+// exist so a refresh mid-round doesn't spam toasts for past locks.
+function useGuessLockToasts(
+  state: WavelengthState | undefined,
+  players: PublicRoomView["players"],
+  playerId: string
+): { id: number; nickname: string }[] {
+  const seenGuessers = useRef<Set<string>>(new Set());
+  const seededFor = useRef<string | null>(null); // round key
+  const idRef = useRef(0);
+  const [toasts, setToasts] = useState<
+    { id: number; nickname: string }[]
+  >([]);
+
+  useEffect(() => {
+    if (!state || state.phase !== "guessing") {
+      // Reset between rounds so the next guessing phase starts fresh.
+      seenGuessers.current = new Set();
+      seededFor.current = null;
+      return;
+    }
+    const roundKey = `${state.round}`;
+    if (seededFor.current !== roundKey) {
+      seenGuessers.current = new Set(
+        state.guesses.map((g) => g.playerId)
+      );
+      seededFor.current = roundKey;
+      return;
+    }
+    const fresh: string[] = [];
+    for (const g of state.guesses) {
+      if (!seenGuessers.current.has(g.playerId)) {
+        seenGuessers.current.add(g.playerId);
+        if (g.playerId !== playerId) fresh.push(g.playerId);
+      }
+    }
+    if (fresh.length === 0) return;
+    for (const fid of fresh) {
+      const nickname =
+        players.find((p) => p.id === fid)?.nickname ?? "?";
+      const id = ++idRef.current;
+      setToasts((prev) => [...prev, { id, nickname }]);
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== id));
+      }, 2400);
+    }
+  }, [state, players, playerId]);
+
+  return toasts;
 }
 
 function WaitingForClue({ psychicName }: { psychicName: string }) {
