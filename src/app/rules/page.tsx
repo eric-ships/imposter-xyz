@@ -209,9 +209,10 @@ export default function RulesPage() {
             least three are in.
           </p>
           <p>
-            A match is five rounds. Each round, one player is the{" "}
-            <em>psychic</em>; the role rotates so everyone gets at least
-            one turn at it.
+            A match is two rounds per player at the table — so 6
+            rounds with 3 players, 12 with 6. Each round one player is
+            the <em>psychic</em>; the role rotates so everyone gets
+            exactly two turns at it.
           </p>
         </Section>
 
@@ -259,7 +260,7 @@ export default function RulesPage() {
 
         <Section label="Winning">
           <p>
-            After all five rounds, whoever has the most cumulative points
+            After all the rounds, whoever has the most cumulative points
             wins. Ties are real ties — multiple winners on the
             scoreboard. The host can hit Play Again to reset scores and
             shuffle the psychic order for a fresh match.

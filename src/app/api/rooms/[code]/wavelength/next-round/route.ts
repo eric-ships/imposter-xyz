@@ -68,10 +68,13 @@ export async function POST(
     });
     nextHistory = [snap, ...existingHistory].slice(0, MATCH_HISTORY_CAP);
 
-    nextState = replayMatch(
-      (playersForSnap ?? []).map((p) => p.id as string),
-      state.totalRounds
+    // Recompute totalRounds from the current player count so a
+    // mid-session table-size change (joined/left between matches) gets
+    // the right "two rounds per player" scaling for the replay.
+    const replayPlayerIds = (playersForSnap ?? []).map(
+      (p) => p.id as string
     );
+    nextState = replayMatch(replayPlayerIds, replayPlayerIds.length * 2);
   } else {
     return NextResponse.json(
       { error: "can only advance from reveal or final" },

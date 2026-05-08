@@ -56,7 +56,9 @@ export async function POST(
     );
   }
 
-  const gameState = initMatch(playerIds);
+  // Two rounds per player so everyone gets to be psychic exactly
+  // twice. Scales the match length with table size.
+  const gameState = initMatch(playerIds, playerIds.length * 2);
 
   const { error: updErr } = await supabaseAdmin
     .from("rooms")
