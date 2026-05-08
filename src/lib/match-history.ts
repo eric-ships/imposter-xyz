@@ -1,19 +1,22 @@
 import type { GuessOutcome } from "@/lib/game";
 
 // Persisted snapshot of one completed match. Stored as a JSON object
-// inside rooms.match_history (jsonb array). Captures both the raw facts
-// (category, secret, imposter ids, guess, outcome) and derived rollups
-// (winner, per-player delta) so the lobby panel can render quickly
-// without re-deriving and so historical entries stay correct even if
-// scoring rules change later.
+// inside rooms.match_history (jsonb array). Multi-game capable via a
+// `kind` discriminator: imposter and wavelength have very different
+// per-match facts, so they're separate variants of a discriminated
+// union rather than one fat shape with mostly-null fields.
 //
-// Nickname + avatar are snapshotted at match-end time so leavers /
-// renamers don't break the historical entry.
+// Nickname + avatar are snapshotted at match-end so leavers/renamers
+// don't break the historical entry.
+
 export type MatchSide = "imposter" | "crewmates" | "draw";
 
-export type MatchHistoryEntry = {
+// Pre-multi-game entries lacked `kind`. Treat them as imposter for
+// backward compatibility — that's what they all were.
+export type ImposterMatchEntry = {
+  kind?: "imposter";
   matchNumber: number;
-  endedAt: string; // ISO timestamp
+  endedAt: string;
   category: string;
   secretWord: string;
   imposterIds: string[];
@@ -29,6 +32,26 @@ export type MatchHistoryEntry = {
     delta: number;
   }>;
 };
+
+export type WavelengthMatchEntry = {
+  kind: "wavelength";
+  matchNumber: number;
+  endedAt: string;
+  totalRounds: number;
+  // Snapshot of the final scoreboard. Sorted on read by score desc.
+  perPlayer: Array<{
+    playerId: string;
+    nickname: string;
+    avatar: string | null;
+    score: number;
+  }>;
+  // Player ids of the top scorer(s). Length > 1 means a tie.
+  winnerIds: string[];
+  // Top score reached.
+  topScore: number;
+};
+
+export type MatchHistoryEntry = ImposterMatchEntry | WavelengthMatchEntry;
 
 // Cap so a single lobby can't accumulate unbounded history. Lobbies are
 // short-lived, so 20 covers a long evening with headroom.
@@ -68,7 +91,7 @@ export function snapshotMatch(args: {
   guess: string | null;
   guessOutcome: GuessOutcome | null;
   players: Array<{ id: string; nickname: string; avatar: string | null }>;
-}): MatchHistoryEntry {
+}): ImposterMatchEntry {
   const caught = !!args.guessOutcome;
   const winner = deriveWinner(caught, args.guessOutcome);
   const imposterSet = new Set(args.imposterIds);
@@ -85,6 +108,7 @@ export function snapshotMatch(args: {
   });
 
   return {
+    kind: "imposter",
     matchNumber: args.matchNumber,
     endedAt: new Date().toISOString(),
     category: args.category,
@@ -95,5 +119,38 @@ export function snapshotMatch(args: {
     guessOutcome: args.guessOutcome,
     winner,
     perPlayer,
+  };
+}
+
+// Wavelength-side snapshot. Called from the next-round route when the
+// host transitions from final → replay. Captures the final scoreboard
+// and winner(s).
+export function snapshotWavelengthMatch(args: {
+  matchNumber: number;
+  totalRounds: number;
+  scores: Record<string, number>;
+  players: Array<{ id: string; nickname: string; avatar: string | null }>;
+}): WavelengthMatchEntry {
+  const perPlayer = args.players.map((p) => ({
+    playerId: p.id,
+    nickname: p.nickname,
+    avatar: p.avatar,
+    score: args.scores[p.id] ?? 0,
+  }));
+  const topScore = perPlayer.reduce(
+    (max, p) => Math.max(max, p.score),
+    0
+  );
+  const winnerIds = perPlayer
+    .filter((p) => p.score === topScore)
+    .map((p) => p.playerId);
+  return {
+    kind: "wavelength",
+    matchNumber: args.matchNumber,
+    endedAt: new Date().toISOString(),
+    totalRounds: args.totalRounds,
+    perPlayer,
+    winnerIds,
+    topScore,
   };
 }

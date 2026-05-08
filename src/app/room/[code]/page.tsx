@@ -1396,26 +1396,10 @@ function LobbyMatchHistoryPanel({ view }: { view: PublicRoomView }) {
       <SectionLabel>Past matches · {history.length}</SectionLabel>
       <div className="space-y-2">
         {history.map((m) => {
-          const nameFor = (id: string) =>
-            liveNicknameById.get(id) ??
-            m.perPlayer.find((p) => p.playerId === id)?.nickname ??
-            "?";
-          const imposters = m.imposterIds.map(nameFor).join(" & ");
-          const winnerLabel =
-            m.winner === "imposter"
-              ? "Imposter wins"
-              : m.winner === "crewmates"
-                ? "Crewmates win"
-                : "Split point";
-          const winnerColor =
-            m.winner === "imposter"
-              ? "text-oxblood"
-              : m.winner === "crewmates"
-                ? "text-leaf"
-                : "text-accent";
-          // Wall-clock end time avoids any "X minutes ago" hydration
-          // mismatch — this component renders during a stable moment
-          // (the lobby) and the absolute time is fine for a session log.
+          // Discriminate on the kind tag. Pre-multi-game entries
+          // omit the field entirely — treat as imposter.
+          const isWavelength =
+            "kind" in m && (m as { kind?: string }).kind === "wavelength";
           let endedTime = "";
           try {
             endedTime = new Date(m.endedAt).toLocaleTimeString([], {
@@ -1425,14 +1409,66 @@ function LobbyMatchHistoryPanel({ view }: { view: PublicRoomView }) {
           } catch {
             /* ignore */
           }
+          if (isWavelength) {
+            const w = m as Extract<typeof m, { kind: "wavelength" }>;
+            const winnerNames = w.winnerIds
+              .map(
+                (id) =>
+                  liveNicknameById.get(id) ??
+                  w.perPlayer.find((p) => p.playerId === id)?.nickname ??
+                  "?"
+              )
+              .join(" & ");
+            return (
+              <div
+                key={`w${w.matchNumber}`}
+                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                    Match {w.matchNumber} · Wavelength
+                    {endedTime && <> · {endedTime}</>}
+                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-leaf">
+                    {w.winnerIds.length === 1 ? "Winner" : "Tied"}
+                  </div>
+                </div>
+                <div className="mt-1 text-sm text-ink">
+                  <span className="font-semibold">{winnerNames}</span>
+                  <span className="ml-2 text-ink-faint">
+                    · {w.topScore} points · {w.totalRounds} rounds
+                  </span>
+                </div>
+              </div>
+            );
+          }
+          // Imposter (default / pre-multi-game)
+          const im = m as Extract<typeof m, { kind?: "imposter" }>;
+          const nameFor = (id: string) =>
+            liveNicknameById.get(id) ??
+            im.perPlayer.find((p) => p.playerId === id)?.nickname ??
+            "?";
+          const imposters = im.imposterIds.map(nameFor).join(" & ");
+          const winnerLabel =
+            im.winner === "imposter"
+              ? "Imposter wins"
+              : im.winner === "crewmates"
+                ? "Crewmates win"
+                : "Split point";
+          const winnerColor =
+            im.winner === "imposter"
+              ? "text-oxblood"
+              : im.winner === "crewmates"
+                ? "text-leaf"
+                : "text-accent";
           return (
             <div
-              key={m.matchNumber}
+              key={`i${im.matchNumber}`}
               className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
             >
               <div className="flex items-baseline justify-between gap-3">
                 <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
-                  Match {m.matchNumber}
+                  Match {im.matchNumber}
                   {endedTime && <> · {endedTime}</>}
                 </div>
                 <div
@@ -1442,16 +1478,16 @@ function LobbyMatchHistoryPanel({ view }: { view: PublicRoomView }) {
                 </div>
               </div>
               <div className="mt-1 text-sm text-ink">
-                <span className="text-ink-faint">{m.category}</span>
+                <span className="text-ink-faint">{im.category}</span>
                 <span className="mx-1.5 text-ink-faint">·</span>
-                <span className="font-semibold">{m.secretWord}</span>
+                <span className="font-semibold">{im.secretWord}</span>
               </div>
               <div className="mt-0.5 text-xs text-ink-soft">
                 Imposter <span className="text-ink">{imposters}</span>
-                {m.guess ? (
+                {im.guess ? (
                   <span>
-                    {" "}· guessed <span className="text-ink">{m.guess}</span>
-                    {m.guessOutcome && <> ({m.guessOutcome})</>}
+                    {" "}· guessed <span className="text-ink">{im.guess}</span>
+                    {im.guessOutcome && <> ({im.guessOutcome})</>}
                   </span>
                 ) : (
                   <span className="text-ink-faint"> · slipped away</span>

@@ -20,6 +20,7 @@ import {
   playTurnChime,
   playVoteCast,
 } from "@/lib/audio";
+import type { MatchHistoryEntry } from "@/lib/match-history";
 
 // Per-viewer audio cues. Watches state transitions and fires chimes
 // for the local player based on what just changed:
@@ -226,7 +227,107 @@ function WavelengthLobby({
           {error}
         </p>
       )}
+
+      <WavelengthHistoryPanel history={view.matchHistory ?? []} />
     </div>
+  );
+}
+
+// Lobby-scoped match history. Discriminates the union and renders both
+// imposter and wavelength entries so a mixed lobby (host could've
+// played one then the other) reads coherently. Mirrors the panel
+// layout from the imposter lobby.
+function WavelengthHistoryPanel({
+  history,
+}: {
+  history: MatchHistoryEntry[];
+}) {
+  if (history.length === 0) return null;
+  return (
+    <section className="space-y-3">
+      <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        Past matches · {history.length}
+      </h2>
+      <div className="space-y-2">
+        {history.map((m) => {
+          let endedTime = "";
+          try {
+            endedTime = new Date(m.endedAt).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit",
+            });
+          } catch {
+            /* ignore */
+          }
+          if ("kind" in m && m.kind === "wavelength") {
+            const winnerNames = m.winnerIds
+              .map(
+                (id) =>
+                  m.perPlayer.find((p) => p.playerId === id)?.nickname ?? "?"
+              )
+              .join(" & ");
+            return (
+              <div
+                key={`w${m.matchNumber}`}
+                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                    Match {m.matchNumber} · Wavelength
+                    {endedTime && <> · {endedTime}</>}
+                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-leaf">
+                    {m.winnerIds.length === 1 ? "Winner" : "Tied"}
+                  </div>
+                </div>
+                <div className="mt-1 text-sm text-ink">
+                  <span className="font-semibold">{winnerNames}</span>
+                  <span className="ml-2 text-ink-faint">
+                    · {m.topScore} points · {m.totalRounds} rounds
+                  </span>
+                </div>
+              </div>
+            );
+          }
+          // Imposter entry (kind missing or 'imposter')
+          const winnerLabel =
+            m.winner === "imposter"
+              ? "Imposter wins"
+              : m.winner === "crewmates"
+                ? "Crewmates win"
+                : "Split point";
+          const winnerColor =
+            m.winner === "imposter"
+              ? "text-oxblood"
+              : m.winner === "crewmates"
+                ? "text-leaf"
+                : "text-accent";
+          return (
+            <div
+              key={`i${m.matchNumber}`}
+              className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+            >
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                  Match {m.matchNumber} · Imposter
+                  {endedTime && <> · {endedTime}</>}
+                </div>
+                <div
+                  className={`text-[11px] uppercase tracking-[0.18em] ${winnerColor}`}
+                >
+                  {winnerLabel}
+                </div>
+              </div>
+              <div className="mt-1 text-sm text-ink">
+                <span className="text-ink-faint">{m.category}</span>
+                <span className="mx-1.5 text-ink-faint">·</span>
+                <span className="font-semibold">{m.secretWord}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

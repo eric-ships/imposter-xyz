@@ -3,6 +3,11 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
 import { advanceRound, replayMatch } from "@/games/wavelength/state";
 import type { WavelengthState } from "@/games/wavelength/types";
+import {
+  MATCH_HISTORY_CAP,
+  snapshotWavelengthMatch,
+  type MatchHistoryEntry,
+} from "@/lib/match-history";
 
 // POST /api/rooms/[code]/wavelength/next-round
 // Body: { playerId }
@@ -21,7 +26,7 @@ export async function POST(
 
   const { data: room } = await supabaseAdmin
     .from("rooms")
-    .select("kind, game_state, host_id")
+    .select("kind, game_state, host_id, match_history")
     .eq("code", code)
     .maybeSingle();
   if (!room || room.kind !== "wavelength") {
@@ -36,16 +41,35 @@ export async function POST(
   }
 
   let nextState: WavelengthState;
+  let nextHistory: MatchHistoryEntry[] | undefined;
   if (state.phase === "reveal") {
     nextState = advanceRound(state, state.concept ? [state.concept] : []);
   } else if (state.phase === "final") {
-    const { data: players } = await supabaseAdmin
+    // Snapshot the just-finished match before resetting. Same shape
+    // contract as imposter — newest first, capped, defensive write.
+    const { data: playersForSnap } = await supabaseAdmin
       .from("players")
-      .select("id")
+      .select("id, nickname, avatar")
       .eq("room_code", code)
       .order("joined_at", { ascending: true });
+    const existingHistory: MatchHistoryEntry[] =
+      "match_history" in room && Array.isArray(room.match_history)
+        ? (room.match_history as MatchHistoryEntry[])
+        : [];
+    const snap = snapshotWavelengthMatch({
+      matchNumber: existingHistory.length + 1,
+      totalRounds: state.totalRounds,
+      scores: state.scores,
+      players: (playersForSnap ?? []).map((p) => ({
+        id: p.id as string,
+        nickname: p.nickname as string,
+        avatar: (p.avatar as string | null) ?? null,
+      })),
+    });
+    nextHistory = [snap, ...existingHistory].slice(0, MATCH_HISTORY_CAP);
+
     nextState = replayMatch(
-      (players ?? []).map((p) => p.id as string),
+      (playersForSnap ?? []).map((p) => p.id as string),
       state.totalRounds
     );
   } else {
@@ -55,12 +79,16 @@ export async function POST(
     );
   }
 
+  const update: Record<string, unknown> = {
+    game_state: nextState,
+    updated_at: new Date().toISOString(),
+  };
+  if (nextHistory && "match_history" in room) {
+    update.match_history = nextHistory;
+  }
   const { error: updErr } = await supabaseAdmin
     .from("rooms")
-    .update({
-      game_state: nextState,
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq("code", code);
   if (updErr) {
     return NextResponse.json({ error: updErr.message }, { status: 500 });
