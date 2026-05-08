@@ -106,19 +106,34 @@ export function applyGuess(
   // Score the round.
   const target = prev.target ?? 50; // shouldn't be null here
   const roundScores: Record<string, number> = {};
-  let psychicTotal = 0;
   for (const g of guesses) {
-    const pts = scoreGuess(g.position, target, prev.targetWidth);
-    roundScores[g.playerId] = pts;
-    psychicTotal += pts;
+    roundScores[g.playerId] = scoreGuess(
+      g.position,
+      target,
+      prev.targetWidth
+    );
   }
-  // Psychic gets the average of guesser band-scores (rounded).
+  // Psychic earns the MAX of guesser band-scores. Rewards connecting
+  // with at least one teammate — the actual point of clue-giving —
+  // without making the psychic strictly worse than guessers when one
+  // teammate completely whiffs.
   if (prev.psychicId) {
-    const avg =
+    const max =
       guesses.length > 0
-        ? Math.round(psychicTotal / guesses.length)
+        ? Math.max(...guesses.map((g) => roundScores[g.playerId]))
         : 0;
-    roundScores[prev.psychicId] = avg;
+    roundScores[prev.psychicId] = max;
+  }
+  // Unanimous bullseye bonus: if every guesser nails it, +2 to
+  // everyone at the table (including the psychic). Rare, hype, gives
+  // the table something to chase together.
+  const allBullseye =
+    guesses.length > 0 &&
+    guesses.every((g) => roundScores[g.playerId] === 4);
+  if (allBullseye) {
+    for (const id of Object.keys(roundScores)) {
+      roundScores[id] += 2;
+    }
   }
   const nextScores = { ...prev.scores };
   for (const [id, pts] of Object.entries(roundScores)) {

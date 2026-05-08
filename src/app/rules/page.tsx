@@ -252,9 +252,15 @@ export default function RulesPage() {
             <Outcome label="Off the band" detail="0 points" />
           </ul>
           <p>
-            The psychic earns the average of their guessers&apos;
-            scores — rewards good clue-giving without making the role
-            inherently better or worse than guessing.
+            The psychic earns the <span className="text-ink">highest</span>{" "}
+            score among their guessers — connecting with at least one
+            teammate is the goal of clue-giving, so missing one player
+            shouldn&apos;t cancel out a great clue for another.
+          </p>
+          <p>
+            <span className="text-leaf">Unanimous bullseye bonus:</span>{" "}
+            if every guesser lands in the bullseye, everyone at the
+            table (psychic included) gets a bonus +2 points.
           </p>
         </Section>
 

@@ -799,6 +799,14 @@ function RevealPhase({
 
   const target = state.target ?? 50;
   const isLastRound = state.round >= state.totalRounds;
+  // Did everyone hit bullseye this round? Drives the celebratory
+  // banner. Mirrors the server-side condition exactly (raw band score
+  // === 4 for every guess).
+  const allBullseye =
+    state.guesses.length > 0 &&
+    state.guesses.every(
+      (g) => scoreGuess(g.position, target, state.targetWidth) === 4
+    );
   // Decorate guesses with nickname + avatar so the dial pins can
   // render the player's circle. avatarFor uses joined-order indexing
   // off view.players so colors match the rest of the room chrome.
@@ -828,6 +836,22 @@ function RevealPhase({
         guesses={decoratedGuesses}
         concept={state.concept}
       />
+
+      {allBullseye && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.85, y: -6 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 360, damping: 22 }}
+          className="rounded-sm border-2 border-leaf bg-leaf/10 px-4 py-3 text-center"
+        >
+          <div className="text-[11px] uppercase tracking-[0.22em] text-leaf">
+            Unanimous bullseye
+          </div>
+          <div className="mt-1 text-sm text-ink">
+            Everyone +2 bonus
+          </div>
+        </motion.div>
+      )}
 
       {/* Per-guess scores */}
       <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -866,7 +890,7 @@ function RevealPhase({
               </span>
             </span>
             <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
-              avg
+              best of table
               <span className="ml-3 inline-block min-w-[2.25rem] rounded-full bg-accent/20 px-2 py-0.5 text-center text-[10px] font-semibold tabular-nums text-accent">
                 +{state.roundScores[state.psychicId] ?? 0}
               </span>
