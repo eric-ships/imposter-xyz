@@ -1,0 +1,976 @@
+"use client";
+
+// Wavelength room body. Rendered inside the existing room page chrome
+// (header, you-pill, theme/mute toggles all stay imposter-side). Reads
+// view.kind === 'wavelength' from the parent dispatch.
+//
+// Phases (from view.gameState.phase):
+//   lobby     — pre-start, host can begin if ≥3 players
+//   clue      — psychic picks a clue word; everyone else waits
+//   guessing  — non-psychics drag dial to guess; psychic waits
+//   reveal    — target shown, scores update
+//   final     — full match scoreboard, host can replay
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion } from "motion/react";
+import type { PublicRoomView } from "@/lib/game";
+import type { WavelengthState } from "./types";
+import { WAVELENGTH_TARGET_WIDTH, scoreGuess } from "./types";
+
+export function WavelengthBody({
+  view,
+  playerId,
+  code,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+}) {
+  const isHost = view.hostId === playerId;
+  const nicknameById = useMemo(
+    () => new Map(view.players.map((p) => [p.id, p.nickname])),
+    [view.players]
+  );
+
+  // The lobby state is signaled by view.state === 'lobby'. Once the
+  // host hits start, view.state becomes 'playing' and the actual
+  // sub-phase lives in gameState.phase.
+  if (view.state === "lobby") {
+    return (
+      <WavelengthLobby
+        view={view}
+        playerId={playerId}
+        code={code}
+        isHost={isHost}
+      />
+    );
+  }
+
+  const state = view.gameState as unknown as WavelengthState | undefined;
+  if (!state || !state.phase) {
+    return (
+      <p className="text-center text-sm text-ink-soft">Loading match…</p>
+    );
+  }
+
+  return (
+    <WavelengthMatch
+      view={view}
+      playerId={playerId}
+      code={code}
+      isHost={isHost}
+      state={state}
+      nicknameById={nicknameById}
+    />
+  );
+}
+
+// ─── Lobby ─────────────────────────────────────────────────────────
+
+function WavelengthLobby({
+  view,
+  playerId,
+  code,
+  isHost,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+  isHost: boolean;
+}) {
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const canStart = view.players.length >= 3;
+
+  async function start() {
+    setError(null);
+    setStarting(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/wavelength/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+      setStarting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-7">
+      <section className="space-y-4">
+        <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          Players · {view.players.length} of 6
+        </h2>
+        <ul className="divide-y divide-line-soft border-y border-line-soft">
+          {view.players.map((p) => (
+            <li key={p.id} className="flex items-center gap-3 py-3">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent/20 text-sm font-semibold text-ink">
+                {p.nickname.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm text-ink">
+                {p.nickname}
+                {p.id === view.hostId && (
+                  <span className="ml-2 text-[10px] uppercase tracking-[0.18em] text-accent">
+                    Host
+                  </span>
+                )}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="space-y-3 rounded-sm border border-line-soft bg-surface/40 p-4">
+        <h3 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          How Wavelength works
+        </h3>
+        <p className="text-sm text-ink-soft">
+          Each round one player is the <em>psychic</em>. They see a hidden
+          target on a spectrum (e.g. <span className="text-ink">Cold ↔ Hot</span>)
+          and pick a clue word the rest of the table tries to dial in on.
+          Closer to the target = more points. Psychic earns the average of
+          their guessers&apos; scores.
+        </p>
+      </section>
+
+      {isHost ? (
+        <button
+          onClick={start}
+          disabled={!canStart || starting}
+          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          {starting
+            ? "Starting…"
+            : !canStart
+              ? `Awaiting ${3 - view.players.length} more`
+              : "Begin the match"}
+        </button>
+      ) : (
+        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+          Awaiting the host
+        </p>
+      )}
+
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Match (clue / guessing / reveal / final) ──────────────────────
+
+function WavelengthMatch({
+  view,
+  playerId,
+  code,
+  isHost,
+  state,
+  nicknameById,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+  isHost: boolean;
+  state: WavelengthState;
+  nicknameById: Map<string, string>;
+}) {
+  const isPsychic = state.psychicId === playerId;
+  const psychicName = state.psychicId
+    ? (nicknameById.get(state.psychicId) ?? "?")
+    : "?";
+
+  if (state.phase === "final") {
+    return (
+      <WavelengthFinal
+        view={view}
+        playerId={playerId}
+        code={code}
+        isHost={isHost}
+        state={state}
+        nicknameById={nicknameById}
+      />
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Round + psychic header */}
+      <div className="flex items-baseline justify-between text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <span>
+          Round {state.round} of {state.totalRounds}
+        </span>
+        <span>
+          Psychic ·{" "}
+          <span className="text-accent">
+            {isPsychic ? "you" : psychicName}
+          </span>
+        </span>
+      </div>
+
+      {/* Concept pair */}
+      {state.concept && (
+        <div className="flex items-center justify-between gap-4 border-y border-line-soft py-4">
+          <span className="font-serif text-xl text-ink">
+            {state.concept.left}
+          </span>
+          <span className="text-ink-faint">↔</span>
+          <span className="font-serif text-xl text-ink">
+            {state.concept.right}
+          </span>
+        </div>
+      )}
+
+      {/* Phase-specific body */}
+      {state.phase === "clue" &&
+        (isPsychic ? (
+          <PsychicCluePhase
+            state={state}
+            code={code}
+            playerId={playerId}
+          />
+        ) : (
+          <WaitingForClue psychicName={psychicName} />
+        ))}
+
+      {state.phase === "guessing" &&
+        (isPsychic ? (
+          <PsychicWaitingForGuesses
+            state={state}
+            view={view}
+            nicknameById={nicknameById}
+          />
+        ) : (
+          <GuesserPhase
+            state={state}
+            code={code}
+            playerId={playerId}
+          />
+        ))}
+
+      {state.phase === "reveal" && (
+        <RevealPhase
+          state={state}
+          view={view}
+          isHost={isHost}
+          code={code}
+          playerId={playerId}
+          nicknameById={nicknameById}
+        />
+      )}
+
+      {/* Cumulative scores */}
+      <ScoreBoard
+        scores={state.scores}
+        roundScores={
+          state.phase === "reveal" ? state.roundScores : undefined
+        }
+        nicknameById={nicknameById}
+        psychicId={state.psychicId}
+      />
+    </div>
+  );
+}
+
+function WaitingForClue({ psychicName }: { psychicName: string }) {
+  return (
+    <div className="rounded-sm border border-line-soft bg-surface/40 p-6 text-center">
+      <p className="text-sm text-ink-soft">
+        <span className="text-ink">{psychicName}</span> is reading the
+        target…
+      </p>
+    </div>
+  );
+}
+
+function PsychicCluePhase({
+  state,
+  code,
+  playerId,
+}: {
+  state: WavelengthState;
+  code: string;
+  playerId: string;
+}) {
+  const [word, setWord] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    const trimmed = word.trim();
+    if (trimmed.length === 0) return;
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/wavelength/clue`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, word: trimmed }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <SpectrumDial
+        mode="psychic-clue"
+        target={state.target ?? 50}
+        targetWidth={state.targetWidth}
+        concept={state.concept}
+      />
+      <p className="text-center text-sm text-ink-soft">
+        Pick a clue word that lands on the target.
+      </p>
+      <div className="flex gap-2">
+        <input
+          value={word}
+          onChange={(e) => setWord(e.target.value)}
+          maxLength={64}
+          placeholder="e.g. Lukewarm"
+          autoFocus
+          type="text"
+          name="wavelength-clue"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          data-form-type="other"
+          data-1p-ignore="true"
+          data-lpignore="true"
+          className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && word.trim() && !submitting) submit();
+          }}
+        />
+        <button
+          onClick={submit}
+          disabled={submitting || word.trim().length === 0}
+          className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          {submitting ? "…" : "Submit"}
+        </button>
+      </div>
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function PsychicWaitingForGuesses({
+  state,
+  view,
+  nicknameById,
+}: {
+  state: WavelengthState;
+  view: PublicRoomView;
+  nicknameById: Map<string, string>;
+}) {
+  const guesserIds = view.players
+    .map((p) => p.id)
+    .filter((id) => id !== state.psychicId);
+  const guessedSet = new Set(state.guesses.map((g) => g.playerId));
+  return (
+    <div className="space-y-5">
+      <ClueDisplay clue={state.clue ?? ""} />
+      <SpectrumDial
+        mode="psychic-clue"
+        target={state.target ?? 50}
+        targetWidth={state.targetWidth}
+        concept={state.concept}
+      />
+      <p className="text-center text-sm text-ink-soft">
+        Waiting on guesses · {state.guesses.length} of {guesserIds.length}
+      </p>
+      <ul className="flex flex-wrap justify-center gap-2">
+        {guesserIds.map((id) => {
+          const guessed = guessedSet.has(id);
+          return (
+            <li
+              key={id}
+              className={`rounded-full border px-3 py-1 text-xs ${
+                guessed
+                  ? "border-leaf bg-leaf/10 text-leaf"
+                  : "border-line text-ink-soft"
+              }`}
+            >
+              {nicknameById.get(id) ?? "?"}
+              {guessed && <span className="ml-1.5">✓</span>}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function GuesserPhase({
+  state,
+  code,
+  playerId,
+}: {
+  state: WavelengthState;
+  code: string;
+  playerId: string;
+}) {
+  const myGuess = state.guesses.find((g) => g.playerId === playerId);
+  const [position, setPosition] = useState<number>(myGuess?.position ?? 50);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [locked, setLocked] = useState(!!myGuess);
+
+  async function submit() {
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/wavelength/guess`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId, position }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      setLocked(true);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <ClueDisplay clue={state.clue ?? ""} />
+      <SpectrumDial
+        mode={locked ? "guess-locked" : "guess"}
+        value={position}
+        onChange={locked ? undefined : setPosition}
+        targetWidth={state.targetWidth}
+        concept={state.concept}
+      />
+      <p className="text-center text-sm text-ink-soft">
+        {locked
+          ? "Guess locked. Waiting on the rest of the table."
+          : "Drag the dial to where the clue lands."}
+      </p>
+      {!locked && (
+        <button
+          onClick={submit}
+          disabled={submitting}
+          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          {submitting ? "Locking in…" : "Lock in guess"}
+        </button>
+      )}
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function RevealPhase({
+  state,
+  view,
+  isHost,
+  code,
+  playerId,
+  nicknameById,
+}: {
+  state: WavelengthState;
+  view: PublicRoomView;
+  isHost: boolean;
+  code: string;
+  playerId: string;
+  nicknameById: Map<string, string>;
+}) {
+  const [advancing, setAdvancing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function next() {
+    setError(null);
+    setAdvancing(true);
+    try {
+      const res = await fetch(
+        `/api/rooms/${code}/wavelength/next-round`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerId }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+      setAdvancing(false);
+    }
+  }
+
+  const target = state.target ?? 50;
+  const isLastRound = state.round >= state.totalRounds;
+  // Decorate guesses with nicknames for the dial pins.
+  const decoratedGuesses = state.guesses.map((g) => ({
+    ...g,
+    nickname: nicknameById.get(g.playerId) ?? "?",
+    score: scoreGuess(g.position, target, state.targetWidth),
+  }));
+
+  return (
+    <div className="space-y-5">
+      <ClueDisplay clue={state.clue ?? ""} />
+      <SpectrumDial
+        mode="reveal"
+        target={target}
+        targetWidth={state.targetWidth}
+        guesses={decoratedGuesses}
+        concept={state.concept}
+      />
+
+      {/* Per-guess scores */}
+      <ul className="divide-y divide-line-soft border-y border-line-soft">
+        {decoratedGuesses
+          .sort((a, b) => b.score - a.score)
+          .map((g) => (
+            <li
+              key={g.playerId}
+              className="flex items-baseline justify-between py-2"
+            >
+              <span className="text-sm text-ink">{g.nickname}</span>
+              <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+                guessed {Math.round(g.position)}
+                <span
+                  className={`ml-3 inline-block min-w-[2.25rem] rounded-full px-2 py-0.5 text-center text-[10px] font-semibold tabular-nums ${
+                    g.score === 4
+                      ? "bg-leaf text-white"
+                      : g.score === 3
+                        ? "bg-leaf/40 text-leaf"
+                        : g.score === 2
+                          ? "bg-accent/30 text-accent"
+                          : "bg-line text-ink-faint"
+                  }`}
+                >
+                  +{g.score}
+                </span>
+              </span>
+            </li>
+          ))}
+        {state.psychicId && (
+          <li className="flex items-baseline justify-between py-2">
+            <span className="text-sm text-ink">
+              {nicknameById.get(state.psychicId) ?? "?"}
+              <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-accent">
+                Psychic
+              </span>
+            </span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+              avg
+              <span className="ml-3 inline-block min-w-[2.25rem] rounded-full bg-accent/20 px-2 py-0.5 text-center text-[10px] font-semibold tabular-nums text-accent">
+                +{state.roundScores[state.psychicId] ?? 0}
+              </span>
+            </span>
+          </li>
+        )}
+      </ul>
+
+      {isHost ? (
+        <button
+          onClick={next}
+          disabled={advancing}
+          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          {advancing
+            ? "…"
+            : isLastRound
+              ? "Show final scores"
+              : "Next round"}
+        </button>
+      ) : (
+        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+          {isLastRound
+            ? "Awaiting the host for the final scores"
+            : "Awaiting the host for the next round"}
+        </p>
+      )}
+
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  void view;
+}
+
+function WavelengthFinal({
+  view,
+  playerId,
+  code,
+  isHost,
+  state,
+  nicknameById,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+  isHost: boolean;
+  state: WavelengthState;
+  nicknameById: Map<string, string>;
+}) {
+  const [restarting, setRestarting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const sorted = view.players
+    .map((p) => ({
+      id: p.id,
+      nickname: p.nickname,
+      score: state.scores[p.id] ?? 0,
+    }))
+    .sort((a, b) => b.score - a.score);
+  const topScore = sorted[0]?.score ?? 0;
+  const winners = sorted.filter((p) => p.score === topScore);
+  const youWon = winners.some((w) => w.id === playerId);
+
+  async function replay() {
+    setError(null);
+    setRestarting(true);
+    try {
+      const res = await fetch(
+        `/api/rooms/${code}/wavelength/next-round`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ playerId }),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+      setRestarting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-7">
+      <section
+        className={`border-2 p-8 text-center ${
+          youWon ? "border-leaf bg-leaf/5" : "border-line bg-surface/40"
+        }`}
+      >
+        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          {winners.length === 1 ? "Winner" : "Tied"}
+        </div>
+        <div
+          className={`mt-3 font-serif text-4xl ${
+            youWon ? "text-leaf" : "text-ink"
+          }`}
+        >
+          {winners.map((w) => w.nickname).join(" & ")}
+        </div>
+        <div className="mt-2 text-sm text-ink-soft">
+          {topScore} points
+        </div>
+      </section>
+
+      <section>
+        <h2 className="mb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          Final scoreboard
+        </h2>
+        <ul className="divide-y divide-line-soft border-y border-line-soft">
+          {sorted.map((p, i) => (
+            <li
+              key={p.id}
+              className="flex items-baseline justify-between gap-3 py-3"
+            >
+              <span className="flex items-baseline gap-3">
+                <span className="w-4 text-right text-sm text-ink-faint tabular-nums">
+                  {i + 1}
+                </span>
+                <span className="text-sm text-ink">{p.nickname}</span>
+                {p.id === playerId && (
+                  <span className="text-[10px] uppercase tracking-[0.2em] text-ink-faint">
+                    you
+                  </span>
+                )}
+              </span>
+              <span className="text-lg text-ink-soft tabular-nums">
+                {p.score}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      {isHost ? (
+        <button
+          onClick={replay}
+          disabled={restarting}
+          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+        >
+          {restarting ? "…" : "Play again"}
+        </button>
+      ) : (
+        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+          Awaiting the host
+        </p>
+      )}
+
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+
+      {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
+      <span className="hidden">
+        {nicknameById.size}
+      </span>
+    </div>
+  );
+}
+
+function ClueDisplay({ clue }: { clue: string }) {
+  return (
+    <div className="text-center">
+      <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        Clue
+      </div>
+      <div className="mt-1 font-serif text-3xl italic text-ink">{clue}</div>
+    </div>
+  );
+}
+
+function ScoreBoard({
+  scores,
+  roundScores,
+  nicknameById,
+  psychicId,
+}: {
+  scores: Record<string, number>;
+  roundScores?: Record<string, number>;
+  nicknameById: Map<string, string>;
+  psychicId: string | null;
+}) {
+  const entries = Object.entries(scores)
+    .map(([id, total]) => ({
+      id,
+      total,
+      delta: roundScores?.[id] ?? 0,
+      nickname: nicknameById.get(id) ?? "?",
+      isPsychic: id === psychicId,
+    }))
+    .sort((a, b) => b.total - a.total);
+  if (entries.length === 0) return null;
+  return (
+    <section className="space-y-2 rounded-sm border border-line-soft bg-surface/40 p-3">
+      <h3 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        Scoreboard
+      </h3>
+      <ul className="divide-y divide-line-soft">
+        {entries.map((e) => (
+          <li
+            key={e.id}
+            className="flex items-baseline justify-between py-1.5"
+          >
+            <span className="text-sm text-ink">
+              {e.nickname}
+              {e.isPsychic && (
+                <span className="ml-2 text-[10px] uppercase tracking-[0.2em] text-accent">
+                  psychic
+                </span>
+              )}
+            </span>
+            <span className="flex items-baseline gap-2">
+              {roundScores && e.delta > 0 && (
+                <span className="rounded-full bg-leaf/10 px-1.5 text-[10px] font-semibold tabular-nums text-leaf">
+                  +{e.delta}
+                </span>
+              )}
+              <span className="text-base tabular-nums text-ink-soft">
+                {e.total}
+              </span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+// ─── Spectrum dial ─────────────────────────────────────────────────
+
+type DialMode = "psychic-clue" | "guess" | "guess-locked" | "reveal";
+
+function SpectrumDial({
+  mode,
+  value,
+  onChange,
+  target,
+  targetWidth,
+  guesses,
+  concept,
+}: {
+  mode: DialMode;
+  value?: number;
+  onChange?: (v: number) => void;
+  target?: number;
+  targetWidth: number;
+  guesses?: { playerId: string; position: number; nickname: string; score: number }[];
+  concept: { left: string; right: string } | null;
+}) {
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [dragging, setDragging] = useState(false);
+  const showTarget = mode === "psychic-clue" || mode === "reveal";
+
+  const updateFromPointer = (e: React.PointerEvent | PointerEvent) => {
+    if (!onChange || !trackRef.current) return;
+    const rect = trackRef.current.getBoundingClientRect();
+    const raw = ((e.clientX - rect.left) / rect.width) * 100;
+    const clamped = Math.max(0, Math.min(100, raw));
+    onChange(Math.round(clamped));
+  };
+
+  // Pointer drag handlers (mouse + touch via pointer events).
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: PointerEvent) => updateFromPointer(e);
+    const onUp = () => setDragging(false);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dragging]);
+
+  // Width math: bullseye center is at `target`, width = targetWidth.
+  // Outer bands extend ±2× and ±3× the width.
+  const interactive = mode === "guess" && !!onChange;
+
+  return (
+    <div className="space-y-2 select-none">
+      <div
+        ref={trackRef}
+        onPointerDown={(e) => {
+          if (!interactive) return;
+          e.preventDefault();
+          (e.target as Element).setPointerCapture?.(e.pointerId);
+          setDragging(true);
+          updateFromPointer(e);
+        }}
+        className={`relative h-16 rounded-sm border border-line bg-surface ${
+          interactive ? "cursor-pointer touch-none" : ""
+        }`}
+      >
+        {/* Target bands (only when visible) */}
+        {showTarget && target !== undefined && (
+          <>
+            {/* Outer band (2pt) */}
+            <div
+              className="absolute top-0 h-full bg-accent/15"
+              style={{
+                left: `${Math.max(0, target - targetWidth * 3)}%`,
+                width: `${Math.min(100, targetWidth * 6)}%`,
+              }}
+            />
+            {/* Inner band (3pt) */}
+            <div
+              className="absolute top-0 h-full bg-accent/30"
+              style={{
+                left: `${Math.max(0, target - targetWidth * 2)}%`,
+                width: `${Math.min(100, targetWidth * 4)}%`,
+              }}
+            />
+            {/* Bullseye (4pt) */}
+            <div
+              className="absolute top-0 h-full bg-accent/60"
+              style={{
+                left: `${Math.max(0, target - targetWidth)}%`,
+                width: `${Math.min(100, targetWidth * 2)}%`,
+              }}
+            />
+            {/* Center line */}
+            <div
+              className="absolute top-0 h-full w-px bg-ink"
+              style={{ left: `${target}%` }}
+            />
+          </>
+        )}
+
+        {/* Tick marks (visual only) */}
+        <div className="absolute inset-x-0 bottom-1 flex justify-between px-1">
+          {Array.from({ length: 11 }).map((_, i) => (
+            <div
+              key={i}
+              className={`w-px ${i % 5 === 0 ? "h-2 bg-ink-faint" : "h-1 bg-ink-faint/40"}`}
+            />
+          ))}
+        </div>
+
+        {/* Reveal-phase guess pins */}
+        {mode === "reveal" &&
+          guesses?.map((g) => (
+            <div
+              key={g.playerId}
+              className="absolute top-0 -translate-x-1/2"
+              style={{ left: `${g.position}%` }}
+              title={`${g.nickname}: +${g.score}`}
+            >
+              <div className="h-16 w-px bg-ink-soft" />
+              <div className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] uppercase tracking-[0.18em] text-ink-soft">
+                {g.nickname}
+              </div>
+            </div>
+          ))}
+
+        {/* Live guess marker */}
+        {(mode === "guess" || mode === "guess-locked") &&
+          value !== undefined && (
+            <motion.div
+              className="absolute top-0 -translate-x-1/2"
+              style={{ left: `${value}%` }}
+              animate={{ scale: dragging ? 1.05 : 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 28 }}
+            >
+              <div
+                className={`h-16 w-1 rounded-sm ${
+                  mode === "guess-locked" ? "bg-leaf" : "bg-accent"
+                }`}
+              />
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full border border-line bg-page px-2 py-0.5 text-[10px] tabular-nums text-ink-soft">
+                {value}
+              </div>
+            </motion.div>
+          )}
+      </div>
+
+      {/* Concept labels under the track */}
+      {concept && (
+        <div className="flex justify-between text-[11px] uppercase tracking-[0.18em] text-ink-soft">
+          <span>{concept.left}</span>
+          <span>{concept.right}</span>
+        </div>
+      )}
+    </div>
+  );
+}
