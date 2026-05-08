@@ -13,8 +13,68 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import type { PublicRoomView } from "@/lib/game";
-import type { WavelengthState } from "./types";
-import { WAVELENGTH_TARGET_WIDTH, scoreGuess } from "./types";
+import type { WavelengthPhase, WavelengthState } from "./types";
+import { scoreGuess } from "./types";
+import {
+  playRevealStageChime,
+  playTurnChime,
+  playVoteCast,
+} from "@/lib/audio";
+
+// Per-viewer audio cues. Watches state transitions and fires chimes
+// for the local player based on what just changed:
+//   - clue phase + you are psychic    → playTurnChime ("your turn")
+//   - guessing phase + you are guesser → playTurnChime
+//   - someone else locked a guess     → playVoteCast (soft thunk)
+//   - reveal phase entered             → playRevealStageChime(0)
+//   - final phase entered              → playRevealStageChime(2)
+//
+// Stays silent for the player who just acted (they already know what
+// they did) and on the very first render after mount (no spurious
+// "you're up" chime when joining mid-game).
+function useWavelengthAudio(
+  state: WavelengthState | undefined,
+  playerId: string
+) {
+  const prevPhase = useRef<WavelengthPhase | null>(null);
+  const prevGuessCount = useRef(0);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (!state) return;
+    const wasFirst = isFirstRender.current;
+    isFirstRender.current = false;
+    const isPsychic = state.psychicId === playerId;
+
+    // Phase transitions.
+    if (prevPhase.current !== state.phase) {
+      const prev = prevPhase.current;
+      prevPhase.current = state.phase;
+      if (!wasFirst) {
+        if (state.phase === "clue" && prev !== "clue") {
+          if (isPsychic) playTurnChime();
+        } else if (state.phase === "guessing" && prev !== "guessing") {
+          if (!isPsychic) playTurnChime();
+        } else if (state.phase === "reveal" && prev !== "reveal") {
+          playRevealStageChime(0);
+        } else if (state.phase === "final" && prev !== "final") {
+          playRevealStageChime(2);
+        }
+      }
+    }
+
+    // Guess-lock-in cues. Fires for everyone except the player who
+    // just locked in (they don't need to hear their own click).
+    if (state.phase === "guessing") {
+      if (state.guesses.length > prevGuessCount.current && !wasFirst) {
+        const newest = state.guesses[state.guesses.length - 1];
+        if (newest.playerId !== playerId) playVoteCast();
+      }
+      prevGuessCount.current = state.guesses.length;
+    } else {
+      prevGuessCount.current = 0;
+    }
+  }, [state, playerId]);
+}
 
 export function WavelengthBody({
   view,
@@ -29,6 +89,13 @@ export function WavelengthBody({
   const nicknameById = useMemo(
     () => new Map(view.players.map((p) => [p.id, p.nickname])),
     [view.players]
+  );
+
+  // Audio cues fire for whatever phase the viewer is in. Pass the raw
+  // gameState (undefined when in lobby pre-start; the hook no-ops).
+  useWavelengthAudio(
+    view.gameState as unknown as WavelengthState | undefined,
+    playerId
   );
 
   // The lobby state is signaled by view.state === 'lobby'. Once the
