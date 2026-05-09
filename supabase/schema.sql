@@ -167,6 +167,35 @@ alter table players
   add column if not exists user_id uuid references users(id);
 create index if not exists players_user_idx on players(user_id);
 
+-- Friend groups (Phase 2 of friend-groups). A group is an invite-only
+-- social unit — anyone with the invite_code can join, owner can kick
+-- and delete. Future phases attach matches to groups for stat
+-- aggregation. Group ownership transfer is intentionally not built
+-- yet — owners of multi-member groups can't leave until that lands.
+create table if not exists groups (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  invite_code text unique not null,
+  owner_user_id uuid not null references users(id),
+  created_at timestamptz not null default now()
+);
+
+-- Per-group membership. Each user has a per-group nickname distinct
+-- from their default_nickname (so "Eric" in family group can be
+-- "ericlovesgames" in work group). Cascade-delete from both sides
+-- so leaving a group / deleting a user / deleting a group cleans up.
+create table if not exists group_members (
+  group_id uuid not null references groups(id) on delete cascade,
+  user_id uuid not null references users(id) on delete cascade,
+  nickname text not null,
+  role text not null default 'member', -- owner | member
+  joined_at timestamptz not null default now(),
+  primary key (group_id, user_id)
+);
+
+create index if not exists group_members_user_idx
+  on group_members(user_id);
+
 -- Optional player avatar (emoji or single character). Falls back to
 -- nickname's first letter if null.
 alter table players add column if not exists avatar text;
@@ -253,6 +282,8 @@ alter table votes enable row level security;
 alter table room_events enable row level security;
 alter table clue_reactions enable row level security;
 alter table users enable row level security;
+alter table groups enable row level security;
+alter table group_members enable row level security;
 
 -- Allow anon SELECT on room_events so realtime subscriptions pass RLS.
 -- No policies on other tables = anon can't read them.

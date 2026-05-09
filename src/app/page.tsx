@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "@/lib/theme";
@@ -133,6 +133,10 @@ export default function HomePage() {
           How to play
         </Link>
       </header>
+
+      {identity.ready && identity.userId && (
+        <MyGroupsSection userId={identity.userId} />
+      )}
 
       <div className="w-full">
         {mode === "choose" ? (
@@ -269,5 +273,208 @@ export default function HomePage() {
         )}
       </div>
     </main>
+  );
+}
+
+// "My groups" section — fetches the caller's groups, lets them
+// create a new one or join via code. Renders only after identity
+// is ready (we need a userId to query). Always shown thereafter,
+// even with 0 groups, so first-time users have a path in.
+type GroupRow = {
+  id: string;
+  name: string;
+  inviteCode: string;
+  ownerUserId: string;
+  memberCount: number;
+  role: string;
+};
+
+function MyGroupsSection({ userId }: { userId: string }) {
+  const router = useRouter();
+  const [groups, setGroups] = useState<GroupRow[] | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
+  const [createName, setCreateName] = useState("");
+  const [joinCode, setJoinCode] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refetch = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/groups?userId=${userId}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "load failed");
+      setGroups(data.groups as GroupRow[]);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "load failed");
+    }
+  }, [userId]);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  async function create() {
+    const name = createName.trim();
+    if (!name) return;
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch("/api/groups", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, name }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "create failed");
+      router.push(`/group/${data.groupId}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "create failed");
+      setPending(false);
+    }
+  }
+
+  async function join() {
+    const code = joinCode.trim().toUpperCase();
+    if (code.length !== 6) {
+      setError("invite code is 6 chars");
+      return;
+    }
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch("/api/groups/join", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, code }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "join failed");
+      router.push(`/group/${data.groupId}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "join failed");
+      setPending(false);
+    }
+  }
+
+  return (
+    <section className="w-full space-y-3">
+      <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        My groups
+      </h2>
+
+      {groups === null ? (
+        <p className="text-xs text-ink-faint">Loading…</p>
+      ) : groups.length === 0 ? (
+        <p className="text-sm text-ink-soft">
+          No groups yet. Create one to start tracking stats with your
+          regulars, or join an existing group with an invite code.
+        </p>
+      ) : (
+        <ul className="divide-y divide-line-soft border-y border-line-soft">
+          {groups.map((g) => (
+            <li key={g.id}>
+              <Link
+                href={`/group/${g.id}`}
+                className="flex items-center justify-between gap-3 py-3 transition hover:bg-surface/40"
+              >
+                <span className="flex items-baseline gap-2">
+                  <span className="text-sm text-ink">{g.name}</span>
+                  {g.role === "owner" && (
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-accent">
+                      Owner
+                    </span>
+                  )}
+                </span>
+                <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+                  {g.memberCount}{" "}
+                  {g.memberCount === 1 ? "member" : "members"}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Inline create / join controls. Two buttons by default,
+          expand into a small form when tapped. */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => {
+            setCreateOpen((o) => !o);
+            setJoinOpen(false);
+            setError(null);
+          }}
+          className="flex-1 rounded-sm border border-line px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+        >
+          {createOpen ? "Cancel" : "Create group"}
+        </button>
+        <button
+          onClick={() => {
+            setJoinOpen((o) => !o);
+            setCreateOpen(false);
+            setError(null);
+          }}
+          className="flex-1 rounded-sm border border-line px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+        >
+          {joinOpen ? "Cancel" : "Join with code"}
+        </button>
+      </div>
+
+      {createOpen && (
+        <div className="flex gap-2">
+          <input
+            value={createName}
+            onChange={(e) => setCreateName(e.target.value)}
+            maxLength={60}
+            placeholder="Group name"
+            autoFocus
+            className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 text-base text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && createName.trim() && !pending) create();
+            }}
+          />
+          <button
+            onClick={create}
+            disabled={pending || createName.trim().length === 0}
+            className="rounded-sm bg-ink px-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            {pending ? "…" : "Create"}
+          </button>
+        </div>
+      )}
+
+      {joinOpen && (
+        <div className="flex gap-2">
+          <input
+            value={joinCode}
+            onChange={(e) =>
+              setJoinCode(e.target.value.toUpperCase().slice(0, 6))
+            }
+            maxLength={6}
+            placeholder="ABCDEF"
+            autoFocus
+            className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 text-center font-serif text-xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && joinCode.trim().length === 6 && !pending)
+                join();
+            }}
+          />
+          <button
+            onClick={join}
+            disabled={pending || joinCode.trim().length !== 6}
+            className="rounded-sm bg-ink px-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          >
+            {pending ? "…" : "Join"}
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
+          {error}
+        </p>
+      )}
+    </section>
   );
 }
