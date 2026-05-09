@@ -66,7 +66,7 @@ export type { MatchHistoryEntry } from "@/lib/match-history";
 // Game kind discriminator. Lives on rooms.kind so a single rooms table
 // can host multiple game types — each game module reads room.kind to
 // decide whether to render its own UI / accept its own actions.
-export type GameKind = "imposter" | "wavelength";
+export type GameKind = "imposter" | "wavelength" | "just-one";
 
 export type PublicRoomView = {
   code: string;

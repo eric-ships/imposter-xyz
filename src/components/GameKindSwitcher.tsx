@@ -18,6 +18,7 @@ type KindOption = {
 const OPTIONS: KindOption[] = [
   { kind: "imposter", label: "Imposter", sub: "social deduction" },
   { kind: "wavelength", label: "Wavelength", sub: "spectrum guessing" },
+  { kind: "just-one", label: "Just One", sub: "cooperative clues" },
 ];
 
 export function GameKindSwitcher({
@@ -58,7 +59,7 @@ export function GameKindSwitcher({
       <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         Game{!isHost && " · host picks"}
       </h2>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2">
         {OPTIONS.map((o) => {
           const selected = o.kind === currentKind;
           const interactive = isHost && !selected && !pending;

@@ -42,9 +42,9 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   // Game picker. Defaults to imposter so existing UX is unchanged for
   // anyone who lands on the page and just hits "Create".
-  const [gameKind, setGameKind] = useState<"imposter" | "wavelength">(
-    "imposter"
-  );
+  const [gameKind, setGameKind] = useState<
+    "imposter" | "wavelength" | "just-one"
+  >("imposter");
 
   function savePlayer(code: string, playerId: string, nickname: string) {
     localStorage.setItem(`ci:${code}:playerId`, playerId);
@@ -144,7 +144,7 @@ export default function HomePage() {
                 <span className="mb-2 block text-sm text-ink-soft">
                   Pick a game
                 </span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2">
                   {(
                     [
                       {
@@ -156,6 +156,11 @@ export default function HomePage() {
                         kind: "wavelength" as const,
                         title: "Wavelength",
                         sub: "3–6 · spectrum guessing",
+                      },
+                      {
+                        kind: "just-one" as const,
+                        title: "Just One",
+                        sub: "3–7 · cooperative clues",
                       },
                     ]
                   ).map((g) => {

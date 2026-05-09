@@ -278,7 +278,11 @@ export async function fetchRoomView(
   // recognize falls back to 'imposter' so legacy data is never broken.
   const rawKind = "kind" in room ? (room.kind as string) : "imposter";
   const kind: GameKind =
-    rawKind === "wavelength" ? "wavelength" : "imposter";
+    rawKind === "wavelength"
+      ? "wavelength"
+      : rawKind === "just-one"
+        ? "just-one"
+        : "imposter";
   let gameState: Record<string, unknown> =
     "game_state" in room &&
     room.game_state &&

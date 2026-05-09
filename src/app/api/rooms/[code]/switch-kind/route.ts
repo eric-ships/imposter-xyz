@@ -12,7 +12,7 @@ import { notifyRoom } from "@/lib/room-state";
 // Refuses if pot is enabled and any player has already anted — same
 // rule as kick. Host should disable pot or settle refunds first.
 
-const VALID_KINDS = new Set(["imposter", "wavelength"]);
+const VALID_KINDS = new Set(["imposter", "wavelength", "just-one"]);
 
 export async function POST(
   request: Request,
