@@ -218,6 +218,15 @@ export default function HomePage() {
                 onChange={(e) => setNickname(e.target.value)}
                 maxLength={20}
                 placeholder="Alice"
+                type="text"
+                name="player-nickname"
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="words"
+                spellCheck={false}
+                data-form-type="other"
+                data-1p-ignore="true"
+                data-lpignore="true"
                 autoFocus
                 className="w-full border-b border-line bg-transparent px-1 pb-2 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
               />
@@ -233,6 +242,15 @@ export default function HomePage() {
                   onChange={(e) =>
                     setJoinCode(e.target.value.toUpperCase().slice(0, 4))
                   }
+                  type="text"
+                  name="room-code"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  data-form-type="other"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
                   maxLength={4}
                   placeholder="ABCD"
                   className="w-full border-b border-line bg-transparent px-1 pb-2 text-center font-serif text-2xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
@@ -428,6 +446,15 @@ function MyGroupsSection({ userId }: { userId: string }) {
             onChange={(e) => setCreateName(e.target.value)}
             maxLength={60}
             placeholder="Group name"
+            type="text"
+            name="group-name"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="words"
+            spellCheck={false}
+            data-form-type="other"
+            data-1p-ignore="true"
+            data-lpignore="true"
             autoFocus
             className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 text-base text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             onKeyDown={(e) => {
@@ -451,6 +478,15 @@ function MyGroupsSection({ userId }: { userId: string }) {
             onChange={(e) =>
               setJoinCode(e.target.value.toUpperCase().slice(0, 6))
             }
+            type="text"
+            name="group-invite-code"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            data-form-type="other"
+            data-1p-ignore="true"
+            data-lpignore="true"
             maxLength={6}
             placeholder="ABCDEF"
             autoFocus

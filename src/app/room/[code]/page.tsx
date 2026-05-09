@@ -245,6 +245,15 @@ export default function RoomPage({
             onChange={(e) => setJoinNickname(e.target.value)}
             maxLength={20}
             placeholder="Alice"
+            type="text"
+            name="player-nickname"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="words"
+            spellCheck={false}
+            data-form-type="other"
+            data-1p-ignore="true"
+            data-lpignore="true"
             className="w-full border-b border-line bg-transparent px-1 pb-2 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
           />
         </label>
@@ -396,6 +405,9 @@ function RoomPlay({
           <span>Room</span>
           <span className="text-base tracking-[0.25em] text-ink normal-case">
             {code}
+          </span>
+          <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+            Imposter
           </span>
         </span>
         <span className="flex items-center gap-3">
@@ -750,6 +762,15 @@ function AvatarPicker({
               onChange={(e) => setCustom(e.target.value.slice(0, 2))}
               placeholder="🎯"
               maxLength={2}
+              type="text"
+              name="avatar-emoji"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="none"
+              spellCheck={false}
+              data-form-type="other"
+              data-1p-ignore="true"
+              data-lpignore="true"
               className="w-16 border border-line bg-page px-2 py-1 text-center text-base outline-none focus:border-accent"
             />
             <button
