@@ -147,6 +147,26 @@ create table if not exists players (
 
 create index if not exists players_room_idx on players(room_code);
 
+-- Identity layer (Phase 1 of friend-groups). Each visitor gets a
+-- device-bound UUID stored in their localStorage (`imposter:userId`)
+-- on first visit. The server upserts a users row keyed on that token.
+-- Cross-device portability is intentionally NOT a v1 feature — losing
+-- localStorage = new identity. Email/wallet auth can layer on later.
+create table if not exists users (
+  id uuid primary key default gen_random_uuid(),
+  device_token text unique not null,
+  default_nickname text,
+  default_avatar text,
+  created_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
+);
+
+-- Wire existing players to users. Nullable for legacy rows + the
+-- transitional period; lazily backfilled on next room interaction.
+alter table players
+  add column if not exists user_id uuid references users(id);
+create index if not exists players_user_idx on players(user_id);
+
 -- Optional player avatar (emoji or single character). Falls back to
 -- nickname's first letter if null.
 alter table players add column if not exists avatar text;
