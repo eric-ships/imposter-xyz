@@ -8,6 +8,8 @@ import type {
 import type { MatchHistoryEntry } from "@/lib/match-history";
 import { redactForViewer as redactWavelength } from "@/games/wavelength/state";
 import type { WavelengthState } from "@/games/wavelength/types";
+import { redactForViewer as redactJustOne } from "@/games/just-one/state";
+import type { JustOneState } from "@/games/just-one/types";
 
 export async function notifyRoom(code: string, kind: string) {
   await supabaseAdmin.from("room_events").insert({ room_code: code, kind });
@@ -293,10 +295,17 @@ export async function fetchRoomView(
 
   // Per-game viewer redaction. Wavelength hides the target from
   // non-psychic viewers during clue/guessing — server-side so the
-  // client can't peek by inspecting the network response.
+  // client can't peek by inspecting the network response. Just One
+  // hides the secret from the guesser, hides others' clues during
+  // clue phase, and anonymizes surviving clues for the guesser.
   if (kind === "wavelength" && Object.keys(gameState).length > 0) {
     gameState = redactWavelength(
       gameState as unknown as WavelengthState,
+      playerId
+    ) as unknown as Record<string, unknown>;
+  } else if (kind === "just-one" && Object.keys(gameState).length > 0) {
+    gameState = redactJustOne(
+      gameState as unknown as JustOneState,
       playerId
     ) as unknown as Record<string, unknown>;
   }
