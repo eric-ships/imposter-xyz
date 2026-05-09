@@ -78,6 +78,12 @@ export type PublicRoomView = {
   // owns this kind. Empty object for legacy imposter rooms (which keep
   // their state in dedicated columns above).
   gameState: Record<string, unknown>;
+  // Friend-group attribution. Null = casual; matches don't persist
+  // beyond the lobby-scoped match_history. Set = matches snapshot to
+  // match_results on end. groupName is denormalized for cheap pill
+  // rendering without a second client round-trip.
+  groupId: string | null;
+  groupName: string | null;
   state: RoomState;
   category: string | null;
   round: number;

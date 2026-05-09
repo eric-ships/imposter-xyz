@@ -23,6 +23,7 @@ import {
 import type { MatchHistoryEntry } from "@/lib/match-history";
 import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
+import { GroupAttributionPill } from "@/components/GroupAttributionPill";
 
 // Per-viewer audio cues. Watches state transitions and fires chimes
 // for the local player based on what just changed:
@@ -83,10 +84,12 @@ export function WavelengthBody({
   view,
   playerId,
   code,
+  userId,
 }: {
   view: PublicRoomView;
   playerId: string;
   code: string;
+  userId: string | null;
 }) {
   const isHost = view.hostId === playerId;
   const nicknameById = useMemo(
@@ -111,6 +114,7 @@ export function WavelengthBody({
         playerId={playerId}
         code={code}
         isHost={isHost}
+        userId={userId}
       />
     );
   }
@@ -141,11 +145,13 @@ function WavelengthLobby({
   playerId,
   code,
   isHost,
+  userId,
 }: {
   view: PublicRoomView;
   playerId: string;
   code: string;
   isHost: boolean;
+  userId: string | null;
 }) {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -176,6 +182,18 @@ function WavelengthLobby({
         isHost={isHost}
         currentKind={view.kind}
       />
+
+      <div>
+        <GroupAttributionPill
+          code={code}
+          playerId={playerId}
+          userId={userId}
+          isHost={isHost}
+          isLobby
+          currentGroupId={view.groupId}
+          currentGroupName={view.groupName}
+        />
+      </div>
 
       <section className="space-y-4">
         <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">

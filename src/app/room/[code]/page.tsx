@@ -36,6 +36,7 @@ import { WavelengthBody } from "@/games/wavelength/WavelengthBody";
 import { JustOneBody } from "@/games/just-one/JustOneBody";
 import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
+import { GroupAttributionPill } from "@/components/GroupAttributionPill";
 import { useIdentity } from "@/lib/identity";
 
 export default function RoomPage({
@@ -270,6 +271,7 @@ export default function RoomPage({
       playerId={view.you.id}
       code={code}
       onRefetch={refetch}
+      userId={identity.userId}
     />
   );
 }
@@ -279,11 +281,13 @@ function RoomPlay({
   playerId,
   code,
   onRefetch,
+  userId,
 }: {
   view: PublicRoomView;
   playerId: string;
   code: string;
   onRefetch: () => void;
+  userId: string | null;
 }) {
   // Multi-game dispatch: route non-imposter rooms to their own
   // module before any imposter-specific state derivation runs.
@@ -296,6 +300,7 @@ function RoomPlay({
         playerId={playerId}
         code={code}
         onRefetch={onRefetch}
+        userId={userId}
       />
     );
   }
@@ -306,6 +311,7 @@ function RoomPlay({
         playerId={playerId}
         code={code}
         onRefetch={onRefetch}
+        userId={userId}
       />
     );
   }
@@ -465,6 +471,7 @@ function RoomPlay({
                 playerId={playerId}
                 code={code}
                 onRefetch={onRefetch}
+                userId={userId}
               />
             )}
 
@@ -784,11 +791,13 @@ function WavelengthRoomShell({
   playerId,
   code,
   onRefetch,
+  userId,
 }: {
   view: PublicRoomView;
   playerId: string;
   code: string;
   onRefetch: () => void;
+  userId: string | null;
 }) {
   const you = view.you!;
   const nicknameById = useMemo(
@@ -851,7 +860,12 @@ function WavelengthRoomShell({
       </div>
 
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
-        <WavelengthBody view={view} playerId={playerId} code={code} />
+        <WavelengthBody
+          view={view}
+          playerId={playerId}
+          code={code}
+          userId={userId}
+        />
       </div>
     </main>
   );
@@ -865,11 +879,13 @@ function JustOneRoomShell({
   playerId,
   code,
   onRefetch,
+  userId,
 }: {
   view: PublicRoomView;
   playerId: string;
   code: string;
   onRefetch: () => void;
+  userId: string | null;
 }) {
   const you = view.you!;
   const nicknameById = useMemo(
@@ -928,7 +944,12 @@ function JustOneRoomShell({
       </div>
 
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
-        <JustOneBody view={view} playerId={playerId} code={code} />
+        <JustOneBody
+          view={view}
+          playerId={playerId}
+          code={code}
+          userId={userId}
+        />
       </div>
     </main>
   );
@@ -2407,11 +2428,13 @@ function LobbyPhase({
   playerId,
   code,
   onRefetch,
+  userId,
 }: {
   view: PublicRoomView;
   playerId: string;
   code: string;
   onRefetch: () => void;
+  userId: string | null;
 }) {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -2476,6 +2499,18 @@ function LobbyPhase({
         isHost={isHost}
         currentKind={view.kind}
       />
+
+      <div>
+        <GroupAttributionPill
+          code={code}
+          playerId={playerId}
+          userId={userId}
+          isHost={isHost}
+          isLobby
+          currentGroupId={view.groupId}
+          currentGroupName={view.groupName}
+        />
+      </div>
 
       <section className="space-y-4">
         <div className="flex items-baseline justify-between">
