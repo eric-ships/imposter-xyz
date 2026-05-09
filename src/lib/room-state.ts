@@ -310,11 +310,33 @@ export async function fetchRoomView(
     ) as unknown as Record<string, unknown>;
   }
 
+  // Friend-group attribution. Pre-migration rooms (no group_id
+  // column) report null. groupName is denormalized via a side
+  // lookup so the lobby pill renders without a second client
+  // round-trip.
+  const groupId =
+    ("group_id" in room ? (room.group_id as string | null) : null) ??
+    null;
+  let groupName: string | null = null;
+  let groupInviteCode: string | null = null;
+  if (groupId) {
+    const { data: g } = await supabaseAdmin
+      .from("groups")
+      .select("name, invite_code")
+      .eq("id", groupId)
+      .maybeSingle();
+    groupName = (g?.name as string | null) ?? null;
+    groupInviteCode = (g?.invite_code as string | null) ?? null;
+  }
+
   return {
     code: room.code,
     hostId: room.host_id,
     kind,
     gameState,
+    groupId,
+    groupName,
+    groupInviteCode,
     state,
     category: room.category,
     round: room.round,

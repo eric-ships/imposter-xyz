@@ -8,6 +8,7 @@ import {
   snapshotJustOneMatch,
   type MatchHistoryEntry,
 } from "@/lib/match-history";
+import { writeMatchResultIfAttributed } from "@/lib/group-stats";
 
 // POST /api/rooms/[code]/just-one/next-card
 // Body: { playerId }
@@ -26,7 +27,7 @@ export async function POST(
 
   const { data: room } = await supabaseAdmin
     .from("rooms")
-    .select("kind, game_state, host_id, match_history")
+    .select("kind, game_state, host_id, match_history, group_id")
     .eq("code", code)
     .maybeSingle();
   if (!room || room.kind !== "just-one") {
@@ -67,9 +68,24 @@ export async function POST(
 
     const { data: players } = await supabaseAdmin
       .from("players")
-      .select("id")
+      .select("id, user_id")
       .eq("room_code", code)
       .order("joined_at", { ascending: true });
+
+    // Persist to match_results if attributed to a friend group.
+    await writeMatchResultIfAttributed({
+      groupId: ("group_id" in room
+        ? (room.group_id as string | null)
+        : null) ?? null,
+      roomCode: code,
+      gameKind: "just-one",
+      snapshot: snap,
+      players: (players ?? []).map((p) => ({
+        id: p.id as string,
+        user_id: (p.user_id as string | null) ?? null,
+      })),
+    });
+
     nextState = replayMatch((players ?? []).map((p) => p.id as string));
   } else {
     return NextResponse.json(

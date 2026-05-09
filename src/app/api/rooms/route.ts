@@ -9,10 +9,11 @@ import { generateRoomCode } from "@/lib/room-code";
 const VALID_KINDS = new Set(["imposter", "wavelength", "just-one"]);
 
 export async function POST(request: Request) {
-  const { nickname, kind, userId } = (await request.json()) as {
+  const { nickname, kind, userId, groupId } = (await request.json()) as {
     nickname?: string;
     kind?: string;
     userId?: string;
+    groupId?: string;
   };
   const trimmed = nickname?.trim();
   if (!trimmed) {
@@ -20,6 +21,30 @@ export async function POST(request: Request) {
   }
   const roomKind = kind && VALID_KINDS.has(kind) ? kind : "imposter";
   const trimmedUserId = userId?.trim() || null;
+  const trimmedGroupId = groupId?.trim() || null;
+
+  // Validate group membership at attribution time. Same rule as
+  // /api/rooms/[code]/attribute — host must be a member.
+  if (trimmedGroupId) {
+    if (!trimmedUserId) {
+      return NextResponse.json(
+        { error: "userId required to attribute to a group" },
+        { status: 400 }
+      );
+    }
+    const { data: membership } = await supabaseAdmin
+      .from("group_members")
+      .select("group_id")
+      .eq("group_id", trimmedGroupId)
+      .eq("user_id", trimmedUserId)
+      .maybeSingle();
+    if (!membership) {
+      return NextResponse.json(
+        { error: "you're not a member of that group" },
+        { status: 403 }
+      );
+    }
+  }
 
   let code = "";
   for (let attempt = 0; attempt < 8; attempt++) {
@@ -55,6 +80,7 @@ export async function POST(request: Request) {
     show_candidates_always: true,
   };
   if (roomKind !== "imposter") insertRow.kind = roomKind;
+  if (trimmedGroupId) insertRow.group_id = trimmedGroupId;
   const { error: roomErr } = await supabaseAdmin
     .from("rooms")
     .insert(insertRow);

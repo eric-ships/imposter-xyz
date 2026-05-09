@@ -196,6 +196,52 @@ create table if not exists group_members (
 create index if not exists group_members_user_idx
   on group_members(user_id);
 
+-- Match attribution (Phase 3 of friend-groups). A room can optionally
+-- belong to a group — if set, the match-end flow snapshots a
+-- match_results row for stat aggregation. Casual rooms (group_id
+-- null) leave no persistent trace beyond rooms.match_history (the
+-- existing lobby-scoped JSON column, which dies with the room).
+alter table rooms
+  add column if not exists group_id uuid references groups(id);
+create index if not exists rooms_group_idx on rooms(group_id);
+
+-- Persisted match results, lifetime per group. The `snapshot` column
+-- holds the existing MatchHistoryEntry shape unchanged — no rewrite
+-- of game-side types. game_kind tag mirrors rooms.kind.
+create table if not exists match_results (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references groups(id) on delete cascade,
+  room_code text not null,         -- not FK; rooms get GC'd
+  game_kind text not null,         -- 'imposter' | 'wavelength' | 'just-one'
+  ended_at timestamptz not null,
+  snapshot jsonb not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists match_results_group_ended_idx
+  on match_results(group_id, ended_at desc);
+create index if not exists match_results_group_game_idx
+  on match_results(group_id, game_kind);
+
+-- Per-player participation row per match. Lets stat queries
+-- aggregate "Eric's imposter W/L" without re-parsing snapshot JSON.
+-- Populated server-side alongside the match_results write.
+--
+-- role / won / delta are per-game-shaped:
+--   imposter  → role: 'imposter' | 'crewmate', won: boolean, delta: int
+--   wavelength→ role: 'psychic' | 'guesser',   won: boolean (top scorer), delta: int
+--   just-one  → role: 'guesser' | 'clue-giver', won: null (cooperative), delta: 0/1
+create table if not exists match_player_results (
+  match_id uuid not null references match_results(id) on delete cascade,
+  user_id uuid not null references users(id) on delete cascade,
+  role text,
+  won boolean,
+  delta int not null default 0,
+  primary key (match_id, user_id)
+);
+
+create index if not exists mpr_user_idx on match_player_results(user_id);
+
 -- Optional player avatar (emoji or single character). Falls back to
 -- nickname's first letter if null.
 alter table players add column if not exists avatar text;
@@ -284,6 +330,8 @@ alter table clue_reactions enable row level security;
 alter table users enable row level security;
 alter table groups enable row level security;
 alter table group_members enable row level security;
+alter table match_results enable row level security;
+alter table match_player_results enable row level security;
 
 -- Allow anon SELECT on room_events so realtime subscriptions pass RLS.
 -- No policies on other tables = anon can't read them.

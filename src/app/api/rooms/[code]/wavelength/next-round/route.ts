@@ -8,6 +8,7 @@ import {
   snapshotWavelengthMatch,
   type MatchHistoryEntry,
 } from "@/lib/match-history";
+import { writeMatchResultIfAttributed } from "@/lib/group-stats";
 
 // POST /api/rooms/[code]/wavelength/next-round
 // Body: { playerId }
@@ -26,7 +27,7 @@ export async function POST(
 
   const { data: room } = await supabaseAdmin
     .from("rooms")
-    .select("kind, game_state, host_id, match_history")
+    .select("kind, game_state, host_id, match_history, group_id")
     .eq("code", code)
     .maybeSingle();
   if (!room || room.kind !== "wavelength") {
@@ -49,7 +50,7 @@ export async function POST(
     // contract as imposter — newest first, capped, defensive write.
     const { data: playersForSnap } = await supabaseAdmin
       .from("players")
-      .select("id, nickname, avatar")
+      .select("id, nickname, avatar, user_id")
       .eq("room_code", code)
       .order("joined_at", { ascending: true });
     const existingHistory: MatchHistoryEntry[] =
@@ -67,6 +68,20 @@ export async function POST(
       })),
     });
     nextHistory = [snap, ...existingHistory].slice(0, MATCH_HISTORY_CAP);
+
+    // Persist to match_results if attributed to a friend group.
+    await writeMatchResultIfAttributed({
+      groupId: ("group_id" in room
+        ? (room.group_id as string | null)
+        : null) ?? null,
+      roomCode: code,
+      gameKind: "wavelength",
+      snapshot: snap,
+      players: (playersForSnap ?? []).map((p) => ({
+        id: p.id as string,
+        user_id: (p.user_id as string | null) ?? null,
+      })),
+    });
 
     // Recompute totalRounds from the current player count so a
     // mid-session table-size change (joined/left between matches) gets
