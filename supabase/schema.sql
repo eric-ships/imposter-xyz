@@ -245,12 +245,14 @@ create index if not exists room_events_room_idx on room_events(room_code, id);
 
 -- RLS: block anon writes/reads on everything sensitive. Clients only
 -- subscribe to realtime INSERTs on room_events (nothing sensitive there).
+-- Server uses the service role to bypass RLS for all reads/writes.
 alter table rooms enable row level security;
 alter table players enable row level security;
 alter table clues enable row level security;
 alter table votes enable row level security;
 alter table room_events enable row level security;
 alter table clue_reactions enable row level security;
+alter table users enable row level security;
 
 -- Allow anon SELECT on room_events so realtime subscriptions pass RLS.
 -- No policies on other tables = anon can't read them.
