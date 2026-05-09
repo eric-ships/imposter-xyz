@@ -6,6 +6,7 @@ import {
   snapshotMatch,
   type MatchHistoryEntry,
 } from "@/lib/match-history";
+import { writeMatchResultIfAttributed } from "@/lib/group-stats";
 import type { GuessOutcome } from "@/lib/game";
 
 export async function POST(
@@ -43,10 +44,11 @@ export async function POST(
 
   // Snapshot the just-finished match into match_history before we wipe
   // the room state. Need players for nickname/avatar capture (so the
-  // history entry doesn't break if someone leaves or renames later).
+  // history entry doesn't break if someone leaves or renames later)
+  // and user_id for any group-attributed match_results writes.
   const { data: playersForSnapshot } = await supabaseAdmin
     .from("players")
-    .select("id, nickname, avatar")
+    .select("id, nickname, avatar, user_id")
     .eq("room_code", code)
     .order("joined_at", { ascending: true });
 
@@ -84,6 +86,23 @@ export async function POST(
     });
     // Newest first; cap so a long lobby session doesn't grow unbounded.
     nextHistory = [snap, ...existingHistory].slice(0, MATCH_HISTORY_CAP);
+
+    // If the room is attributed to a friend group, persist the
+    // snapshot to match_results + match_player_results for cross-
+    // session stat aggregation. Defensive: helper swallows errors so
+    // a missing-table / etc doesn't break play-again.
+    await writeMatchResultIfAttributed({
+      groupId: ("group_id" in room
+        ? (room.group_id as string | null)
+        : null) ?? null,
+      roomCode: code,
+      gameKind: "imposter",
+      snapshot: snap,
+      players: (playersForSnapshot ?? []).map((p) => ({
+        id: p.id as string,
+        user_id: (p.user_id as string | null) ?? null,
+      })),
+    });
   }
 
   await Promise.all([
