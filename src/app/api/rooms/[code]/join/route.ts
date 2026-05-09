@@ -8,8 +8,12 @@ export async function POST(
 ) {
   const { code: raw } = await params;
   const code = raw.toUpperCase();
-  const { nickname } = (await request.json()) as { nickname?: string };
+  const { nickname, userId } = (await request.json()) as {
+    nickname?: string;
+    userId?: string;
+  };
   const trimmed = nickname?.trim();
+  const trimmedUserId = userId?.trim() || null;
   if (!trimmed) {
     return NextResponse.json({ error: "nickname required" }, { status: 400 });
   }
@@ -24,18 +28,47 @@ export async function POST(
     return NextResponse.json({ error: "room not found" }, { status: 404 });
   }
 
-  // Reclaim path: if the nickname (case-insensitive) already exists in
-  // this room, return that player's id instead of inserting a new row.
-  // Lets someone who lost localStorage (cleared cache, switched device,
-  // closed the tab mid-game) come back as themselves by typing the same
-  // name — works in both lobby and active phases.
+  // Reclaim by user_id first: if the same device already has a
+  // player row in this room, return it. Cleanest path — survives
+  // nickname changes within a session ("oh I want to be Alice
+  // instead of alice123") without orphaning the original row.
+  if (trimmedUserId) {
+    const { data: byUser } = await supabaseAdmin
+      .from("players")
+      .select("id")
+      .eq("room_code", code)
+      .eq("user_id", trimmedUserId)
+      .maybeSingle();
+    if (byUser) {
+      await notifyRoom(code, "player_rejoined");
+      return NextResponse.json({
+        playerId: byUser.id,
+        rejoined: true,
+      });
+    }
+  }
+
+  // Fallback reclaim by nickname: case-insensitive match. Lets
+  // someone who lost localStorage (cleared cache, switched device,
+  // closed the tab mid-game) come back by typing the same name —
+  // works in both lobby and active phases. Lazy-backfill: if the
+  // matched row has no user_id and we have one, bind it now.
   const { data: existing } = await supabaseAdmin
     .from("players")
-    .select("id, nickname")
+    .select("id, nickname, user_id")
     .eq("room_code", code)
     .ilike("nickname", trimmed)
     .maybeSingle();
   if (existing) {
+    if (
+      trimmedUserId &&
+      !(existing as { user_id?: string | null }).user_id
+    ) {
+      await supabaseAdmin
+        .from("players")
+        .update({ user_id: trimmedUserId })
+        .eq("id", existing.id);
+    }
     await notifyRoom(code, "player_rejoined");
     return NextResponse.json({ playerId: existing.id, rejoined: true });
   }
@@ -60,9 +93,14 @@ export async function POST(
     );
   }
 
+  const insertRow: Record<string, unknown> = {
+    room_code: code,
+    nickname: trimmed,
+  };
+  if (trimmedUserId) insertRow.user_id = trimmedUserId;
   const { data: player, error } = await supabaseAdmin
     .from("players")
-    .insert({ room_code: code, nickname: trimmed })
+    .insert(insertRow)
     .select("id")
     .single();
 

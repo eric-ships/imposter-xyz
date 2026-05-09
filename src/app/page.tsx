@@ -41,9 +41,9 @@ export default function HomePage() {
   const [joinCode, setJoinCode] = useState("");
   // Identity bootstrap: ensures the device has a userId in
   // localStorage, upserts the users row server-side, bumps presence.
-  // Result is unused in v1 (no UI surfaces userId yet) but the hook
-  // firing on every home visit is what populates last_seen_at.
-  useIdentity();
+  // userId is forwarded into create/join calls so the resulting
+  // players row is bound to this device's user.
+  const identity = useIdentity();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Game picker. Defaults to imposter so existing UX is unchanged for
@@ -64,7 +64,11 @@ export default function HomePage() {
       const res = await fetch("/api/rooms", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: nickname.trim(), kind: gameKind }),
+        body: JSON.stringify({
+          nickname: nickname.trim(),
+          kind: gameKind,
+          userId: identity.userId ?? undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
@@ -84,7 +88,10 @@ export default function HomePage() {
       const res = await fetch(`/api/rooms/${code}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: nickname.trim() }),
+        body: JSON.stringify({
+          nickname: nickname.trim(),
+          userId: identity.userId ?? undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");

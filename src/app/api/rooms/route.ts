@@ -9,15 +9,17 @@ import { generateRoomCode } from "@/lib/room-code";
 const VALID_KINDS = new Set(["imposter", "wavelength", "just-one"]);
 
 export async function POST(request: Request) {
-  const { nickname, kind } = (await request.json()) as {
+  const { nickname, kind, userId } = (await request.json()) as {
     nickname?: string;
     kind?: string;
+    userId?: string;
   };
   const trimmed = nickname?.trim();
   if (!trimmed) {
     return NextResponse.json({ error: "nickname required" }, { status: 400 });
   }
   const roomKind = kind && VALID_KINDS.has(kind) ? kind : "imposter";
+  const trimmedUserId = userId?.trim() || null;
 
   let code = "";
   for (let attempt = 0; attempt < 8; attempt++) {
@@ -60,9 +62,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: roomErr.message }, { status: 500 });
   }
 
+  // Bind to user_id if the client passed one (identity layer
+  // bootstraps it from localStorage). Pre-migration DBs without the
+  // column don't get the field set; we only include it when present.
+  const playerRow: Record<string, unknown> = {
+    id: hostId,
+    room_code: code,
+    nickname: trimmed,
+  };
+  if (trimmedUserId) playerRow.user_id = trimmedUserId;
   const { error: playerErr } = await supabaseAdmin
     .from("players")
-    .insert({ id: hostId, room_code: code, nickname: trimmed });
+    .insert(playerRow);
   if (playerErr) {
     return NextResponse.json({ error: playerErr.message }, { status: 500 });
   }

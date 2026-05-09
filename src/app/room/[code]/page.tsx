@@ -65,13 +65,14 @@ export default function RoomPage({
   // Identity bootstrap. Seeds default_nickname from this room's
   // stored nickname so a returning player who's never been on the
   // home page since the identity layer shipped still gets their
-  // user row populated with a sensible default. Result is unused in
-  // v1 but the call bumps last_seen_at on every room visit.
+  // user row populated with a sensible default. userId is forwarded
+  // into the in-room join call so a fresh joiner's player row is
+  // bound to their device.
   const seedNickname =
     typeof window !== "undefined"
       ? localStorage.getItem(`ci:${code}:nickname`)
       : null;
-  useIdentity({ seedNickname });
+  const identity = useIdentity({ seedNickname });
 
   const refetch = useCallback(async () => {
     const url = playerId
@@ -161,7 +162,10 @@ export default function RoomPage({
       const res = await fetch(`/api/rooms/${code}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname: joinNickname.trim() }),
+        body: JSON.stringify({
+          nickname: joinNickname.trim(),
+          userId: identity.userId ?? undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
