@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "@/lib/theme";
+import { useIdentity } from "@/lib/identity";
 
 type Mode = "choose" | "create" | "join";
 
@@ -38,6 +39,11 @@ export default function HomePage() {
   const [mode, setMode] = useState<Mode>("choose");
   const [nickname, setNickname] = useState("");
   const [joinCode, setJoinCode] = useState("");
+  // Identity bootstrap: ensures the device has a userId in
+  // localStorage, upserts the users row server-side, bumps presence.
+  // Result is unused in v1 (no UI surfaces userId yet) but the hook
+  // firing on every home visit is what populates last_seen_at.
+  useIdentity();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Game picker. Defaults to imposter so existing UX is unchanged for
