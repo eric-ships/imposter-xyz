@@ -156,10 +156,44 @@ export default function RoomPage({
     router.push("/");
   }, [code, hydrated, playerId, view, router]);
 
+  // When the joiner ticks "Add me to <Group>" in the join screen,
+  // we POST to /api/groups/join FIRST (so their stats start counting
+  // immediately), then proceed with the normal room-join. Failures on
+  // the group-join are non-fatal — we surface a notice but still let
+  // the room-join through, so the user can play even if for some
+  // reason the group-join fails (group full, network blip, etc).
+  const [joinGroupToo, setJoinGroupToo] = useState(true);
+
   async function doJoin() {
     setJoinError(null);
     setJoining(true);
     try {
+      // Optionally join the group first.
+      if (
+        joinGroupToo &&
+        view?.groupId &&
+        view.groupInviteCode &&
+        identity.userId
+      ) {
+        const gRes = await fetch("/api/groups/join", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: identity.userId,
+            code: view.groupInviteCode,
+            nickname: joinNickname.trim(),
+          }),
+        });
+        if (!gRes.ok) {
+          // Soft-fail: surface the error but continue with room-join
+          // so the user can still play (their stats just won't count).
+          const gData = await gRes.json().catch(() => ({}));
+          console.warn(
+            "group-join failed, continuing room-join:",
+            gData.error
+          );
+        }
+      }
       const res = await fetch(`/api/rooms/${code}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -179,6 +213,32 @@ export default function RoomPage({
       setJoining(false);
     }
   }
+
+  // Track which groups the viewer belongs to so we can detect "joining
+  // a room attributed to a group I'm not in" and offer to also join
+  // the group. Loaded once when identity is ready; non-blocking.
+  const [memberGroupIds, setMemberGroupIds] = useState<Set<string> | null>(
+    null
+  );
+  useEffect(() => {
+    if (!identity.userId) return;
+    fetch(`/api/groups?userId=${identity.userId}`)
+      .then(async (r) => (r.ok ? r.json() : { groups: [] }))
+      .then((data) =>
+        setMemberGroupIds(
+          new Set(
+            (data.groups as { id: string }[]).map((g) => g.id)
+          )
+        )
+      )
+      .catch(() => setMemberGroupIds(new Set()));
+  }, [identity.userId]);
+
+  const showAttributionPrompt =
+    !!view?.groupId &&
+    !!identity.userId &&
+    memberGroupIds !== null &&
+    !memberGroupIds.has(view.groupId);
 
   if (notFound) {
     return (
@@ -237,6 +297,32 @@ export default function RoomPage({
             {code}
           </div>
         </div>
+
+        {showAttributionPrompt && view?.groupName && (
+          <div className="w-full rounded-sm border border-leaf/40 bg-leaf/5 p-4 text-sm">
+            <div className="text-[11px] uppercase tracking-[0.22em] text-leaf">
+              Friend group
+            </div>
+            <p className="mt-1 text-ink">
+              This room is playing as{" "}
+              <span className="font-semibold">{view.groupName}</span>.
+            </p>
+            <label className="mt-3 flex cursor-pointer items-start gap-2 text-xs text-ink-soft">
+              <input
+                type="checkbox"
+                checked={joinGroupToo}
+                onChange={(e) => setJoinGroupToo(e.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-leaf"
+              />
+              <span>
+                Add me to{" "}
+                <span className="text-ink">{view.groupName}</span> so my
+                stats count for this group.
+              </span>
+            </label>
+          </div>
+        )}
+
         <label className="block w-full">
           <span className="mb-3 block text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             Your name
@@ -254,7 +340,11 @@ export default function RoomPage({
           disabled={joining || joinNickname.trim().length === 0}
           className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
-          {joining ? "Joining" : "Join"}
+          {joining
+            ? "Joining"
+            : showAttributionPrompt && joinGroupToo && view?.groupName
+              ? `Join + add to ${view.groupName}`
+              : "Join"}
         </button>
         {joinError && (
           <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">

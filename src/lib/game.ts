@@ -80,10 +80,13 @@ export type PublicRoomView = {
   gameState: Record<string, unknown>;
   // Friend-group attribution. Null = casual; matches don't persist
   // beyond the lobby-scoped match_history. Set = matches snapshot to
-  // match_results on end. groupName is denormalized for cheap pill
-  // rendering without a second client round-trip.
+  // match_results on end. groupName + groupInviteCode are denormalized
+  // for cheap rendering without a second client round-trip; invite
+  // code is exposed so non-members joining the room can opt into
+  // group membership ("join the group + add your stats").
   groupId: string | null;
   groupName: string | null;
+  groupInviteCode: string | null;
   state: RoomState;
   category: string | null;
   round: number;

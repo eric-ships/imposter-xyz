@@ -318,13 +318,15 @@ export async function fetchRoomView(
     ("group_id" in room ? (room.group_id as string | null) : null) ??
     null;
   let groupName: string | null = null;
+  let groupInviteCode: string | null = null;
   if (groupId) {
     const { data: g } = await supabaseAdmin
       .from("groups")
-      .select("name")
+      .select("name, invite_code")
       .eq("id", groupId)
       .maybeSingle();
     groupName = (g?.name as string | null) ?? null;
+    groupInviteCode = (g?.invite_code as string | null) ?? null;
   }
 
   return {
@@ -334,6 +336,7 @@ export async function fetchRoomView(
     gameState,
     groupId,
     groupName,
+    groupInviteCode,
     state,
     category: room.category,
     round: room.round,
