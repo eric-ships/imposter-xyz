@@ -51,7 +51,19 @@ export type WavelengthMatchEntry = {
   topScore: number;
 };
 
-export type MatchHistoryEntry = ImposterMatchEntry | WavelengthMatchEntry;
+export type JustOneMatchEntry = {
+  kind: "just-one";
+  matchNumber: number;
+  endedAt: string;
+  totalCards: number;
+  score: number; // correct guesses
+  rating: string; // human label ("Telepathic", "Sharp", etc.)
+};
+
+export type MatchHistoryEntry =
+  | ImposterMatchEntry
+  | WavelengthMatchEntry
+  | JustOneMatchEntry;
 
 // Cap so a single lobby can't accumulate unbounded history. Lobbies are
 // short-lived, so 20 covers a long evening with headroom.
@@ -119,6 +131,35 @@ export function snapshotMatch(args: {
     guessOutcome: args.guessOutcome,
     winner,
     perPlayer,
+  };
+}
+
+// Just-One-side snapshot. Called from the next-card route when the
+// host transitions from final → replay. Captures the final score and
+// a human rating label.
+export function snapshotJustOneMatch(args: {
+  matchNumber: number;
+  totalCards: number;
+  score: number;
+}): JustOneMatchEntry {
+  const ratio = args.totalCards > 0 ? args.score / args.totalCards : 0;
+  const rating =
+    ratio >= 0.85
+      ? "Telepathic"
+      : ratio >= 0.6
+        ? "Sharp"
+        : ratio >= 0.35
+          ? "Solid"
+          : ratio >= 0.15
+            ? "Warming up"
+            : "Tough deck";
+  return {
+    kind: "just-one",
+    matchNumber: args.matchNumber,
+    endedAt: new Date().toISOString(),
+    totalCards: args.totalCards,
+    score: args.score,
+    rating,
   };
 }
 

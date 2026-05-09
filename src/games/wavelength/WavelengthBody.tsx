@@ -277,6 +277,27 @@ function WavelengthHistoryPanel({
           } catch {
             /* ignore */
           }
+          if ("kind" in m && m.kind === "just-one") {
+            return (
+              <div
+                key={`j${m.matchNumber}`}
+                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                    Match {m.matchNumber} · Just One
+                    {endedTime && <> · {endedTime}</>}
+                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-leaf">
+                    {m.score} / {m.totalCards}
+                  </div>
+                </div>
+                <div className="mt-1 text-sm text-ink-soft">
+                  {m.rating}
+                </div>
+              </div>
+            );
+          }
           if ("kind" in m && m.kind === "wavelength") {
             const winnerNames = m.winnerIds
               .map(

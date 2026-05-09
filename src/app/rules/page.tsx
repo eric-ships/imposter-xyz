@@ -10,7 +10,7 @@ export default function RulesPage() {
         <h1 className="mt-2 font-serif text-4xl italic text-ink">
           How to play
         </h1>
-        <nav className="mt-6 flex justify-center gap-2">
+        <nav className="mt-6 flex flex-wrap justify-center gap-2">
           <a
             href="#imposter"
             className="rounded-full border border-line px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
@@ -22,6 +22,12 @@ export default function RulesPage() {
             className="rounded-full border border-line px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
             Wavelength
+          </a>
+          <a
+            href="#just-one"
+            className="rounded-full border border-line px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+          >
+            Just One
           </a>
         </nav>
       </header>
@@ -283,6 +289,100 @@ export default function RulesPage() {
             in and the round still plays out. If a guesser runs out of
             time, the middle of the dial is locked as their guess (which
             usually means zero points).
+          </p>
+        </Section>
+      </article>
+
+      {/* ───────────────────── Just One ───────────────────── */}
+      <article
+        id="just-one"
+        className="scroll-mt-12 space-y-10 border-t border-line pt-12"
+      >
+        <header className="border-b border-line pb-4">
+          <h2 className="font-serif text-3xl italic text-ink">Just One</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            A cooperative clue-giving game with a beautiful catch.
+            <br />
+            Three to seven players. Ten to twenty minutes.
+          </p>
+        </header>
+
+        <Section label="Setup">
+          <p>
+            One person creates a Just One room and shares the
+            four-letter code. Three to seven players is the sweet spot.
+            The host starts the match once at least three are in.
+          </p>
+          <p>
+            A match is two cards per player at the table — so 6
+            cards with 3 players, 14 with 7. Each card has one player
+            as the <em>guesser</em>; the role rotates.
+          </p>
+        </Section>
+
+        <Section label="What each side sees">
+          <ul className="space-y-2 pl-0">
+            <li>
+              <span className="text-ink">Clue-givers</span> see the
+              secret word and write a one-word clue privately.
+            </li>
+            <li>
+              <span className="text-accent">Guesser</span> sees nothing
+              while clues are being written.
+            </li>
+          </ul>
+        </Section>
+
+        <Section label="The catch">
+          <p>
+            Before the guesser sees the clues, the system{" "}
+            <span className="text-oxblood">silently eliminates</span>{" "}
+            any duplicates. If two clue-givers wrote the same word
+            (case-insensitive, with light stem matching like{" "}
+            <em>banana</em> = <em>bananas</em>), both clues vanish. Any
+            clue that matches the secret word is also eliminated. The
+            guesser only sees what survived.
+          </p>
+          <p>
+            That&apos;s the whole game. Coordinate without coordinating
+            — write a clue your team won&apos;t also write.
+          </p>
+        </Section>
+
+        <Section label="The guess">
+          <p>
+            The guesser sees the surviving clues (without knowing who
+            wrote what) and submits one guess at the secret word. They
+            can also skip the card if no clue is helpful — that
+            counts as the card being played but not as a correct
+            guess.
+          </p>
+        </Section>
+
+        <Section label="Scoring">
+          <p>
+            Cooperative — the whole table shares one score. After all
+            cards, your final tally gets a label:
+          </p>
+          <ul className="space-y-2">
+            <Outcome label="Telepathic" detail="≥85% correct" />
+            <Outcome label="Sharp" detail="≥60% correct" />
+            <Outcome label="Solid" detail="≥35% correct" />
+            <Outcome label="Warming up" detail="≥15% correct" />
+            <Outcome label="Tough deck" detail="<15% correct" />
+          </ul>
+        </Section>
+
+        <Section label="Timers">
+          <ul className="space-y-2">
+            <Timer label="Clue" value="60 seconds" />
+            <Timer label="Guess" value="45 seconds" />
+          </ul>
+          <p>
+            If clue time runs out, the card moves to the guess phase
+            with whatever clues are in (missing players just don&apos;t
+            help that round). If guess time runs out, the card counts
+            as wrong.
           </p>
         </Section>
       </article>

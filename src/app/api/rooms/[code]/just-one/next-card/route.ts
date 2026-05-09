@@ -3,6 +3,11 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
 import { advanceCard, replayMatch } from "@/games/just-one/state";
 import type { JustOneState } from "@/games/just-one/types";
+import {
+  MATCH_HISTORY_CAP,
+  snapshotJustOneMatch,
+  type MatchHistoryEntry,
+} from "@/lib/match-history";
 
 // POST /api/rooms/[code]/just-one/next-card
 // Body: { playerId }
@@ -21,7 +26,7 @@ export async function POST(
 
   const { data: room } = await supabaseAdmin
     .from("rooms")
-    .select("kind, game_state, host_id")
+    .select("kind, game_state, host_id, match_history")
     .eq("code", code)
     .maybeSingle();
   if (!room || room.kind !== "just-one") {
@@ -39,9 +44,27 @@ export async function POST(
   }
 
   let nextState: JustOneState;
+  let nextHistory: MatchHistoryEntry[] | undefined;
   if (state.phase === "reveal") {
     nextState = advanceCard(state);
   } else if (state.phase === "final") {
+    // Snapshot the just-finished match before resetting.
+    const existingHistory: MatchHistoryEntry[] =
+      "match_history" in room && Array.isArray(room.match_history)
+        ? (room.match_history as MatchHistoryEntry[])
+        : [];
+    // Final-state score includes the last card (advanceCard pushed it
+    // into history before transitioning).
+    const correctCount = state.history.filter(
+      (h) => h.outcome === "correct"
+    ).length;
+    const snap = snapshotJustOneMatch({
+      matchNumber: existingHistory.length + 1,
+      totalCards: state.totalCards,
+      score: correctCount,
+    });
+    nextHistory = [snap, ...existingHistory].slice(0, MATCH_HISTORY_CAP);
+
     const { data: players } = await supabaseAdmin
       .from("players")
       .select("id")
@@ -55,12 +78,16 @@ export async function POST(
     );
   }
 
+  const update: Record<string, unknown> = {
+    game_state: nextState,
+    updated_at: new Date().toISOString(),
+  };
+  if (nextHistory && "match_history" in room) {
+    update.match_history = nextHistory;
+  }
   const { error: updErr } = await supabaseAdmin
     .from("rooms")
-    .update({
-      game_state: nextState,
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq("code", code);
   if (updErr) {
     return NextResponse.json({ error: updErr.message }, { status: 500 });

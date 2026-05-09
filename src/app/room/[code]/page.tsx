@@ -33,6 +33,7 @@ import {
 import { TIMER_GRACE_MS, timerDurationsFor } from "@/lib/timer";
 import { useTheme } from "@/lib/theme";
 import { WavelengthBody } from "@/games/wavelength/WavelengthBody";
+import { JustOneBody } from "@/games/just-one/JustOneBody";
 import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 
@@ -268,13 +269,23 @@ function RoomPlay({
   code: string;
   onRefetch: () => void;
 }) {
-  // Multi-game dispatch: route Wavelength rooms to the wavelength
+  // Multi-game dispatch: route non-imposter rooms to their own
   // module before any imposter-specific state derivation runs.
-  // Imposter chrome (turn chimes, candidate prefetch, mainWidth, etc.)
-  // is irrelevant for wavelength rooms.
+  // Imposter chrome (turn chimes, candidate prefetch, mainWidth,
+  // etc.) is irrelevant for the other games.
   if (view.kind === "wavelength") {
     return (
       <WavelengthRoomShell
+        view={view}
+        playerId={playerId}
+        code={code}
+        onRefetch={onRefetch}
+      />
+    );
+  }
+  if (view.kind === "just-one") {
+    return (
+      <JustOneRoomShell
         view={view}
         playerId={playerId}
         code={code}
@@ -825,6 +836,83 @@ function WavelengthRoomShell({
 
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
         <WavelengthBody view={view} playerId={playerId} code={code} />
+      </div>
+    </main>
+  );
+}
+
+// Just One room shell. Mirrors WavelengthRoomShell — same chrome
+// (room code + game badge, theme/mute fixed cluster, you-pill with
+// avatar) but routes the body to JustOneBody.
+function JustOneRoomShell({
+  view,
+  playerId,
+  code,
+  onRefetch,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+  onRefetch: () => void;
+}) {
+  const you = view.you!;
+  const nicknameById = useMemo(
+    () => new Map(view.players.map((p) => [p.id, p.nickname])),
+    [view.players]
+  );
+  useAudioPriming();
+  void onRefetch;
+
+  return (
+    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl">
+      <FixedRoomChrome />
+      <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
+        <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <span className="flex items-baseline gap-2">
+            <span>Room</span>
+            <span className="text-base tracking-[0.25em] text-ink normal-case">
+              {code}
+            </span>
+            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+              Just One
+            </span>
+          </span>
+          <span className="flex items-center gap-3">
+            <Link
+              href="/rules#just-one"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
+              title="How to play"
+            >
+              Rules
+            </Link>
+            <span className="flex items-center gap-2">
+              <AvatarPicker
+                code={code}
+                playerId={playerId}
+                nickname={nicknameById.get(playerId) ?? ""}
+                avatar={
+                  view.players.find((p) => p.id === playerId)?.avatar ??
+                  null
+                }
+                players={view.players}
+              />
+              <span className="text-base text-ink normal-case tracking-normal">
+                {nicknameById.get(playerId)}
+              </span>
+              {you.isHost && (
+                <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-accent">
+                  Host
+                </span>
+              )}
+            </span>
+          </span>
+        </header>
+      </div>
+
+      <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
+        <JustOneBody view={view} playerId={playerId} code={code} />
       </div>
     </main>
   );
@@ -1408,8 +1496,10 @@ function LobbyMatchHistoryPanel({ view }: { view: PublicRoomView }) {
         {history.map((m) => {
           // Discriminate on the kind tag. Pre-multi-game entries
           // omit the field entirely — treat as imposter.
-          const isWavelength =
-            "kind" in m && (m as { kind?: string }).kind === "wavelength";
+          const tag =
+            "kind" in m ? (m as { kind?: string }).kind : undefined;
+          const isWavelength = tag === "wavelength";
+          const isJustOne = tag === "just-one";
           let endedTime = "";
           try {
             endedTime = new Date(m.endedAt).toLocaleTimeString([], {
@@ -1418,6 +1508,28 @@ function LobbyMatchHistoryPanel({ view }: { view: PublicRoomView }) {
             });
           } catch {
             /* ignore */
+          }
+          if (isJustOne) {
+            const j = m as Extract<typeof m, { kind: "just-one" }>;
+            return (
+              <div
+                key={`j${j.matchNumber}`}
+                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                    Match {j.matchNumber} · Just One
+                    {endedTime && <> · {endedTime}</>}
+                  </div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-leaf">
+                    {j.score} / {j.totalCards}
+                  </div>
+                </div>
+                <div className="mt-1 text-sm text-ink-soft">
+                  {j.rating}
+                </div>
+              </div>
+            );
           }
           if (isWavelength) {
             const w = m as Extract<typeof m, { kind: "wavelength" }>;
