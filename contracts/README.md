@@ -1,6 +1,6 @@
 # contracts
 
-Solidity contracts for imposter.xyz. Built with Foundry.
+Solidity contracts for Upper. Built with Foundry.
 
 ## PotEscrow
 

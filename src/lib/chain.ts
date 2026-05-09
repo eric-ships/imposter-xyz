@@ -31,9 +31,14 @@ export function publicClient() {
  * single room can stake more than one pot game (the next pot round in
  * the same lobby gets a fresh gameId instead of colliding with the
  * already-resolved one).
+ *
+ * Pre-rebrand rooms used the "imposter.xyz" prefix; new rooms use
+ * "upper". Existing pots reference their gameId via rooms.chain_game_id
+ * (stored at create-time) so a prefix change can't orphan in-flight
+ * pots — settlement uses the stored id, never re-hashes.
  */
 export function computeGameId(roomCode: string, nonce: string): `0x${string}` {
-  return keccak256(stringToHex(`imposter.xyz:${roomCode}:${nonce}`));
+  return keccak256(stringToHex(`upper:${roomCode}:${nonce}`));
 }
 
 export function blockExplorerUrl(txOrAddress: string): string {
