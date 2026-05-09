@@ -135,6 +135,10 @@ export default function HomePage() {
       </header>
 
       {identity.ready && identity.userId && (
+        <PersonalStatsCard userId={identity.userId} />
+      )}
+
+      {identity.ready && identity.userId && (
         <MyGroupsSection userId={identity.userId} />
       )}
 
@@ -476,5 +480,117 @@ function MyGroupsSection({ userId }: { userId: string }) {
         </p>
       )}
     </section>
+  );
+}
+
+// Personal stats card — cross-group rollup, private to viewer.
+// Hidden when the user has 0 matches played (no sad empty state on
+// first visit). Compact card layout: total matches headline + per-game
+// summary lines for whichever games they've actually played.
+type PersonalStats = {
+  totalMatches: number;
+  games: {
+    imposter: {
+      played: number;
+      asImposter: { played: number; won: number };
+      asCrewmate: { played: number; won: number };
+      totalDelta: number;
+    };
+    wavelength: { played: number; won: number; totalDelta: number };
+    justOne: { played: number; totalDelta: number };
+  };
+};
+
+function PersonalStatsCard({ userId }: { userId: string }) {
+  const [data, setData] = useState<PersonalStats | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/users/me/stats?userId=${userId}`)
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json()) as PersonalStats;
+      })
+      .then((d) => {
+        if (cancelled || !d) return;
+        setData(d);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
+  if (!data || data.totalMatches === 0) return null;
+
+  const g = data.games;
+  return (
+    <section className="w-full space-y-3 rounded-sm border border-line-soft bg-surface/40 p-4">
+      <div className="flex items-baseline justify-between gap-2">
+        <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          Your stats
+        </h2>
+        <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+          across all groups
+        </span>
+      </div>
+      <div className="font-serif text-3xl text-ink">
+        {data.totalMatches}{" "}
+        <span className="text-base text-ink-faint normal-case">
+          {data.totalMatches === 1 ? "match" : "matches"} played
+        </span>
+      </div>
+      <div className="space-y-1.5">
+        {g.imposter.played > 0 && (
+          <PersonalRow
+            label="Imposter"
+            detail={`${g.imposter.played} played${
+              g.imposter.asImposter.played > 0
+                ? ` · imp ${g.imposter.asImposter.won}/${g.imposter.asImposter.played}`
+                : ""
+            }${
+              g.imposter.asCrewmate.played > 0
+                ? ` · crew ${g.imposter.asCrewmate.won}/${g.imposter.asCrewmate.played}`
+                : ""
+            }`}
+          />
+        )}
+        {g.wavelength.played > 0 && (
+          <PersonalRow
+            label="Wavelength"
+            detail={`${g.wavelength.played} played · won ${g.wavelength.won}${
+              g.wavelength.played > 0
+                ? ` · avg ${Math.round(
+                    g.wavelength.totalDelta / g.wavelength.played
+                  )} pts`
+                : ""
+            }`}
+          />
+        )}
+        {g.justOne.played > 0 && (
+          <PersonalRow
+            label="Just One"
+            detail={`${g.justOne.played} played · avg ${(
+              g.justOne.totalDelta / g.justOne.played
+            ).toFixed(1)} per match`}
+          />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function PersonalRow({
+  label,
+  detail,
+}: {
+  label: string;
+  detail: string;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 text-xs">
+      <span className="text-ink">{label}</span>
+      <span className="text-ink-soft">{detail}</span>
+    </div>
   );
 }

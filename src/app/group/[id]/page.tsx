@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { useIdentity } from "@/lib/identity";
 import { useTheme } from "@/lib/theme";
 import { avatarFor } from "@/lib/avatar";
+import type { MatchHistoryEntry } from "@/lib/match-history";
 
 type GroupMember = {
   userId: string;
@@ -48,6 +49,9 @@ export default function GroupPage({
   const [error, setError] = useState<string | null>(null);
   const [loadState, setLoadState] = useState<"idle" | "ok" | "err" | "forbidden">(
     "idle"
+  );
+  const [activeTab, setActiveTab] = useState<"roster" | "stats" | "recent">(
+    "roster"
   );
 
   const refetch = useCallback(async () => {
@@ -112,7 +116,7 @@ export default function GroupPage({
   const isOwner = group.ownerUserId === identity.userId;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-7 px-6 py-10">
+    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 px-6 py-10">
       <div className="absolute right-4 top-4">
         <PageThemeToggle />
       </div>
@@ -141,6 +145,67 @@ export default function GroupPage({
         <InviteChip code={group.inviteCode} />
       </header>
 
+      {/* Tab nav */}
+      <nav className="flex gap-2 border-b border-line">
+        {(["roster", "stats", "recent"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setActiveTab(t)}
+            className={`-mb-px border-b-2 px-3 py-2 text-[11px] uppercase tracking-[0.2em] transition ${
+              activeTab === t
+                ? "border-ink text-ink"
+                : "border-transparent text-ink-faint hover:text-ink"
+            }`}
+          >
+            {t === "roster"
+              ? "Roster"
+              : t === "stats"
+                ? "Stats"
+                : "Recent"}
+          </button>
+        ))}
+      </nav>
+
+      {activeTab === "roster" && (
+        <RosterTab
+          group={group}
+          identity={identity}
+          isOwner={isOwner}
+          refetch={refetch}
+          onLeft={() => router.push("/")}
+          onDeleted={() => router.push("/")}
+        />
+      )}
+      {activeTab === "stats" && (
+        <StatsTab groupId={group.id} userId={identity.userId!} />
+      )}
+      {activeTab === "recent" && (
+        <RecentTab groupId={group.id} userId={identity.userId!} />
+      )}
+    </main>
+  );
+}
+
+// Roster tab: extracted from the original page body so the tab nav
+// can swap it in/out cleanly.
+function RosterTab({
+  group,
+  identity,
+  isOwner,
+  refetch,
+  onLeft,
+  onDeleted,
+}: {
+  group: GroupDetail;
+  identity: { userId: string | null };
+  isOwner: boolean;
+  refetch: () => void;
+  onLeft: () => void;
+  onDeleted: () => void;
+}) {
+  return (
+    <>
       <section className="space-y-3">
         <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           Members · {group.members.length}
@@ -205,18 +270,455 @@ export default function GroupPage({
           <LeaveButton
             groupId={group.id}
             userId={identity.userId!}
-            onLeft={() => router.push("/")}
+            onLeft={onLeft}
           />
         )}
         {isOwner && (
           <DeleteButton
             groupId={group.id}
             userId={identity.userId!}
-            onDeleted={() => router.push("/")}
+            onDeleted={onDeleted}
           />
         )}
       </section>
-    </main>
+    </>
+  );
+}
+
+// ─── Stats tab ─────────────────────────────────────────────────────
+
+type GameRollup = {
+  imposter: {
+    played: number;
+    asImposter: { played: number; won: number };
+    asCrewmate: { played: number; won: number };
+    totalDelta: number;
+  };
+  wavelength: { played: number; won: number; totalDelta: number };
+  justOne: { played: number; totalDelta: number };
+};
+
+type StatsResponse = {
+  totalMatches: number;
+  perMember: Array<{
+    userId: string;
+    nickname: string;
+    role: string;
+    defaultAvatar: string | null;
+    games: GameRollup;
+  }>;
+};
+
+function StatsTab({
+  groupId,
+  userId,
+}: {
+  groupId: string;
+  userId: string;
+}) {
+  const [data, setData] = useState<StatsResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setError(null);
+    fetch(`/api/groups/${groupId}/stats?userId=${userId}`)
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error ?? "load failed");
+        return body as StatsResponse;
+      })
+      .then((d) => {
+        if (!cancelled) setData(d);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [groupId, userId]);
+
+  if (error) {
+    return (
+      <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-2 text-sm text-oxblood">
+        {error}
+      </p>
+    );
+  }
+  if (!data) {
+    return (
+      <p className="text-xs uppercase tracking-[0.2em] text-ink-faint">
+        Loading…
+      </p>
+    );
+  }
+  if (data.totalMatches === 0) {
+    return (
+      <div className="rounded-sm border border-line-soft bg-surface/40 p-4 text-sm text-ink-soft">
+        No matches yet. Play a game with this group attributed
+        (lobby pill) and the stats will start showing up.
+      </div>
+    );
+  }
+
+  // Sort members by total matches played desc — most-active first.
+  const sorted = [...data.perMember].sort((a, b) => {
+    const aPlayed =
+      a.games.imposter.played +
+      a.games.wavelength.played +
+      a.games.justOne.played;
+    const bPlayed =
+      b.games.imposter.played +
+      b.games.wavelength.played +
+      b.games.justOne.played;
+    return bPlayed - aPlayed;
+  });
+
+  return (
+    <div className="space-y-5">
+      <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+        {data.totalMatches}{" "}
+        {data.totalMatches === 1 ? "match" : "matches"} total
+      </div>
+      <ul className="space-y-3">
+        {sorted.map((m) => {
+          const av = avatarFor(
+            m.userId,
+            m.nickname,
+            m.defaultAvatar,
+            sorted.map((s) => ({ id: s.userId }))
+          );
+          const totalPlayed =
+            m.games.imposter.played +
+            m.games.wavelength.played +
+            m.games.justOne.played;
+          return (
+            <li
+              key={m.userId}
+              className="rounded-sm border border-line-soft bg-page/40 p-3"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${av.color} ${
+                    av.isCustom
+                      ? "border border-line text-base"
+                      : "text-sm font-semibold text-white"
+                  }`}
+                >
+                  {av.initial}
+                </div>
+                <div className="flex flex-1 items-baseline gap-2">
+                  <span className="text-sm text-ink">{m.nickname}</span>
+                  {m.role === "owner" && (
+                    <span className="text-[10px] uppercase tracking-[0.18em] text-accent">
+                      Owner
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+                  {totalPlayed} played
+                </span>
+              </div>
+
+              {/* Per-game breakdown — only show games this player has
+                  actually played to keep the panel lean. */}
+              <div className="mt-2 space-y-1.5">
+                {m.games.imposter.played > 0 && (
+                  <ImposterStatRow stats={m.games.imposter} />
+                )}
+                {m.games.wavelength.played > 0 && (
+                  <WavelengthStatRow stats={m.games.wavelength} />
+                )}
+                {m.games.justOne.played > 0 && (
+                  <JustOneStatRow stats={m.games.justOne} />
+                )}
+                {totalPlayed === 0 && (
+                  <p className="text-[11px] text-ink-faint">
+                    Hasn&apos;t played a group-attributed match yet.
+                  </p>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function ImposterStatRow({
+  stats,
+}: {
+  stats: GameRollup["imposter"];
+}) {
+  const impWinRate =
+    stats.asImposter.played === 0
+      ? null
+      : Math.round((stats.asImposter.won / stats.asImposter.played) * 100);
+  const crewWinRate =
+    stats.asCrewmate.played === 0
+      ? null
+      : Math.round((stats.asCrewmate.won / stats.asCrewmate.played) * 100);
+  return (
+    <div className="flex items-baseline justify-between gap-3 text-xs">
+      <span className="text-ink-soft">
+        Imposter <span className="text-ink-faint">·</span>{" "}
+        {stats.played} played
+      </span>
+      <span className="flex items-baseline gap-3 text-ink-soft">
+        {stats.asImposter.played > 0 && (
+          <span>
+            <span className="text-oxblood">imp</span>{" "}
+            <span className="text-ink">
+              {stats.asImposter.won}/{stats.asImposter.played}
+            </span>
+            {impWinRate !== null && (
+              <span className="ml-1 text-ink-faint">({impWinRate}%)</span>
+            )}
+          </span>
+        )}
+        {stats.asCrewmate.played > 0 && (
+          <span>
+            <span className="text-leaf">crew</span>{" "}
+            <span className="text-ink">
+              {stats.asCrewmate.won}/{stats.asCrewmate.played}
+            </span>
+            {crewWinRate !== null && (
+              <span className="ml-1 text-ink-faint">({crewWinRate}%)</span>
+            )}
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function WavelengthStatRow({
+  stats,
+}: {
+  stats: GameRollup["wavelength"];
+}) {
+  const winRate =
+    stats.played === 0
+      ? null
+      : Math.round((stats.won / stats.played) * 100);
+  const avgPts =
+    stats.played === 0
+      ? null
+      : Math.round(stats.totalDelta / stats.played);
+  return (
+    <div className="flex items-baseline justify-between gap-3 text-xs">
+      <span className="text-ink-soft">
+        Wavelength <span className="text-ink-faint">·</span>{" "}
+        {stats.played} played
+      </span>
+      <span className="text-ink-soft">
+        <span className="text-ink">
+          {stats.won}/{stats.played}
+        </span>{" "}
+        {winRate !== null && (
+          <span className="text-ink-faint">({winRate}%)</span>
+        )}
+        {avgPts !== null && (
+          <span className="ml-2 text-ink-faint">avg {avgPts} pts</span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function JustOneStatRow({
+  stats,
+}: {
+  stats: GameRollup["justOne"];
+}) {
+  const avg =
+    stats.played === 0
+      ? null
+      : (stats.totalDelta / stats.played).toFixed(1);
+  return (
+    <div className="flex items-baseline justify-between gap-3 text-xs">
+      <span className="text-ink-soft">
+        Just One <span className="text-ink-faint">·</span>{" "}
+        {stats.played} played
+      </span>
+      <span className="text-ink-soft">
+        {avg !== null && (
+          <span>
+            avg <span className="text-ink">{avg}</span> per match
+          </span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+// ─── Recent tab ────────────────────────────────────────────────────
+
+type RecentMatch = {
+  id: string;
+  gameKind: string;
+  endedAt: string;
+  roomCode: string;
+  snapshot: MatchHistoryEntry;
+};
+
+function RecentTab({
+  groupId,
+  userId,
+}: {
+  groupId: string;
+  userId: string;
+}) {
+  const [matches, setMatches] = useState<RecentMatch[] | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setError(null);
+    fetch(`/api/groups/${groupId}/recent?userId=${userId}`)
+      .then(async (res) => {
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error ?? "load failed");
+        return body as { matches: RecentMatch[] };
+      })
+      .then((d) => {
+        if (!cancelled) setMatches(d.matches);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e.message);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [groupId, userId]);
+
+  if (error) {
+    return (
+      <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-2 text-sm text-oxblood">
+        {error}
+      </p>
+    );
+  }
+  if (!matches) {
+    return (
+      <p className="text-xs uppercase tracking-[0.2em] text-ink-faint">
+        Loading…
+      </p>
+    );
+  }
+  if (matches.length === 0) {
+    return (
+      <div className="rounded-sm border border-line-soft bg-surface/40 p-4 text-sm text-ink-soft">
+        No matches yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      {matches.map((m) => (
+        <RecentMatchCard key={m.id} match={m} />
+      ))}
+    </div>
+  );
+}
+
+function RecentMatchCard({ match }: { match: RecentMatch }) {
+  let endedTime = "";
+  try {
+    endedTime = new Date(match.endedAt).toLocaleString([], {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    /* ignore */
+  }
+
+  if (
+    "kind" in match.snapshot &&
+    match.snapshot.kind === "wavelength"
+  ) {
+    const w = match.snapshot;
+    const winnerNames = w.winnerIds
+      .map(
+        (id) =>
+          w.perPlayer.find((p) => p.playerId === id)?.nickname ?? "?"
+      )
+      .join(" & ");
+    return (
+      <div className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+            Wavelength · {endedTime}
+          </div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-leaf">
+            {w.winnerIds.length === 1 ? "Winner" : "Tied"}
+          </div>
+        </div>
+        <div className="mt-1 text-sm text-ink">
+          <span className="font-semibold">{winnerNames}</span>{" "}
+          <span className="text-ink-faint">· {w.topScore} pts</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    "kind" in match.snapshot &&
+    match.snapshot.kind === "just-one"
+  ) {
+    const j = match.snapshot;
+    return (
+      <div className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+            Just One · {endedTime}
+          </div>
+          <div className="text-[11px] uppercase tracking-[0.18em] text-leaf">
+            {j.score} / {j.totalCards}
+          </div>
+        </div>
+        <div className="mt-1 text-sm text-ink-soft">{j.rating}</div>
+      </div>
+    );
+  }
+
+  // Imposter
+  const im = match.snapshot;
+  const winnerLabel =
+    im.winner === "imposter"
+      ? "Imposter wins"
+      : im.winner === "crewmates"
+        ? "Crewmates win"
+        : "Split";
+  const winnerColor =
+    im.winner === "imposter"
+      ? "text-oxblood"
+      : im.winner === "crewmates"
+        ? "text-leaf"
+        : "text-accent";
+  return (
+    <div className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5">
+      <div className="flex items-baseline justify-between gap-3">
+        <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+          Imposter · {endedTime}
+        </div>
+        <div
+          className={`text-[11px] uppercase tracking-[0.18em] ${winnerColor}`}
+        >
+          {winnerLabel}
+        </div>
+      </div>
+      <div className="mt-1 text-sm text-ink">
+        <span className="text-ink-faint">{im.category}</span>{" "}
+        <span className="text-ink-faint">·</span>{" "}
+        <span className="font-semibold">{im.secretWord}</span>
+      </div>
+    </div>
   );
 }
 
