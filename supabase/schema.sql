@@ -167,6 +167,51 @@ alter table players
   add column if not exists user_id uuid references users(id);
 create index if not exists players_user_idx on players(user_id);
 
+-- Magic-link auth (Phase 5 of friend-groups). Layers email-anchored
+-- accounts on top of the existing device-bound identity so stats
+-- survive cache wipes / device switches.
+--
+-- Device tokens become 1:N → user. The legacy users.device_token
+-- column is left in place as a backwards-compat shim; new code
+-- reads from this table exclusively. A follow-up migration can
+-- drop the legacy column once nothing references it.
+create table if not exists user_device_tokens (
+  device_token text primary key,
+  user_id uuid not null references users(id) on delete cascade,
+  created_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
+);
+create index if not exists user_device_tokens_user_idx
+  on user_device_tokens(user_id);
+
+-- Backfill: every existing users.device_token becomes a row.
+-- Idempotent — re-running this migration is a no-op once seeded.
+insert into user_device_tokens (device_token, user_id, created_at, last_seen_at)
+select device_token, id, created_at, last_seen_at from users
+where device_token is not null
+on conflict (device_token) do nothing;
+
+-- Email column on users. Nullable: device-only users persist forever.
+-- Unique so two users can't claim the same email.
+alter table users add column if not exists email text unique;
+
+-- Magic link tokens. requesting_device_token lets the verify
+-- endpoint know which device's stats to merge into the emailed
+-- user (if any). Optional — sign-in from a fresh device leaves
+-- it null and just attaches the new device to the email's user.
+create table if not exists magic_link_tokens (
+  token text primary key,
+  email text not null,
+  requesting_device_token text,
+  expires_at timestamptz not null,
+  used_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists magic_link_tokens_email_idx
+  on magic_link_tokens(email);
+create index if not exists magic_link_tokens_unused_idx
+  on magic_link_tokens(used_at) where used_at is null;
+
 -- Friend groups (Phase 2 of friend-groups). A group is an invite-only
 -- social unit — anyone with the invite_code can join, owner can kick
 -- and delete. Future phases attach matches to groups for stat
@@ -330,6 +375,8 @@ alter table clue_reactions enable row level security;
 alter table users enable row level security;
 alter table groups enable row level security;
 alter table group_members enable row level security;
+alter table user_device_tokens enable row level security;
+alter table magic_link_tokens enable row level security;
 alter table match_results enable row level security;
 alter table match_player_results enable row level security;
 
