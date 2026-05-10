@@ -116,74 +116,80 @@ export default function GroupPage({
   const isOwner = group.ownerUserId === identity.userId;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-md flex-col gap-6 px-6 py-10">
-      <div className="absolute right-4 top-4">
+    <>
+      {/* Theme toggle pinned to viewport top-right (was absolute
+          inside main → wandered to mid-screen on widescreens). */}
+      <div className="fixed right-4 top-4 z-50">
         <PageThemeToggle />
       </div>
+      <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-6 pb-12 pt-8 sm:pt-10 lg:max-w-3xl lg:gap-7 lg:pt-12">
+        <Link
+          href="/"
+          className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
+        >
+          ← Home
+        </Link>
 
-      <Link
-        href="/"
-        className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
-      >
-        ← Home
-      </Link>
+        <header className="space-y-2">
+          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+            Friend group
+          </div>
+          {isOwner ? (
+            <RenameTitle
+              initial={group.name}
+              groupId={group.id}
+              userId={identity.userId!}
+              onRenamed={(next) => setGroup({ ...group, name: next })}
+            />
+          ) : (
+            <h1 className="font-serif text-3xl text-ink lg:text-4xl">
+              {group.name}
+            </h1>
+          )}
+          <InviteChip code={group.inviteCode} />
+        </header>
 
-      <header className="space-y-2">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-          Friend group
-        </div>
-        {isOwner ? (
-          <RenameTitle
-            initial={group.name}
-            groupId={group.id}
-            userId={identity.userId!}
-            onRenamed={(next) => setGroup({ ...group, name: next })}
+        {/* Tab nav. Bigger touch targets on mobile (py-2.5 → 44px
+            tap area), stays compact visually via text-xs. */}
+        <nav className="flex gap-1 border-b border-line">
+          {(["roster", "stats", "recent"] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setActiveTab(t)}
+              className={`-mb-px min-h-[44px] border-b-2 px-4 py-2.5 text-[11px] uppercase tracking-[0.2em] transition ${
+                activeTab === t
+                  ? "border-ink text-ink"
+                  : "border-transparent text-ink-faint hover:text-ink"
+              }`}
+            >
+              {t === "roster"
+                ? "Roster"
+                : t === "stats"
+                  ? "Stats"
+                  : "Recent"}
+            </button>
+          ))}
+        </nav>
+
+        {activeTab === "roster" && (
+          <RosterTab
+            group={group}
+            identity={identity}
+            isOwner={isOwner}
+            refetch={refetch}
+            onLeft={() => router.push("/")}
+            onDeleted={() => router.push("/")}
           />
-        ) : (
-          <h1 className="font-serif text-3xl text-ink">{group.name}</h1>
         )}
-        <InviteChip code={group.inviteCode} />
-      </header>
-
-      {/* Tab nav */}
-      <nav className="flex gap-2 border-b border-line">
-        {(["roster", "stats", "recent"] as const).map((t) => (
-          <button
-            key={t}
-            type="button"
-            onClick={() => setActiveTab(t)}
-            className={`-mb-px border-b-2 px-3 py-2 text-[11px] uppercase tracking-[0.2em] transition ${
-              activeTab === t
-                ? "border-ink text-ink"
-                : "border-transparent text-ink-faint hover:text-ink"
-            }`}
-          >
-            {t === "roster"
-              ? "Roster"
-              : t === "stats"
-                ? "Stats"
-                : "Recent"}
-          </button>
-        ))}
-      </nav>
-
-      {activeTab === "roster" && (
-        <RosterTab
-          group={group}
-          identity={identity}
-          isOwner={isOwner}
-          refetch={refetch}
-          onLeft={() => router.push("/")}
-          onDeleted={() => router.push("/")}
-        />
-      )}
-      {activeTab === "stats" && (
-        <StatsTab groupId={group.id} userId={identity.userId!} />
-      )}
-      {activeTab === "recent" && (
-        <RecentTab groupId={group.id} userId={identity.userId!} />
-      )}
-    </main>
+        {activeTab === "stats" && (
+          <StatsTab groupId={group.id} userId={identity.userId!} />
+        )}
+        {activeTab === "recent" && (
+          <RecentTab groupId={group.id} userId={identity.userId!} />
+        )}
+      </main>
+    </>
   );
 }
 

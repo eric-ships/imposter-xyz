@@ -455,7 +455,7 @@ function RoomPlay({
     view.state === "guessing";
   const mainWidth = widePhase
     ? "max-w-xl md:max-w-2xl lg:max-w-5xl xl:max-w-6xl"
-    : "max-w-xl md:max-w-2xl";
+    : "max-w-xl md:max-w-2xl lg:max-w-3xl";
 
   const currentPlayerId = view.turnOrder[view.turnIndex];
   const currentPlayerName = currentPlayerId
@@ -923,7 +923,7 @@ function WavelengthRoomShell({
   void onRefetch;
 
   return (
-    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl">
+    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <FixedRoomChrome />
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
         <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
@@ -1007,7 +1007,7 @@ function JustOneRoomShell({
   void onRefetch;
 
   return (
-    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl">
+    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <FixedRoomChrome />
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
         <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
@@ -1117,9 +1117,15 @@ function CasualModeButton({
 // these so the toggles stay reachable on wide screens regardless of
 // the per-phase content width.
 function FixedRoomChrome() {
+  // Top spacing uses max() with env() so the cluster clears an iOS
+  // notch / Dynamic Island regardless of orientation. Inner padding
+  // sized so each tap target hits the iOS-recommended 44pt minimum.
   return (
-    <div className="pointer-events-none fixed right-3 top-3 z-50 flex items-center gap-3 sm:right-4 sm:top-4">
-      <div className="pointer-events-auto rounded-full border border-line bg-page/95 p-2 shadow-sm backdrop-blur-sm flex items-center gap-3">
+    <div
+      className="pointer-events-none fixed right-3 z-50 flex items-center gap-3 sm:right-4"
+      style={{ top: "max(env(safe-area-inset-top), 0.75rem)" }}
+    >
+      <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-line bg-page/95 px-2.5 py-2 shadow-sm backdrop-blur-sm">
         <ThemeToggle />
         <MuteToggle />
       </div>
@@ -1140,7 +1146,7 @@ function ThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       title={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      className="flex h-6 w-6 items-center justify-center text-ink-faint transition-all duration-100 hover:text-ink active:scale-90"
+      className="flex h-9 w-9 items-center justify-center text-ink-faint transition-all duration-100 hover:text-ink active:scale-90"
     >
       {isDark ? (
         // Sun
@@ -1201,7 +1207,7 @@ function MuteToggle() {
       onClick={toggle}
       aria-label={iconMuted ? "Unmute sounds" : "Mute sounds"}
       title={iconMuted ? "Unmute sounds" : "Mute sounds"}
-      className="flex h-6 w-6 items-center justify-center text-ink-faint transition hover:text-ink"
+      className="flex h-9 w-9 items-center justify-center text-ink-faint transition hover:text-ink"
     >
       {iconMuted ? (
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -4075,7 +4081,10 @@ function VotingPhase({
       {/* Vote-cast toasts: pinned to bottom-center of viewport, stack up
           newest-on-top, auto-dismiss after ~2.4s. Fixed so they're
           visible regardless of scroll position. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex flex-col items-center gap-2">
+      <div
+        className="pointer-events-none fixed inset-x-0 z-40 flex flex-col items-center gap-2"
+        style={{ bottom: "max(env(safe-area-inset-bottom), 1.5rem)" }}
+      >
         <AnimatePresence initial={false}>
           {voteToasts.map((t) => (
             <motion.div
