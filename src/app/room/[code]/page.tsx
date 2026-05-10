@@ -455,7 +455,7 @@ function RoomPlay({
     view.state === "guessing";
   const mainWidth = widePhase
     ? "max-w-xl md:max-w-2xl lg:max-w-5xl xl:max-w-6xl"
-    : "max-w-xl md:max-w-2xl";
+    : "max-w-xl md:max-w-2xl lg:max-w-3xl";
 
   const currentPlayerId = view.turnOrder[view.turnIndex];
   const currentPlayerName = currentPlayerId
@@ -923,7 +923,7 @@ function WavelengthRoomShell({
   void onRefetch;
 
   return (
-    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl">
+    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <FixedRoomChrome />
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
         <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
@@ -1007,7 +1007,7 @@ function JustOneRoomShell({
   void onRefetch;
 
   return (
-    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl">
+    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <FixedRoomChrome />
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
         <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
