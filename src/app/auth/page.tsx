@@ -116,8 +116,10 @@ export default function AuthPage() {
                 Sign in to Upper
               </h1>
               <p className="text-sm leading-relaxed text-ink-soft">
-                Use email to keep your stats across devices and sign in
-                from anywhere. We&apos;ll send a one-time link.
+                You only need an account to create or join a friend
+                group — casual play works without one. Email lets your
+                stats and group memberships follow you across devices.
+                We&apos;ll send a one-time link.
               </p>
             </header>
 
