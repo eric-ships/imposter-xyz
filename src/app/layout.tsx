@@ -18,8 +18,22 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "imposter.xyz",
-  description: "A social deduction word game.",
+  title: "Upper · party games for the group",
+  description:
+    "Short, social games for friends — Imposter, Wavelength, Just One. Play together in a shared room from your phone.",
+  metadataBase: new URL("https://upper.games"),
+  openGraph: {
+    title: "Upper",
+    description: "Short, social games for the group.",
+    url: "https://upper.games",
+    siteName: "Upper",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Upper",
+    description: "Short, social games for the group.",
+  },
 };
 
 export default function RootLayout({

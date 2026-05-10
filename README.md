@@ -1,15 +1,23 @@
-# imposter.xyz
+# Upper
 
-A real-time social deduction word game. Everyone sees a shared category. Everyone except one player (the imposter) also sees the secret word. Take turns giving one-word clues for 3 rounds, then vote on who the imposter is.
+Short, social games for the group. Three to eight players, five to twenty minutes per match, playable in a shared room from your phone.
 
-Built with Next.js 16, Supabase (Postgres + Realtime), and Claude Haiku for dynamic category/word generation.
+Three games in one platform:
+
+- **Imposter** — social deduction. Everyone sees the category; one player (the imposter) doesn't see the secret word. Bluff or get caught.
+- **Wavelength** — spectrum guessing. The psychic gets a hidden target on a dial; their team has to read the clue and dial in.
+- **Just One** — cooperative clue-giving. Duplicate clues are silently eliminated before the guesser sees them.
+
+Friend groups: claim an identity that follows you across rooms, attribute matches to a group, and stats accrue per game per person.
+
+Built with Next.js 16, Supabase (Postgres + Realtime), and Claude Haiku for dynamic word/category/concept generation.
 
 ## Setup
 
 ### 1. Create a Supabase project
 
 1. Go to [supabase.com](https://supabase.com) and create a new project (free tier is fine).
-2. Once it's ready, open the SQL editor and paste the contents of `supabase/schema.sql`. Run it.
+2. Open the SQL editor and run the contents of `supabase/schema.sql`. It's idempotent — every statement is `if not exists`.
 3. In **Project Settings → API**, grab these three values:
    - Project URL → `NEXT_PUBLIC_SUPABASE_URL`
    - `anon` public key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
@@ -34,7 +42,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Create a room, share the link, and play with 3+ people.
+Open [http://localhost:3000](http://localhost:3000). Create a room, pick a game, share the 4-letter code, and play with 3+ people.
 
 ## Deploy to Vercel
 
@@ -43,21 +51,17 @@ Open [http://localhost:3000](http://localhost:3000). Create a room, share the li
 3. Add the four env vars from `.env.example` in the Vercel project settings.
 4. Deploy.
 
-## How the game works
-
-- **Lobby**: host creates a room, shares the 4-letter code. Players join with a nickname. Minimum 3 players.
-- **Start**: host clicks start. The server generates a category + secret word via Claude Haiku, picks a random imposter, and randomizes turn order.
-- **Play**: 3 rounds. On each turn, the current player submits a one-word clue. The imposter only sees the category (not the word) and must bluff.
-- **Vote**: after 3 rounds, everyone votes on who they think the imposter is.
-- **Reveal**: imposter revealed. If caught (plurality), all non-imposters get +1 point. Otherwise, the imposter gets +2.
-- **Play again**: host can restart the round with the same players (scores persist).
-
 ## Architecture
 
-- `src/app/api/rooms/...` — REST endpoints for all mutations. The server is authoritative; it holds the secret word and imposter id.
-- `src/app/page.tsx` — home (create/join).
-- `src/app/room/[code]/page.tsx` — room page with all phases (lobby / playing / voting / reveal).
-- `src/lib/anthropic.ts` — `generateWordPrompt()` calls Claude Haiku 4.5 for a fresh `{category, word}` each game.
+- `src/app/page.tsx` — home (create / join, my groups, personal stats).
+- `src/app/room/[code]/page.tsx` — room shell. Dispatches to per-game body based on `view.kind`.
+- `src/app/group/[id]/page.tsx` — friend group page (roster / stats / recent).
+- `src/app/api/rooms/...` — REST endpoints for room mutations. Server is authoritative; secrets / target / imposter id never leave the server-side filter.
+- `src/games/{imposter,wavelength,just-one}/` — per-game state machines + UI bodies. Each owns its own `game_state` jsonb shape on the polymorphic rooms table.
+- `src/lib/identity.ts` + `src/app/api/users/me/...` — device-bound user identity bootstrap.
+- `src/lib/group-stats-aggregate.ts` — pure aggregation for `match_results` / `match_player_results`.
+- `src/lib/anthropic.ts` — Claude Haiku 4.5 prompt for category + secret word generation (Imposter).
 - `src/lib/supabase/server.ts` — service-role client, server only.
 - `src/lib/supabase/browser.ts` — anon client for Realtime subscriptions.
-- Clients subscribe to INSERTs on the `room_events` table (realtime over Postgres changes) and refetch the full filtered state via `GET /api/rooms/:code?playerId=X` on every event. The server hides the secret word from the imposter's view and hides the imposter id until the reveal phase.
+
+Clients subscribe to INSERTs on the `room_events` table (realtime over Postgres changes) and refetch the full server-filtered view on every event. The view layer redacts per-game secrets (Imposter's word, Wavelength's target, Just One's surviving-clue authorship) before the payload leaves the server.

@@ -19,7 +19,7 @@ let _sdk: ReturnType<typeof createBaseAccountSDK> | null = null;
 function sdk() {
   if (!_sdk) {
     _sdk = createBaseAccountSDK({
-      appName: "imposter.xyz",
+      appName: "Upper",
       appLogoUrl: null,
       appChainIds: [CHAIN_ID],
     });

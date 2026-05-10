@@ -5,11 +5,15 @@ export default function RulesPage() {
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-12 px-8 py-12">
       <header className="text-center">
         <div className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">
-          Rule book
+          Upper · rule book
         </div>
         <h1 className="mt-2 font-serif text-4xl italic text-ink">
           How to play
         </h1>
+        <p className="mt-3 text-sm text-ink-soft">
+          Three short games. Pick one in the lobby and bring three to
+          eight friends.
+        </p>
         <nav className="mt-6 flex flex-wrap justify-center gap-2">
           <a
             href="#imposter"

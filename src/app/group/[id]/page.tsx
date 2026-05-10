@@ -876,6 +876,15 @@ function RenameTitle({
           onChange={(e) => setName(e.target.value)}
           maxLength={60}
           autoFocus
+          type="text"
+          name="group-name"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="words"
+          spellCheck={false}
+          data-form-type="other"
+          data-1p-ignore="true"
+          data-lpignore="true"
           className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-3xl text-ink outline-none transition focus:border-accent"
           onKeyDown={(e) => {
             if (e.key === "Enter" && name.trim() && !pending) save();
