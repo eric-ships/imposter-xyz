@@ -38,6 +38,8 @@ import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { ShareMatchButton } from "@/components/ShareMatchButton";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
+import { StreamerCastBanner } from "@/components/StreamerCastBanner";
+import { StreamerModeToggle } from "@/components/StreamerModeToggle";
 import { useIdentity } from "@/lib/identity";
 
 export default function RoomPage({
@@ -556,6 +558,7 @@ function RoomPlay({
           playerCount={view.players.length}
         />
       )}
+      <StreamerCastBanner view={view} />
       </div>
 
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
@@ -969,9 +972,13 @@ function WavelengthRoomShell({
             </span>
           </span>
         </header>
+        <StreamerCastBanner view={view} />
       </div>
 
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
+        {view.state === "lobby" && (
+          <StreamerModeToggle view={view} playerId={playerId} code={code} />
+        )}
         <WavelengthBody
           view={view}
           playerId={playerId}
@@ -1053,9 +1060,13 @@ function JustOneRoomShell({
             </span>
           </span>
         </header>
+        <StreamerCastBanner view={view} />
       </div>
 
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
+        {view.state === "lobby" && (
+          <StreamerModeToggle view={view} playerId={playerId} code={code} />
+        )}
         <JustOneBody
           view={view}
           playerId={playerId}
@@ -2668,6 +2679,8 @@ function LobbyPhase({
       <JesusModeToggle view={view} playerId={playerId} code={code} />
 
       <PoliceModeToggle view={view} playerId={playerId} code={code} />
+
+      <StreamerModeToggle view={view} playerId={playerId} code={code} />
 
       <section className="space-y-3">
         <SectionLabel>Invite</SectionLabel>

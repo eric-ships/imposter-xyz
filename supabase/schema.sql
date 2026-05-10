@@ -79,6 +79,15 @@ alter table rooms
 alter table rooms add column if not exists police_id uuid;
 alter table players add column if not exists investigated_id uuid;
 
+-- Streamer mode: host opt-in flag. Surfaces a "cast this URL" pill in
+-- every player's room view pointing at /spectate/CODE, and is the
+-- signal hosts use to coordinate "phones for play, TV for the table."
+-- Pure UX flag — does not change game logic, redaction, or scoring.
+-- Toggleable in any phase (host might decide to start streaming
+-- mid-match), unlike mole/jesus/police which bake into match start.
+alter table rooms
+  add column if not exists streamer_mode boolean not null default false;
+
 -- Lobby-scoped match history. Each completed match (when a host hits
 -- "Play again") appends a JSON snapshot of the round's outcome:
 --   { matchNumber, category, secretWord, imposterIds, caughtImposterId,
