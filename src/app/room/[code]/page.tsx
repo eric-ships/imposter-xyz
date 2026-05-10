@@ -36,6 +36,7 @@ import { WavelengthBody } from "@/games/wavelength/WavelengthBody";
 import { JustOneBody } from "@/games/just-one/JustOneBody";
 import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
+import { ShareMatchButton } from "@/components/ShareMatchButton";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
 import { useIdentity } from "@/lib/identity";
 
@@ -5084,6 +5085,8 @@ function RevealPhase({
           Awaiting the host
         </p>
       )}
+
+      <ShareMatchButton code={code} kind="imposter" />
           </motion.div>
         )}
       </AnimatePresence>

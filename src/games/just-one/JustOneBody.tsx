@@ -31,6 +31,7 @@ import type { MatchHistoryEntry } from "@/lib/match-history";
 import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
+import { ShareMatchButton } from "@/components/ShareMatchButton";
 
 // Per-viewer audio cues. Same shape as wavelength's hook.
 function useJustOneAudio(
@@ -1047,6 +1048,8 @@ function JustOneFinal({
           Awaiting the host
         </p>
       )}
+
+      <ShareMatchButton code={code} kind="just-one" />
 
       {error && (
         <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
