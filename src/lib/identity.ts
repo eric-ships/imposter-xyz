@@ -67,6 +67,10 @@ export type IdentityState = {
   userId: string | null;
   defaultNickname: string | null;
   defaultAvatar: string | null;
+  // Set once the user has claimed their account via magic link.
+  // Null = device-only (the "Save your account" CTA shows when this
+  // is null + ≥3 matches played).
+  email: string | null;
   // True once we've heard back from /api/users/me at least once.
   // Lets consumers gate "now I know who I am" UI without flickering
   // through a null state.
@@ -77,6 +81,7 @@ const INITIAL: IdentityState = {
   userId: null,
   defaultNickname: null,
   defaultAvatar: null,
+  email: null,
   ready: false,
 };
 
@@ -118,12 +123,14 @@ export function useIdentity({
           userId?: string;
           defaultNickname?: string | null;
           defaultAvatar?: string | null;
+          email?: string | null;
         };
         if (cancelled) return;
         setState({
           userId: data.userId ?? null,
           defaultNickname: data.defaultNickname ?? null,
           defaultAvatar: data.defaultAvatar ?? null,
+          email: data.email ?? null,
           ready: true,
         });
       })
