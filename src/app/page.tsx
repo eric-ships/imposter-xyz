@@ -139,7 +139,10 @@ export default function HomePage() {
       </header>
 
       {identity.ready && identity.userId && (
-        <PersonalStatsCard userId={identity.userId} />
+        <PersonalStatsCard
+          userId={identity.userId}
+          email={identity.email}
+        />
       )}
 
       {identity.ready && identity.userId && (
@@ -542,7 +545,13 @@ type PersonalStats = {
   };
 };
 
-function PersonalStatsCard({ userId }: { userId: string }) {
+function PersonalStatsCard({
+  userId,
+  email,
+}: {
+  userId: string;
+  email: string | null;
+}) {
   const [data, setData] = useState<PersonalStats | null>(null);
 
   useEffect(() => {
@@ -617,6 +626,22 @@ function PersonalStatsCard({ userId }: { userId: string }) {
           />
         )}
       </div>
+
+      {/* CTA: only shown to device-only users with ≥3 matches.
+           Once email is set the prompt disappears forever. */}
+      {!email && data.totalMatches >= 3 && (
+        <Link
+          href="/auth"
+          className="-mx-1 mt-2 flex items-center justify-between gap-3 rounded-sm border border-accent/40 bg-accent/5 px-3 py-2.5 text-xs transition hover:border-accent hover:bg-accent/10"
+        >
+          <span className="text-ink">
+            Save your account → claim with email
+          </span>
+          <span className="text-[10px] uppercase tracking-[0.18em] text-accent">
+            Sign in →
+          </span>
+        </Link>
+      )}
     </section>
   );
 }
