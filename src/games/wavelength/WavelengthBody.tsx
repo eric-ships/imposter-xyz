@@ -515,7 +515,10 @@ function WavelengthMatch({
 
       {/* Guess-lock toasts: pinned to bottom-center, auto-dismiss in
            ~2.4s. Stacks if multiple guesses land in the same render. */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex flex-col items-center gap-2">
+      <div
+        className="pointer-events-none fixed inset-x-0 z-40 flex flex-col items-center gap-2"
+        style={{ bottom: "max(env(safe-area-inset-bottom), 1.5rem)" }}
+      >
         <AnimatePresence initial={false}>
           {toasts.map((t) => (
             <motion.div
