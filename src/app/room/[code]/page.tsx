@@ -32,6 +32,7 @@ import {
 } from "@/lib/audio";
 import { TIMER_GRACE_MS, timerDurationsFor } from "@/lib/timer";
 import { useTheme } from "@/lib/theme";
+import { PalettePicker } from "@/components/PalettePicker";
 import { WavelengthBody } from "@/games/wavelength/WavelengthBody";
 import { JustOneBody } from "@/games/just-one/JustOneBody";
 import { avatarFor } from "@/lib/avatar";
@@ -1127,6 +1128,7 @@ function FixedRoomChrome() {
       style={{ top: "max(env(safe-area-inset-top), 0.75rem)" }}
     >
       <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-line bg-page/95 px-2.5 py-2 shadow-sm backdrop-blur-sm">
+        <PalettePicker />
         <ThemeToggle />
         <MuteToggle />
       </div>

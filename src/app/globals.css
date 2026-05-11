@@ -17,9 +17,19 @@
   --font-sans: var(--font-inter);
 }
 
-/* Light (default) — original parlor-game palette. */
-:root,
-[data-theme="light"] {
+/* ============================================================
+   Two independent dimensions:
+     data-palette = parchment | noir | marine | bloom
+     data-theme   = light | dark
+   Each palette ships both a light + a dark block. The :root and
+   bare [data-theme="..."] selectors below default to parchment so
+   pre-migration users (no data-palette attribute) see the original
+   look and don't get a sudden visual reskin on first load.
+   ============================================================ */
+
+/* ─── Parchment (default — warm cream + sepia, the original) ─── */
+[data-palette="parchment"]:not([data-theme="dark"]),
+:root:not([data-palette="noir"]):not([data-palette="marine"]):not([data-palette="bloom"]):not([data-theme="dark"]) {
   --page: #f5f0e6;
   --surface: #ffffff;
   --cream: #ece4d1;
@@ -35,10 +45,8 @@
   color-scheme: light;
 }
 
-/* Dark — warm ink instead of pure black; same tonal family, inverted
-   lightness. Accent / leaf / oxblood get a subtle brightness bump so
-   they read against the dark surface. */
-[data-theme="dark"] {
+[data-palette="parchment"][data-theme="dark"],
+:root:not([data-palette="noir"]):not([data-palette="marine"]):not([data-palette="bloom"])[data-theme="dark"] {
   --page: #15130f;
   --surface: #1f1c17;
   --cream: #25221c;
@@ -51,6 +59,108 @@
   --accent-soft: #d8bf94;
   --leaf: #7e9d63;
   --oxblood: #c8615b;
+  color-scheme: dark;
+}
+
+/* ─── Noir (high-contrast monochrome with crimson) ───────────── */
+[data-palette="noir"][data-theme="light"],
+[data-palette="noir"]:not([data-theme="dark"]) {
+  --page: #ffffff;
+  --surface: #ffffff;
+  --cream: #f3f3f3;
+  --ink: #0a0a0a;
+  --ink-soft: #3a3a3a;
+  --ink-faint: #8a8a8a;
+  --line: #d0d0d0;
+  --line-soft: #e8e8e8;
+  --accent: #b40000;
+  --accent-soft: #d44a4a;
+  --leaf: #525252;
+  --oxblood: #b40000;
+  color-scheme: light;
+}
+
+[data-palette="noir"][data-theme="dark"] {
+  --page: #0a0a0a;
+  --surface: #161616;
+  --cream: #1c1c1c;
+  --ink: #f0f0f0;
+  --ink-soft: #b0b0b0;
+  --ink-faint: #6c6c6c;
+  --line: #2e2e2e;
+  --line-soft: #1e1e1e;
+  --accent: #ff3a3a;
+  --accent-soft: #ff7a7a;
+  --leaf: #9a9a9a;
+  --oxblood: #ff3a3a;
+  color-scheme: dark;
+}
+
+/* ─── Marine (cool seafoam + deep navy + brass accents) ──────── */
+[data-palette="marine"][data-theme="light"],
+[data-palette="marine"]:not([data-theme="dark"]) {
+  --page: #e8efef;
+  --surface: #ffffff;
+  --cream: #d5e0e0;
+  --ink: #11253b;
+  --ink-soft: #4a5a6a;
+  --ink-faint: #7e8e9e;
+  --line: #b8c8d4;
+  --line-soft: #cad8e0;
+  --accent: #c89344;
+  --accent-soft: #e0b06a;
+  --leaf: #2d7575;
+  --oxblood: #d96666;
+  color-scheme: light;
+}
+
+[data-palette="marine"][data-theme="dark"] {
+  --page: #0d1825;
+  --surface: #14202e;
+  --cream: #1a2838;
+  --ink: #d8e5ee;
+  --ink-soft: #99adc0;
+  --ink-faint: #6a7d90;
+  --line: #2a3c50;
+  --line-soft: #1c2a3a;
+  --accent: #d8a868;
+  --accent-soft: #e8c89a;
+  --leaf: #5dbaba;
+  --oxblood: #ee8a8a;
+  color-scheme: dark;
+}
+
+/* ─── Bloom (dusty rose + plum + terra cotta + sage) ─────────── */
+[data-palette="bloom"][data-theme="light"],
+[data-palette="bloom"]:not([data-theme="dark"]) {
+  --page: #f7e8e6;
+  --surface: #ffffff;
+  --cream: #efd5d0;
+  --ink: #3a1a2e;
+  --ink-soft: #6a4a5a;
+  --ink-faint: #998290;
+  --line: #e3c8c5;
+  --line-soft: #efd8d4;
+  --accent: #c25c44;
+  --accent-soft: #e08a6e;
+  --leaf: #6b8a52;
+  --oxblood: #c43a6c;
+  color-scheme: light;
+}
+
+[data-palette="bloom"][data-theme="dark"] {
+  --page: #2a1820;
+  --surface: #3a2530;
+  --cream: #3a2530;
+  --ink: #f0d8e0;
+  --ink-soft: #c098a8;
+  --ink-faint: #907080;
+  --line: #4a3540;
+  --line-soft: #382530;
+  --accent: #e08a6e;
+  --accent-soft: #f0aa90;
+  --leaf: #9eb888;
+  --oxblood: #e85e92;
   color-scheme: dark;
 }
 
@@ -75,4 +185,3 @@ html {
   font-family: var(--font-fraunces), "Iowan Old Style", "Hoefler Text", Georgia, serif;
   font-feature-settings: "liga", "dlig";
 }
-

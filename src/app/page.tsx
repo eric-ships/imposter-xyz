@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTheme } from "@/lib/theme";
+import { PalettePicker } from "@/components/PalettePicker";
 import { useIdentity } from "@/lib/identity";
 
 type Mode = "choose" | "create" | "join";
@@ -114,7 +115,8 @@ export default function HomePage() {
       {/* Theme toggle pinned to viewport top-right (was absolute inside
           main, which on a centered narrow column put it in the middle
           of the screen on widescreens). */}
-      <div className="fixed right-4 top-4 z-50">
+      <div className="fixed right-4 top-4 z-50 flex items-center gap-1">
+        <PalettePicker />
         <HomeThemeToggle />
       </div>
       <main className="mx-auto flex w-full max-w-md flex-col items-center gap-8 px-6 pb-12 pt-10 sm:gap-10 sm:pt-16 lg:max-w-xl lg:gap-12 lg:pt-24">
