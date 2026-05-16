@@ -3,16 +3,20 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 // POST /api/users/me
 // Body: { deviceToken, defaultNickname?, defaultAvatar? }
-// Upserts the user keyed on device_token. Bumps last_seen_at on every
-// call so the eventual roster "active Xm ago" derives from this. Used
-// as the page-load presence ping — any visit refreshes presence.
+//
+// Looks up the user via user_device_tokens (1:N — one user can have
+// many devices via email auth). If the device is unknown, mints a
+// fresh user + a new device-token row binding them. Bumps
+// last_seen_at on the per-device row (account presence is "any
+// device active recently"); preserves users.last_seen_at as the
+// account-creation snapshot.
 //
 // On first-time creation: passes through default_nickname / avatar
 // from the body if provided so the row is seeded.
 // On subsequent calls: updates default_nickname / avatar IFF the
 // body provides non-empty values; otherwise preserves what's stored.
 //
-// Returns { userId, defaultNickname, defaultAvatar }.
+// Returns { userId, defaultNickname, defaultAvatar, email }.
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     deviceToken?: string;
@@ -27,73 +31,97 @@ export async function POST(request: Request) {
     );
   }
 
-  // Look up first to decide between insert and update — the upsert
-  // path lets us apply defaultNickname/avatar conditionally (only set
-  // them if the caller passed them, and only if not already set on
-  // an existing row).
-  const { data: existing, error: lookupErr } = await supabaseAdmin
-    .from("users")
-    .select("id, default_nickname, default_avatar")
+  // Look up the device → user via the new mapping table.
+  const { data: tokenRow, error: tokenErr } = await supabaseAdmin
+    .from("user_device_tokens")
+    .select("user_id")
     .eq("device_token", deviceToken)
     .maybeSingle();
-  if (lookupErr) {
-    return NextResponse.json({ error: lookupErr.message }, { status: 500 });
+  if (tokenErr) {
+    return NextResponse.json({ error: tokenErr.message }, { status: 500 });
   }
 
   const now = new Date().toISOString();
-  if (existing) {
-    // Bump presence; also fill in defaults if currently null and the
-    // caller provided one (lets the bootstrap pass through nickname
-    // discovered from a prior room without overwriting an explicit
-    // profile change).
-    const update: Record<string, unknown> = { last_seen_at: now };
-    if (
-      !existing.default_nickname &&
-      body.defaultNickname &&
-      body.defaultNickname.trim()
-    ) {
-      update.default_nickname = body.defaultNickname.trim();
-    }
-    if (
-      !existing.default_avatar &&
-      body.defaultAvatar &&
-      body.defaultAvatar.trim()
-    ) {
-      update.default_avatar = body.defaultAvatar.trim();
-    }
-    const { error: updErr } = await supabaseAdmin
+
+  if (tokenRow) {
+    // Known device → load + maybe-update profile.
+    const { data: existing, error: lookupErr } = await supabaseAdmin
       .from("users")
-      .update(update)
-      .eq("id", existing.id);
-    if (updErr) {
-      return NextResponse.json({ error: updErr.message }, { status: 500 });
+      .select("id, default_nickname, default_avatar, email")
+      .eq("id", tokenRow.user_id)
+      .maybeSingle();
+    if (lookupErr) {
+      return NextResponse.json(
+        { error: lookupErr.message },
+        { status: 500 }
+      );
     }
-    return NextResponse.json({
-      userId: existing.id,
-      defaultNickname:
-        (update.default_nickname as string | undefined) ??
-        existing.default_nickname,
-      defaultAvatar:
-        (update.default_avatar as string | undefined) ??
-        existing.default_avatar,
-    });
+    if (!existing) {
+      // Token row pointed at a deleted user (cascade race) — recover
+      // by minting a fresh user below.
+      await supabaseAdmin
+        .from("user_device_tokens")
+        .delete()
+        .eq("device_token", deviceToken);
+    } else {
+      // Bump per-device presence.
+      await supabaseAdmin
+        .from("user_device_tokens")
+        .update({ last_seen_at: now })
+        .eq("device_token", deviceToken);
+
+      // Conditionally seed defaults if currently null and caller
+      // provided one. Lets the room-page bootstrap pass through a
+      // nickname discovered from a prior room without overwriting
+      // an explicit profile change.
+      const update: Record<string, unknown> = {};
+      if (
+        !existing.default_nickname &&
+        body.defaultNickname &&
+        body.defaultNickname.trim()
+      ) {
+        update.default_nickname = body.defaultNickname.trim();
+      }
+      if (
+        !existing.default_avatar &&
+        body.defaultAvatar &&
+        body.defaultAvatar.trim()
+      ) {
+        update.default_avatar = body.defaultAvatar.trim();
+      }
+      if (Object.keys(update).length > 0) {
+        await supabaseAdmin
+          .from("users")
+          .update(update)
+          .eq("id", existing.id);
+      }
+      return NextResponse.json({
+        userId: existing.id,
+        defaultNickname:
+          (update.default_nickname as string | undefined) ??
+          existing.default_nickname,
+        defaultAvatar:
+          (update.default_avatar as string | undefined) ??
+          existing.default_avatar,
+        email: existing.email ?? null,
+      });
+    }
   }
 
-  // Fresh row.
-  const insertRow: Record<string, unknown> = {
-    device_token: deviceToken,
+  // Unknown device → mint fresh user + bind this device token.
+  const insertUser: Record<string, unknown> = {
     last_seen_at: now,
   };
   if (body.defaultNickname && body.defaultNickname.trim()) {
-    insertRow.default_nickname = body.defaultNickname.trim();
+    insertUser.default_nickname = body.defaultNickname.trim();
   }
   if (body.defaultAvatar && body.defaultAvatar.trim()) {
-    insertRow.default_avatar = body.defaultAvatar.trim();
+    insertUser.default_avatar = body.defaultAvatar.trim();
   }
   const { data: created, error: insertErr } = await supabaseAdmin
     .from("users")
-    .insert(insertRow)
-    .select("id, default_nickname, default_avatar")
+    .insert(insertUser)
+    .select("id, default_nickname, default_avatar, email")
     .single();
   if (insertErr || !created) {
     return NextResponse.json(
@@ -101,10 +129,23 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
+  const { error: bindErr } = await supabaseAdmin
+    .from("user_device_tokens")
+    .insert({
+      device_token: deviceToken,
+      user_id: created.id,
+      last_seen_at: now,
+    });
+  if (bindErr) {
+    // Roll back the user so we don't leak orphan rows.
+    await supabaseAdmin.from("users").delete().eq("id", created.id);
+    return NextResponse.json({ error: bindErr.message }, { status: 500 });
+  }
   return NextResponse.json({
     userId: created.id,
     defaultNickname: created.default_nickname,
     defaultAvatar: created.default_avatar,
+    email: created.email ?? null,
   });
 }
 
@@ -141,7 +182,7 @@ export async function PATCH(request: Request) {
     .from("users")
     .update(update)
     .eq("id", body.userId)
-    .select("id, default_nickname, default_avatar")
+    .select("id, default_nickname, default_avatar, email")
     .maybeSingle();
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -153,5 +194,6 @@ export async function PATCH(request: Request) {
     userId: data.id,
     defaultNickname: data.default_nickname,
     defaultAvatar: data.default_avatar,
+    email: data.email ?? null,
   });
 }

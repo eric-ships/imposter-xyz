@@ -145,7 +145,10 @@ export default function HomePage() {
       )}
 
       {identity.ready && identity.userId && (
-        <MyGroupsSection userId={identity.userId} />
+        <MyGroupsSection
+          userId={identity.userId}
+          email={identity.email}
+        />
       )}
 
       <div className="w-full">
@@ -318,7 +321,13 @@ type GroupRow = {
   role: string;
 };
 
-function MyGroupsSection({ userId }: { userId: string }) {
+function MyGroupsSection({
+  userId,
+  email,
+}: {
+  userId: string;
+  email: string | null;
+}) {
   const router = useRouter();
   const [groups, setGroups] = useState<GroupRow[] | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -425,30 +434,48 @@ function MyGroupsSection({ userId }: { userId: string }) {
         </ul>
       )}
 
-      {/* Inline create / join controls. Two buttons by default,
-          expand into a small form when tapped. */}
-      <div className="flex gap-2">
-        <button
-          onClick={() => {
-            setCreateOpen((o) => !o);
-            setJoinOpen(false);
-            setError(null);
-          }}
-          className="flex-1 rounded-sm border border-line px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
-        >
-          {createOpen ? "Cancel" : "Create group"}
-        </button>
-        <button
-          onClick={() => {
-            setJoinOpen((o) => !o);
-            setCreateOpen(false);
-            setError(null);
-          }}
-          className="flex-1 rounded-sm border border-line px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
-        >
-          {joinOpen ? "Cancel" : "Join with code"}
-        </button>
-      </div>
+      {/* Inline create / join controls. Friend groups need an email
+          (cross-device identity is the whole point), so the buttons
+          gate on identity.email. Anonymous click → /auth with the
+          intent stashed; verify-success returns home and the user
+          re-clicks (the buttons are no longer gated). */}
+      {!email ? (
+        <div className="rounded-sm border border-accent/30 bg-accent/5 p-3 text-xs text-ink-soft">
+          <p>
+            Friend groups need an email so your stats follow you
+            across devices.
+          </p>
+          <Link
+            href="/auth"
+            className="mt-2 inline-block rounded-sm border border-ink px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
+          >
+            Sign in to create or join →
+          </Link>
+        </div>
+      ) : (
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              setCreateOpen((o) => !o);
+              setJoinOpen(false);
+              setError(null);
+            }}
+            className="flex-1 rounded-sm border border-line px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+          >
+            {createOpen ? "Cancel" : "Create group"}
+          </button>
+          <button
+            onClick={() => {
+              setJoinOpen((o) => !o);
+              setCreateOpen(false);
+              setError(null);
+            }}
+            className="flex-1 rounded-sm border border-line px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+          >
+            {joinOpen ? "Cancel" : "Join with code"}
+          </button>
+        </div>
+      )}
 
       {createOpen && (
         <div className="flex gap-2">
@@ -619,6 +646,13 @@ function PersonalStatsCard({ userId }: { userId: string }) {
           />
         )}
       </div>
+
+      {/* CTA used to live here, but the email gate now sits at the
+           group-create moment (see MyGroupsSection) — the natural
+           friction point for users who care about persistent stats.
+           Anonymous users can still play forever and accumulate
+           personal stats locally; they're only nudged to sign in
+           when they try to opt into a friend group. */}
     </section>
   );
 }
