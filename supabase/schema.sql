@@ -200,6 +200,11 @@ select device_token, id, created_at, last_seen_at from users
 where device_token is not null
 on conflict (device_token) do nothing;
 
+-- New code never writes users.device_token (it lives in
+-- user_device_tokens now), so the legacy column must be nullable or
+-- every new-user insert fails its NOT NULL constraint.
+alter table users alter column device_token drop not null;
+
 -- Email column on users. Nullable: device-only users persist forever.
 -- Unique so two users can't claim the same email.
 alter table users add column if not exists email text unique;
@@ -391,10 +396,21 @@ alter table match_player_results enable row level security;
 
 -- Allow anon SELECT on room_events so realtime subscriptions pass RLS.
 -- No policies on other tables = anon can't read them.
+-- drop-then-create so the whole file stays re-runnable (create policy
+-- has no "if not exists").
+drop policy if exists "anon can read room_events" on room_events;
 create policy "anon can read room_events"
   on room_events for select
   to anon
   using (true);
 
--- Enable realtime on room_events
-alter publication supabase_realtime add table room_events;
+-- Enable realtime on room_events. Guarded so re-running the file
+-- doesn't error with "table is already a member".
+do $$ begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'room_events'
+  ) then
+    alter publication supabase_realtime add table room_events;
+  end if;
+end $$;
