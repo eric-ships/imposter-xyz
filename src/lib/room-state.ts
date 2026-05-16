@@ -181,6 +181,7 @@ export async function fetchRoomView(
 
   // Police mode: am I the cop, and have I already investigated?
   const policeMode = "police_mode" in room && !!room.police_mode;
+  const streamerMode = "streamer_mode" in room && !!room.streamer_mode;
   const policeId = ("police_id" in room ? room.police_id : null) as
     | string
     | null;
@@ -364,6 +365,7 @@ export async function fetchRoomView(
     moleMode,
     jesusMode,
     policeMode,
+    streamerMode,
     you,
     reveal,
     matchHistory,

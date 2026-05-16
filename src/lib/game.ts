@@ -136,6 +136,11 @@ export type PublicRoomView = {
   jesusMode: boolean;
   // Police mode toggle (host-controlled, lobby only).
   policeMode: boolean;
+  // Streamer mode toggle (host-controlled, any phase). Pure UX flag —
+  // when on, every player's room view surfaces a "cast → /spectate/CODE"
+  // pill so the table can be Chromecasted to a TV while players keep
+  // their secrets on their phones. Doesn't change game logic.
+  streamerMode: boolean;
   // Only populated during reveal:
   reveal: {
     imposterIds: string[];
