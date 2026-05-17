@@ -18,13 +18,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Upper · party games for the group",
+  title: "Upper · party games for the squad",
   description:
     "Short, social games for friends — Imposter, Wavelength, Just One. Play together in a shared room from your phone.",
   metadataBase: new URL("https://upper.games"),
   openGraph: {
     title: "Upper",
-    description: "Short, social games for the group.",
+    description: "Short, social games for the squad.",
     url: "https://upper.games",
     siteName: "Upper",
     type: "website",
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Upper",
-    description: "Short, social games for the group.",
+    description: "Short, social games for the squad.",
   },
 };
 

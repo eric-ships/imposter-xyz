@@ -29,7 +29,7 @@ export function ShareMatchButton({ code, kind }: SharePayload) {
   async function share() {
     const url = `${typeof window !== "undefined" ? window.location.origin : "https://upper.games"}/c/${code}`;
     const title = shareTitleFor(kind);
-    const text = "Short, social games for the group — upper.games";
+    const text = "Short, social games for the squad — upper.games";
 
     // Prefer native share sheet on mobile. Web Share API is gated
     // on user gesture + secure context, both of which are true

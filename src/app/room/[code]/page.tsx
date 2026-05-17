@@ -309,7 +309,7 @@ export default function RoomPage({
         {showAttributionPrompt && view?.groupName && (
           <div className="w-full rounded-xl border-2 border-leaf/40 bg-leaf/5 p-4 text-sm">
             <div className="text-xs font-bold uppercase tracking-[0.14em] text-leaf">
-              Friend group
+              Squad
             </div>
             <p className="mt-1 text-ink">
               This room is playing as{" "}
@@ -325,7 +325,7 @@ export default function RoomPage({
               <span>
                 Add me to{" "}
                 <span className="text-ink">{view.groupName}</span> so my
-                stats count for this group.
+                stats count for this squad.
               </span>
             </label>
           </div>
