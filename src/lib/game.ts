@@ -11,6 +11,7 @@ export type GuessOutcome = "exact" | "close" | "wrong";
 
 export type Player = {
   id: string;
+  userId: string | null;
   nickname: string;
   score: number;
   // Optional emoji or single character. Falls back to the nickname's

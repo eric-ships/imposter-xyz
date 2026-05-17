@@ -235,6 +235,7 @@ export async function fetchRoomView(
 
   const decoratedPlayers = (players ?? []).map((p) => ({
     id: p.id as string,
+    userId: (p.user_id as string | null) ?? null,
     nickname: p.nickname as string,
     score: p.score as number,
     avatar: (p.avatar as string | null) ?? null,
