@@ -381,6 +381,37 @@ function WavelengthHistoryPanel({
               </div>
             );
           }
+          if ("kind" in m && m.kind === "hold") {
+            const victory = m.outcome === "victory";
+            return (
+              <div
+                key={`h${m.matchNumber}`}
+                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                    Match {m.matchNumber} · Hold
+                    {endedTime && <> · {endedTime}</>}
+                  </div>
+                  <div
+                    className={`text-[11px] uppercase tracking-[0.18em] ${
+                      victory ? "text-leaf" : "text-oxblood"
+                    }`}
+                  >
+                    {victory ? "Held the line" : "Core breached"}
+                  </div>
+                </div>
+                <div className="mt-1 text-sm text-ink">
+                  <span className="font-semibold">
+                    Wave {m.waveReached} / {m.totalWaves}
+                  </span>
+                  <span className="ml-2 text-ink-faint">
+                    · core {m.coreHp} HP
+                  </span>
+                </div>
+              </div>
+            );
+          }
           // Imposter entry (kind missing or 'imposter')
           const winnerLabel =
             m.winner === "imposter"

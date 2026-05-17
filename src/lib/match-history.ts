@@ -77,11 +77,31 @@ export type CrewMatchEntry = {
   }>;
 };
 
+// Hold is a cooperative tower defense — the whole table wins or loses
+// together. The snapshot carries the run outcome plus a per-player
+// breakdown of how many towers each builder put down.
+export type HoldMatchEntry = {
+  kind: "hold";
+  matchNumber: number;
+  endedAt: string;
+  outcome: "victory" | "defeat";
+  waveReached: number; // 1-indexed wave the run ended on
+  totalWaves: number;
+  coreHp: number; // core HP remaining at match end
+  perPlayer: Array<{
+    playerId: string;
+    nickname: string;
+    avatar: string | null;
+    towersBuilt: number;
+  }>;
+};
+
 export type MatchHistoryEntry =
   | ImposterMatchEntry
   | WavelengthMatchEntry
   | JustOneMatchEntry
-  | CrewMatchEntry;
+  | CrewMatchEntry
+  | HoldMatchEntry;
 
 // Cap so a single lobby can't accumulate unbounded history. Lobbies are
 // short-lived, so 20 covers a long evening with headroom.
@@ -240,5 +260,35 @@ export function snapshotWavelengthMatch(args: {
     perPlayer,
     winnerIds,
     topScore,
+  };
+}
+
+// Hold-side snapshot. Called from the next-wave route when the run
+// ends (advanceWave lands in victory or defeat). Captures the wave
+// reached, surviving core HP, and a per-builder tower count.
+export function snapshotHoldMatch(args: {
+  matchNumber: number;
+  outcome: "victory" | "defeat";
+  waveReached: number;
+  totalWaves: number;
+  coreHp: number;
+  towersBuilt: Record<string, number>;
+  players: Array<{ id: string; nickname: string; avatar: string | null }>;
+}): HoldMatchEntry {
+  const perPlayer = args.players.map((p) => ({
+    playerId: p.id,
+    nickname: p.nickname,
+    avatar: p.avatar,
+    towersBuilt: args.towersBuilt[p.id] ?? 0,
+  }));
+  return {
+    kind: "hold",
+    matchNumber: args.matchNumber,
+    endedAt: new Date().toISOString(),
+    outcome: args.outcome,
+    waveReached: args.waveReached,
+    totalWaves: args.totalWaves,
+    coreHp: args.coreHp,
+    perPlayer,
   };
 }

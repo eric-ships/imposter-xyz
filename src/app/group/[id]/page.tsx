@@ -863,6 +863,36 @@ function RecentMatchCard({ match }: { match: RecentMatch }) {
     );
   }
 
+  if (
+    "kind" in match.snapshot &&
+    match.snapshot.kind === "hold"
+  ) {
+    const h = match.snapshot;
+    const victory = h.outcome === "victory";
+    return (
+      <div className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+            Hold · {endedTime}
+          </div>
+          <div
+            className={`text-[11px] uppercase tracking-[0.18em] ${
+              victory ? "text-leaf" : "text-oxblood"
+            }`}
+          >
+            {victory ? "Held the line" : "Core breached"}
+          </div>
+        </div>
+        <div className="mt-1 text-sm text-ink">
+          <span className="font-semibold">
+            Wave {h.waveReached} / {h.totalWaves}
+          </span>
+          <span className="ml-2 text-ink-faint">· core {h.coreHp} HP</span>
+        </div>
+      </div>
+    );
+  }
+
   // Imposter
   const im = match.snapshot;
   const winnerLabel =

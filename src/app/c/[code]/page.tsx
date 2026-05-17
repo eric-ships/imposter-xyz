@@ -49,6 +49,9 @@ function ogTitleFor(match: MatchHistoryEntry | null): string {
     const done = match.perPlayer.filter((p) => p.taskDone).length;
     return `Crew · ${match.outcome === "won" ? "mission won" : "mission lost"} · ${done} / ${match.taskCount} tasks`;
   }
+  if ("kind" in match && match.kind === "hold") {
+    return `Hold · wave ${match.waveReached} / ${match.totalWaves} · ${match.outcome === "victory" ? "held the line" : "core breached"}`;
+  }
   return `Imposter · "${match.secretWord}" · ${match.winner === "imposter" ? "imposter wins" : match.winner === "crewmates" ? "crewmates win" : "split"}`;
 }
 

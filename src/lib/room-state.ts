@@ -12,6 +12,8 @@ import { redactForViewer as redactJustOne } from "@/games/just-one/state";
 import type { JustOneState } from "@/games/just-one/types";
 import { redactForViewer as redactCrew } from "@/games/crew/state";
 import type { CrewState } from "@/games/crew/types";
+import { redactForViewer as redactHold } from "@/games/hold/state";
+import type { HoldState } from "@/games/hold/types";
 
 export async function notifyRoom(code: string, kind: string) {
   await supabaseAdmin.from("room_events").insert({ room_code: code, kind });
@@ -289,7 +291,9 @@ export async function fetchRoomView(
         ? "just-one"
         : rawKind === "crew"
           ? "crew"
-          : "imposter";
+          : rawKind === "hold"
+            ? "hold"
+            : "imposter";
   let gameState: Record<string, unknown> =
     "game_state" in room &&
     room.game_state &&
@@ -316,6 +320,11 @@ export async function fetchRoomView(
   } else if (kind === "crew" && Object.keys(gameState).length > 0) {
     gameState = redactCrew(
       gameState as unknown as CrewState,
+      playerId
+    ) as unknown as Record<string, unknown>;
+  } else if (kind === "hold" && Object.keys(gameState).length > 0) {
+    gameState = redactHold(
+      gameState as unknown as HoldState,
       playerId
     ) as unknown as Record<string, unknown>;
   }

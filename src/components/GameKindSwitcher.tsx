@@ -20,6 +20,7 @@ const OPTIONS: KindOption[] = [
   { kind: "wavelength", label: "Wavelength", sub: "spectrum guessing" },
   { kind: "just-one", label: "Just One", sub: "cooperative clues" },
   { kind: "crew", label: "Crew", sub: "co-op card game" },
+  { kind: "hold", label: "Hold", sub: "co-op tower defense" },
 ];
 
 export function GameKindSwitcher({

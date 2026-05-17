@@ -93,6 +93,8 @@ function Card({
           <JustOneBody match={match} />
         ) : isCrew(match) ? (
           <CrewBodyCard match={match} />
+        ) : isHold(match) ? (
+          <HoldCardBody match={match} />
         ) : (
           <ImposterBody match={match} />
         )}
@@ -118,7 +120,9 @@ function Header({
         ? "Just One"
         : isCrew(match)
           ? "Crew"
-          : "Imposter";
+          : isHold(match)
+            ? "Hold"
+            : "Imposter";
   return (
     <div
       style={{
@@ -225,6 +229,11 @@ function isCrew(
   m: MatchHistoryEntry
 ): m is Extract<MatchHistoryEntry, { kind: "crew" }> {
   return "kind" in m && m.kind === "crew";
+}
+function isHold(
+  m: MatchHistoryEntry
+): m is Extract<MatchHistoryEntry, { kind: "hold" }> {
+  return "kind" in m && m.kind === "hold";
 }
 
 function ImposterBody({ match }: { match: ImposterEntry }) {
@@ -477,6 +486,82 @@ function JustOneBody({
         }}
       >
         {match.rating}
+      </div>
+    </div>
+  );
+}
+
+// ─── Hold ─────────────────────────────────────────────────────────
+
+function HoldCardBody({
+  match,
+}: {
+  match: Extract<MatchHistoryEntry, { kind: "hold" }>;
+}) {
+  const victory = match.outcome === "victory";
+  const outcomeColor = victory ? LEAF : OXBLOOD;
+  const outcomeLabel = victory ? "Held the line" : "Core breached";
+  const totalTowers = match.perPlayer.reduce(
+    (sum, p) => sum + p.towersBuilt,
+    0
+  );
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 24,
+        alignItems: "center",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          fontSize: 16,
+          textTransform: "uppercase",
+          letterSpacing: 4,
+          color: INK_FAINT,
+        }}
+      >
+        Co-op tower defense
+      </div>
+      <div
+        style={{
+          display: "flex",
+          fontFamily: 'ui-serif, Georgia, "Iowan Old Style", serif',
+          fontStyle: "italic",
+          fontSize: 130,
+          color: outcomeColor,
+          letterSpacing: -3,
+          lineHeight: 1,
+        }}
+      >
+        Wave {match.waveReached} / {match.totalWaves}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          padding: "8px 24px",
+          border: `2px solid ${outcomeColor}`,
+          color: outcomeColor,
+          fontSize: 22,
+          textTransform: "uppercase",
+          letterSpacing: 4,
+        }}
+      >
+        {outcomeLabel}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          fontSize: 22,
+          color: INK_SOFT,
+          marginTop: 8,
+        }}
+      >
+        Core&nbsp;
+        <span style={{ color: INK }}>{match.coreHp} HP</span>
+        &nbsp;· {totalTowers} towers built
       </div>
     </div>
   );
