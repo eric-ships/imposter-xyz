@@ -386,55 +386,80 @@ export default function HomePage() {
       )}
 
       {/* FACE A — new-visitor landing. The marketing front door:
-          wordmark, hook, the five-game showcase, and the two CTAs
-          into the shared create/join flow. */}
+          wordmark, loud hook, the five-game showcase, and the two
+          CTAs into the shared create/join flow. */}
       {dataReady && !isReturning && !inFlow && (
-        <main className="mx-auto flex w-full max-w-md flex-col items-center gap-9 px-6 pb-16 pt-12 sm:gap-11 sm:pt-20 lg:max-w-xl lg:pt-24">
+        <main className="mx-auto flex w-full max-w-md flex-col items-center gap-12 px-6 pb-20 pt-14 sm:gap-14 sm:pt-20 lg:max-w-xl lg:pt-24">
           <motion.header
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="flex flex-col items-center text-center"
+            className="flex w-full flex-col items-start"
           >
+            {/* Classic serif anchor — the one quiet element. */}
             <h1 className="font-serif text-7xl italic leading-[0.95] tracking-tight text-ink sm:text-8xl">
               Upper
             </h1>
-            <span className="mt-4 inline-block rounded-full bg-accent px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
-              Party games for the group
-            </span>
-            <p className="mt-6 text-lg font-medium leading-snug text-ink-soft">
-              Party games for your crew. Free, instant, no app.
-            </p>
+            {/* The hook — oversized, loud, lowercase. */}
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
+              className="mt-5 text-[2.75rem] font-extrabold leading-[0.95] tracking-tight text-ink sm:text-6xl"
+            >
+              round up
+              <br />
+              the{" "}
+              <span className="-rotate-2 inline-block rounded-xl bg-accent px-2 pb-1 text-white">
+                squad.
+              </span>
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.16, ease: "easeOut" }}
+              className="mt-5 text-lg font-semibold lowercase leading-snug text-ink-soft"
+            >
+              five games, one room. pick a chaos.
+            </motion.p>
             <Link
               href="/rules"
-              className="mt-4 text-sm font-semibold text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
+              className="mt-4 text-sm font-bold lowercase text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
             >
-              How to play →
+              how to play →
             </Link>
           </motion.header>
 
-          {/* The five games, shown off — a showcase, not a picker. */}
+          {/* The five games, shown off — a showcase, not a picker.
+              Looser than a tidy grid: cards alternate their lean so
+              the stack reads kinetic, not corporate. */}
           <motion.section
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
-            className="w-full space-y-3"
+            transition={{ duration: 0.4, delay: 0.24, ease: "easeOut" }}
+            className="w-full"
           >
-            <SectionLabel>Five games to play tonight</SectionLabel>
-            <div className="grid grid-cols-1 gap-2.5">
+            <h2 className="mb-4 text-sm font-extrabold lowercase tracking-tight text-ink-faint">
+              the lineup ↓
+            </h2>
+            <div className="flex flex-col gap-3">
               {GAMES.map((g, i) => {
                 const Vignette = GAME_VIGNETTES[g.kind];
+                // Alternate lean + offset so the stack feels hand-set.
+                const lean = i % 2 === 0 ? "-rotate-1" : "rotate-1";
+                const nudge = i % 2 === 0 ? "self-start" : "self-end";
                 return (
                   <motion.div
                     key={g.kind}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{
-                      duration: 0.3,
-                      delay: 0.12 + i * 0.05,
+                      duration: 0.32,
+                      delay: 0.3 + i * 0.06,
                       ease: "easeOut",
                     }}
-                    className="flex items-center gap-4 rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5"
+                    whileHover={{ rotate: 0, scale: 1.02 }}
+                    className={`flex w-[92%] items-center gap-4 rounded-2xl border-2 border-ink bg-surface px-4 py-3.5 shadow-[3px_3px_0_0_var(--color-ink)] ${lean} ${nudge}`}
                   >
                     {/* Animated game vignette — the card's visual. */}
                     {Vignette && (
@@ -443,10 +468,10 @@ export default function HomePage() {
                       </span>
                     )}
                     <span className="flex flex-col gap-0.5">
-                      <span className="font-serif text-xl text-ink">
+                      <span className="font-serif text-2xl text-ink">
                         {g.title}
                       </span>
-                      <span className="text-xs font-medium text-ink-faint">
+                      <span className="text-xs font-semibold lowercase text-ink-faint">
                         {g.sub}
                       </span>
                     </span>
@@ -460,18 +485,19 @@ export default function HomePage() {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" }}
-            className="w-full space-y-2.5"
+            transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
+            className="w-full space-y-3"
           >
             <motion.button
               whileTap={{ scale: 0.97 }}
+              whileHover={{ y: -2 }}
               onClick={() => {
                 setMode("create");
                 setError(null);
               }}
-              className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md"
+              className="w-full rounded-2xl border-2 border-ink bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-[4px_4px_0_0_var(--color-ink)] transition-[filter] duration-100 hover:brightness-110"
             >
-              Start playing
+              let&apos;s go →
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.97 }}
@@ -479,9 +505,9 @@ export default function HomePage() {
                 setMode("join");
                 setError(null);
               }}
-              className="w-full rounded-xl border-2 border-line px-6 py-3.5 text-sm font-bold tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
+              className="w-full rounded-2xl border-2 border-line px-6 py-3.5 text-sm font-bold lowercase tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
             >
-              Join with a code
+              got a code? hop in
             </motion.button>
           </motion.div>
         </main>
