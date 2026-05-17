@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Upper — an up-arrow. Bold accent ground + a chunky white arrow so
+     it reads at 16px in a browser tab. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="12" fill="#F5F0E6"/>
-  <text x="50%" y="54%" text-anchor="middle" dominant-baseline="central"
-    font-family="Georgia, 'Times New Roman', serif" font-style="italic"
-    font-weight="700" font-size="50" fill="#1A1815">i</text>
-  <circle cx="42" cy="17" r="4.5" fill="#8B3A3A"/>
+  <rect width="64" height="64" rx="14" fill="#D6471F"/>
+  <path d="M32 11 L55 34 L42 34 L42 55 L22 55 L22 34 L9 34 Z" fill="#FFFDF8"/>
 </svg>
