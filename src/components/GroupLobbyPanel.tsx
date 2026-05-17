@@ -73,7 +73,7 @@ export function GroupLobbyPanel({
 
       {everyoneHere ? (
         <p className="text-[12px] text-ink-soft">
-          The whole group made it in. Start when you&rsquo;re ready.
+          The whole squad made it in. Start when you&rsquo;re ready.
         </p>
       ) : (
         <div className="space-y-1.5">

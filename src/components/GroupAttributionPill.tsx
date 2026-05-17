@@ -136,7 +136,7 @@ export function GroupAttributionPill({
             </div>
           ) : groups.length === 0 ? (
             <div className="px-3 py-2 text-[11px] text-ink-faint">
-              No groups yet — create one from the home page.
+              No squads yet — create one from the home page.
             </div>
           ) : (
             groups.map((g) => (

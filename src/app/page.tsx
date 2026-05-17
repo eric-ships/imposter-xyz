@@ -258,18 +258,18 @@ export default function HomePage() {
           )}
           {mode === "create" && groups && groups.length > 0 && (
             <div className="space-y-2.5">
-              <SectionLabel>For a group?</SectionLabel>
+              <SectionLabel>For a squad?</SectionLabel>
               <div className="grid grid-cols-1 gap-2.5">
                 {[
                   {
                     id: null as string | null,
                     title: "Just casual",
-                    sub: "not tracked to a group",
+                    sub: "not tracked to a squad",
                   },
                   ...groups.map((g) => ({
                     id: g.id as string | null,
                     title: g.name,
-                    sub: "match counts toward this group",
+                    sub: "match counts toward this squad",
                   })),
                 ].map((opt) => {
                   const selected = createGroupId === opt.id;
@@ -725,7 +725,7 @@ function NamePrompt({
           className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
         />
         <p className="text-xs text-ink-faint">
-          This is your name everywhere — in every room and group. You
+          This is your name everywhere — in every room and squad. You
           can change it any time.
         </p>
       </label>
@@ -1546,7 +1546,7 @@ function PersonalStatsCard({
       <div className="flex items-baseline justify-between gap-2">
         <SectionLabel>Your stats</SectionLabel>
         <span className="text-[11px] font-medium text-ink-faint">
-          across all groups
+          across all squads
         </span>
       </div>
       <div className="font-serif text-4xl text-ink">

@@ -106,7 +106,7 @@ export default function GroupPage({
             Not a member
           </h1>
           <p className="text-sm text-ink-soft">
-            Ask the host for the group&apos;s invite code, then join from
+            Ask the host for the squad&apos;s invite code, then join from
             the home page.
           </p>
           <Link
@@ -120,7 +120,7 @@ export default function GroupPage({
     );
   }
   if (loadState === "err") {
-    return <SmallShell>{error ?? "Could not load group."}</SmallShell>;
+    return <SmallShell>{error ?? "Could not load squad."}</SmallShell>;
   }
   if (!group) {
     return <SmallShell>Loading…</SmallShell>;
@@ -146,7 +146,7 @@ export default function GroupPage({
 
         <header className="space-y-2">
           <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-            Friend group
+            Squad
           </div>
           {isOwner ? (
             <RenameTitle
@@ -307,7 +307,7 @@ function RosterTab({
 
       <section className="space-y-3">
         <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-          {isOwner ? "Owner controls" : "Group actions"}
+          {isOwner ? "Owner controls" : "Squad actions"}
         </h2>
         {!isOwner && (
           <LeaveButton
@@ -424,7 +424,7 @@ function EditableNickname({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             maxLength={20}
-            placeholder={isIdentity ? "Your name" : "Name in this group"}
+            placeholder={isIdentity ? "Your name" : "Name in this squad"}
             autoFocus
             className="w-36 border-b border-line bg-transparent text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             onKeyDown={(e) => {
@@ -452,7 +452,7 @@ function EditableNickname({
         <span className="text-[10px] text-ink-faint">
           {isIdentity
             ? "Changes your name everywhere"
-            : "Only changes your name in this group"}
+            : "Only changes your name in this squad"}
         </span>
       </span>
     );
@@ -483,7 +483,7 @@ function EditableNickname({
             className="text-sm text-ink underline decoration-dotted decoration-ink-faint underline-offset-4 transition hover:decoration-ink"
             title={
               hasOverride
-                ? "Tap to edit your name in this group"
+                ? "Tap to edit your name in this squad"
                 : "Tap to rename yourself everywhere"
             }
           >
@@ -492,7 +492,7 @@ function EditableNickname({
         )}
         {hasOverride && (
           <span className="text-[10px] uppercase tracking-[0.14em] text-ink-faint">
-            group name
+            squad name
           </span>
         )}
       </span>
@@ -517,14 +517,14 @@ function EditableNickname({
               }}
               className="underline decoration-dotted underline-offset-2 transition hover:text-ink"
             >
-              Set a name just for this group →
+              Set a name just for this squad →
             </button>
           ) : (
             <button
               onClick={() => setOverrideOpen(true)}
               className="transition hover:text-ink"
             >
-              Use a different name in this group
+              Use a different name in this squad
             </button>
           )}
         </span>
@@ -680,7 +680,7 @@ function GamesSection({
         disabled={busy}
         className="w-full rounded-sm bg-ink px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent active:scale-[0.97] disabled:opacity-40"
       >
-        {busy ? "…" : "Start a game for this group"}
+        {busy ? "…" : "Start a game for this squad"}
       </button>
 
       {error && (
@@ -774,7 +774,7 @@ function StatsTab({
   if (data.totalMatches === 0) {
     return (
       <div className="rounded-sm border border-line-soft bg-surface/40 p-4 text-sm text-ink-soft">
-        No matches yet. Play a game with this group attributed
+        No matches yet. Play a game with this squad attributed
         (lobby pill) and the stats will start showing up.
       </div>
     );
@@ -877,7 +877,7 @@ function StatsTab({
                   )}
                   {totalPlayed === 0 && (
                     <p className="text-[11px] text-ink-faint">
-                      Hasn&apos;t played a group-attributed match yet.
+                      Hasn&apos;t played a squad-attributed match yet.
                     </p>
                   )}
                 </div>
@@ -1554,7 +1554,7 @@ function KickMemberButton({
           }
           void commit();
         }}
-        title={`Remove ${targetNickname} from group`}
+        title={`Remove ${targetNickname} from squad`}
         className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] transition active:scale-[0.97] disabled:opacity-50 ${
           armed
             ? "border-oxblood bg-oxblood text-white hover:bg-oxblood/90"
@@ -1629,7 +1629,7 @@ function LeaveButton({
             : "border-line text-ink-soft hover:border-oxblood hover:text-oxblood"
         }`}
       >
-        {pending ? "…" : armed ? "Confirm leave?" : "Leave group"}
+        {pending ? "…" : armed ? "Confirm leave?" : "Leave squad"}
       </button>
       {error && (
         <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
@@ -1701,7 +1701,7 @@ function DeleteButton({
           ? "…"
           : armed
             ? "Really delete? This cannot be undone."
-            : "Delete group"}
+            : "Delete squad"}
       </button>
       {error && (
         <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">

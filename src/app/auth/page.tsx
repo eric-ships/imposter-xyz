@@ -131,9 +131,9 @@ export default function AuthPage() {
                 Sign in to Upper
               </h1>
               <p className="text-sm leading-relaxed text-ink-soft">
-                You only need an account to create or join a friend
-                group — casual play works without one. Email lets your
-                stats and group memberships follow you across devices.
+                You only need an account to create or join a
+                squad — casual play works without one. Email lets your
+                stats and squad memberships follow you across devices.
                 We&apos;ll send a one-time link.
               </p>
             </header>

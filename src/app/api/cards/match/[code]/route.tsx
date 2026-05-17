@@ -205,7 +205,7 @@ function FallbackBody() {
           color: INK_SOFT,
         }}
       >
-        Party games for the group.
+        Party games for the squad.
       </div>
     </div>
   );

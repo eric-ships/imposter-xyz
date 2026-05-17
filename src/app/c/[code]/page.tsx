@@ -38,7 +38,7 @@ async function fetchLatestMatch(
 }
 
 function ogTitleFor(match: MatchHistoryEntry | null): string {
-  if (!match) return "Upper · party games for the group";
+  if (!match) return "Upper · party games for the squad";
   if ("kind" in match && match.kind === "wavelength") {
     return `Wavelength · ${match.topScore} points · upper.games`;
   }
