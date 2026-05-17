@@ -162,6 +162,37 @@ export async function GET(request: Request) {
     countByGroup.set(gid, (countByGroup.get(gid) ?? 0) + 1);
   }
 
+  // Live room per group: the single most-recently-updated room
+  // attributed to each group that's still active. Same recency rule
+  // as the single-group detail route (30-min updated_at window).
+  // One batched query across all the user's groups — no N+1.
+  const ACTIVE_WINDOW_MS = 30 * 60 * 1000;
+  const cutoff = Date.now() - ACTIVE_WINDOW_MS;
+  const { data: groupRooms, error: roomsErr } = await supabaseAdmin
+    .from("rooms")
+    .select("code, kind, state, group_id, updated_at")
+    .in("group_id", groupIds)
+    .gte("updated_at", new Date(cutoff).toISOString())
+    .order("updated_at", { ascending: false });
+  if (roomsErr) {
+    return NextResponse.json({ error: roomsErr.message }, { status: 500 });
+  }
+  // Rows arrive newest-first, so the first row seen for a group is its
+  // most-recently-updated active room.
+  const activeRoomByGroup = new Map<
+    string,
+    { code: string; kind: string; state: string }
+  >();
+  for (const r of groupRooms ?? []) {
+    const gid = r.group_id as string;
+    if (activeRoomByGroup.has(gid)) continue;
+    activeRoomByGroup.set(gid, {
+      code: r.code as string,
+      kind: r.kind as string,
+      state: r.state as string,
+    });
+  }
+
   const result = (groups ?? []).map((g) => ({
     id: g.id as string,
     name: g.name as string,
@@ -170,6 +201,7 @@ export async function GET(request: Request) {
     memberCount: countByGroup.get(g.id as string) ?? 0,
     role: roleByGroup.get(g.id as string) ?? "member",
     createdAt: g.created_at as string,
+    activeRoom: activeRoomByGroup.get(g.id as string) ?? null,
   }));
 
   return NextResponse.json({ groups: result });
