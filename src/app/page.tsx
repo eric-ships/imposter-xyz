@@ -8,6 +8,8 @@ import { useTheme } from "@/lib/theme";
 import { PalettePicker } from "@/components/PalettePicker";
 import { useIdentity, getOrMintDeviceToken } from "@/lib/identity";
 import { avatarFor } from "@/lib/avatar";
+import { UpperLoader } from "@/components/UpperLoader";
+import { GAME_VIGNETTES } from "@/components/GameVignettes";
 
 type Mode = "choose" | "create" | "join";
 
@@ -375,10 +377,11 @@ export default function HomePage() {
       {/* FACE 0 — splash. Identity / groups / stats still settling.
           A bare centered wordmark so neither real face flashes. */}
       {!dataReady && !inFlow && (
-        <main className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center px-6">
+        <main className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center gap-6 px-6">
           <h1 className="font-serif text-7xl italic leading-[0.95] tracking-tight text-ink sm:text-8xl">
             Upper
           </h1>
+          <UpperLoader size={44} />
         </main>
       )}
 
@@ -419,28 +422,37 @@ export default function HomePage() {
           >
             <SectionLabel>Five games to play tonight</SectionLabel>
             <div className="grid grid-cols-1 gap-2.5">
-              {GAMES.map((g, i) => (
-                <motion.div
-                  key={g.kind}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.3,
-                    delay: 0.12 + i * 0.05,
-                    ease: "easeOut",
-                  }}
-                  className="flex items-center gap-3 rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5"
-                >
-                  <span className="flex flex-col gap-0.5">
-                    <span className="font-serif text-xl text-ink">
-                      {g.title}
+              {GAMES.map((g, i) => {
+                const Vignette = GAME_VIGNETTES[g.kind];
+                return (
+                  <motion.div
+                    key={g.kind}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.3,
+                      delay: 0.12 + i * 0.05,
+                      ease: "easeOut",
+                    }}
+                    className="flex items-center gap-4 rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5"
+                  >
+                    {/* Animated game vignette — the card's visual. */}
+                    {Vignette && (
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center">
+                        <Vignette />
+                      </span>
+                    )}
+                    <span className="flex flex-col gap-0.5">
+                      <span className="font-serif text-xl text-ink">
+                        {g.title}
+                      </span>
+                      <span className="text-xs font-medium text-ink-faint">
+                        {g.sub}
+                      </span>
                     </span>
-                    <span className="text-xs font-medium text-ink-faint">
-                      {g.sub}
-                    </span>
-                  </span>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.section>
 
