@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { motion } from "motion/react";
 import { useTheme } from "@/lib/theme";
 import { PalettePicker } from "@/components/PalettePicker";
 import { useIdentity } from "@/lib/identity";
@@ -19,19 +20,28 @@ function HomeThemeToggle() {
       onClick={toggle}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       title={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      className="flex h-8 w-8 items-center justify-center text-ink-faint transition-all duration-100 hover:text-ink active:scale-90"
+      className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-faint transition-all duration-100 hover:bg-cream hover:text-ink active:scale-90"
     >
       {isDark ? (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="12" cy="12" r="4" />
           <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
         </svg>
       ) : (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
         </svg>
       )}
     </button>
+  );
+}
+
+// Section heading — bolder than the old hairline tracked label.
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      {children}
+    </h2>
   );
 }
 
@@ -112,198 +122,209 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Theme toggle pinned to viewport top-right (was absolute inside
-          main, which on a centered narrow column put it in the middle
-          of the screen on widescreens). */}
+      {/* Theme / palette controls pinned to the viewport top-right. */}
       <div className="fixed right-4 top-4 z-50 flex items-center gap-1">
         <PalettePicker />
         <HomeThemeToggle />
       </div>
-      <main className="mx-auto flex w-full max-w-md flex-col items-center gap-8 px-6 pb-12 pt-10 sm:gap-10 sm:pt-16 lg:max-w-xl lg:gap-12 lg:pt-24">
-      <header className="text-center">
-        <h1 className="font-serif text-6xl font-light italic tracking-tight text-ink">
-          Upper
-        </h1>
-        <div className="mt-3 text-xs uppercase tracking-[0.22em] text-ink-faint">
-          Party games for the group
-        </div>
-        <p className="mt-6 text-base leading-relaxed text-ink-soft">
-          Short, social games to play with friends.
-          <br />
-          Three to eight players. Five to twenty minutes.
-        </p>
-        <Link
-          href="/rules"
-          className="mt-5 inline-block border-b border-ink-faint pb-0.5 text-xs text-ink-soft transition hover:border-ink hover:text-ink"
+      <main className="mx-auto flex w-full max-w-md flex-col items-center gap-9 px-6 pb-16 pt-12 sm:gap-11 sm:pt-20 lg:max-w-xl lg:pt-28">
+        <motion.header
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          className="flex flex-col items-center text-center"
         >
-          How to play
-        </Link>
-      </header>
+          <h1 className="font-serif text-7xl italic leading-[0.95] tracking-tight text-ink sm:text-8xl">
+            Upper
+          </h1>
+          <span className="mt-4 inline-block rounded-full bg-accent px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+            Party games for the group
+          </span>
+          <p className="mt-6 text-lg leading-snug text-ink-soft">
+            Short, social games to play with friends — 3 to 8 players,
+            5 to 20 minutes.
+          </p>
+          <Link
+            href="/rules"
+            className="mt-4 text-sm font-semibold text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
+          >
+            How to play →
+          </Link>
+        </motion.header>
 
-      {identity.ready && identity.userId && (
-        <PersonalStatsCard userId={identity.userId} />
-      )}
+        {identity.ready && identity.userId && (
+          <PersonalStatsCard userId={identity.userId} />
+        )}
 
-      {identity.ready && identity.userId && (
-        <MyGroupsSection
-          userId={identity.userId}
-          email={identity.email}
-        />
-      )}
+        {identity.ready && identity.userId && (
+          <MyGroupsSection
+            userId={identity.userId}
+            email={identity.email}
+          />
+        )}
 
-      <div className="w-full">
-        {mode === "choose" ? (
-          <div className="space-y-3">
-            <button
-              onClick={() => setMode("create")}
-              className="w-full rounded-sm bg-ink px-6 py-4 text-sm font-medium tracking-wide text-page transition-all duration-100 hover:bg-accent active:scale-[0.97]"
+        <div className="w-full">
+          {mode === "choose" ? (
+            <div className="space-y-3.5">
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setMode("create")}
+                className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md"
+              >
+                Create a room
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setMode("join")}
+                className="w-full rounded-2xl border-2 border-ink bg-transparent px-6 py-5 text-lg font-bold tracking-tight text-ink transition-all duration-100 hover:bg-ink hover:text-page"
+              >
+                Join a room
+              </motion.button>
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+              className="space-y-6"
             >
-              Create a room
-            </button>
-            <button
-              onClick={() => setMode("join")}
-              className="w-full rounded-sm border border-ink px-6 py-4 text-sm font-medium tracking-wide text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
-            >
-              Join a room
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {mode === "create" && (
-              <div>
-                <span className="mb-2 block text-sm text-ink-soft">
-                  Pick a game
-                </span>
-                <div className="grid grid-cols-1 gap-2">
-                  {(
-                    [
-                      {
-                        kind: "imposter" as const,
-                        title: "Imposter",
-                        sub: "3–8 · social deduction",
-                      },
-                      {
-                        kind: "wavelength" as const,
-                        title: "Wavelength",
-                        sub: "3–6 · spectrum guessing",
-                      },
-                      {
-                        kind: "just-one" as const,
-                        title: "Just One",
-                        sub: "3–7 · cooperative clues",
-                      },
-                    ]
-                  ).map((g) => {
-                    const selected = gameKind === g.kind;
-                    return (
-                      <button
-                        key={g.kind}
-                        type="button"
-                        onClick={() => setGameKind(g.kind)}
-                        className={`flex flex-col items-start gap-1 rounded-sm border px-3 py-3 text-left transition-all duration-100 active:scale-[0.98] ${
-                          selected
-                            ? "border-accent bg-accent/10"
-                            : "border-line text-ink-soft hover:border-ink hover:text-ink"
-                        }`}
-                      >
-                        <span
-                          className={`font-serif text-base ${
-                            selected ? "text-ink" : ""
+              {mode === "create" && (
+                <div className="space-y-2.5">
+                  <SectionLabel>Pick a game</SectionLabel>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {(
+                      [
+                        {
+                          kind: "imposter" as const,
+                          title: "Imposter",
+                          sub: "3–8 · social deduction",
+                        },
+                        {
+                          kind: "wavelength" as const,
+                          title: "Wavelength",
+                          sub: "3–6 · spectrum guessing",
+                        },
+                        {
+                          kind: "just-one" as const,
+                          title: "Just One",
+                          sub: "3–7 · cooperative clues",
+                        },
+                      ]
+                    ).map((g) => {
+                      const selected = gameKind === g.kind;
+                      return (
+                        <button
+                          key={g.kind}
+                          type="button"
+                          onClick={() => setGameKind(g.kind)}
+                          className={`flex items-center justify-between gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-all duration-100 active:scale-[0.98] ${
+                            selected
+                              ? "border-accent bg-accent/10"
+                              : "border-line bg-surface/40 hover:border-ink"
                           }`}
                         >
-                          {g.title}
-                        </span>
-                        <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
-                          {g.sub}
-                        </span>
-                      </button>
-                    );
-                  })}
+                          <span className="flex flex-col gap-0.5">
+                            <span className="font-serif text-xl text-ink">
+                              {g.title}
+                            </span>
+                            <span className="text-xs font-medium text-ink-faint">
+                              {g.sub}
+                            </span>
+                          </span>
+                          <span
+                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                              selected
+                                ? "border-accent bg-accent text-white"
+                                : "border-line text-transparent"
+                            }`}
+                          >
+                            ✓
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
-            <label className="block">
-              <span className="mb-2 block text-sm text-ink-soft">
-                Your name
-              </span>
-              <input
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                maxLength={20}
-                placeholder="Alice"
-                type="text"
-                name="player-nickname"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="words"
-                spellCheck={false}
-                data-form-type="other"
-                data-1p-ignore="true"
-                data-lpignore="true"
-                autoFocus
-                className="w-full border-b border-line bg-transparent px-1 pb-2 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-              />
-            </label>
-
-            {mode === "join" && (
-              <label className="block">
-                <span className="mb-2 block text-sm text-ink-soft">
-                  Room code
-                </span>
+              )}
+              <label className="block space-y-2">
+                <SectionLabel>Your name</SectionLabel>
                 <input
-                  value={joinCode}
-                  onChange={(e) =>
-                    setJoinCode(e.target.value.toUpperCase().slice(0, 4))
-                  }
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  maxLength={20}
+                  placeholder="Alice"
                   type="text"
-                  name="room-code"
+                  name="player-nickname"
                   autoComplete="off"
                   autoCorrect="off"
-                  autoCapitalize="characters"
+                  autoCapitalize="words"
                   spellCheck={false}
                   data-form-type="other"
                   data-1p-ignore="true"
                   data-lpignore="true"
-                  maxLength={4}
-                  placeholder="ABCD"
-                  className="w-full border-b border-line bg-transparent px-1 pb-2 text-center font-serif text-2xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+                  autoFocus
+                  className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
                 />
               </label>
-            )}
 
-            <button
-              onClick={mode === "create" ? createRoom : joinRoom}
-              disabled={!canSubmit}
-              className="w-full rounded-sm bg-ink px-6 py-4 text-sm font-medium tracking-wide text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
-            >
-              {submitting
-                ? mode === "create"
-                  ? "Creating…"
-                  : "Joining…"
-                : mode === "create"
-                  ? "Create room"
-                  : "Join room"}
-            </button>
+              {mode === "join" && (
+                <label className="block space-y-2">
+                  <SectionLabel>Room code</SectionLabel>
+                  <input
+                    value={joinCode}
+                    onChange={(e) =>
+                      setJoinCode(e.target.value.toUpperCase().slice(0, 4))
+                    }
+                    type="text"
+                    name="room-code"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="characters"
+                    spellCheck={false}
+                    data-form-type="other"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
+                    maxLength={4}
+                    placeholder="ABCD"
+                    className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-center font-serif text-3xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+                  />
+                </label>
+              )}
 
-            <button
-              onClick={() => {
-                setMode("choose");
-                setError(null);
-              }}
-              className="block w-full text-center text-xs text-ink-faint transition hover:text-ink"
-            >
-              ← Back
-            </button>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={mode === "create" ? createRoom : joinRoom}
+                disabled={!canSubmit}
+                className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
+              >
+                {submitting
+                  ? mode === "create"
+                    ? "Creating…"
+                    : "Joining…"
+                  : mode === "create"
+                    ? "Create room"
+                    : "Join room"}
+              </motion.button>
 
-            {error && (
-              <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
-                {error}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    </main>
+              <button
+                onClick={() => {
+                  setMode("choose");
+                  setError(null);
+                }}
+                className="block w-full text-center text-sm font-semibold text-ink-faint transition hover:text-ink"
+              >
+                ← Back
+              </button>
+
+              {error && (
+                <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-medium text-oxblood">
+                  {error}
+                </p>
+              )}
+            </motion.div>
+          )}
+        </div>
+      </main>
     </>
   );
 }
@@ -397,34 +418,34 @@ function MyGroupsSection({
 
   return (
     <section className="w-full space-y-3">
-      <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-        My groups
-      </h2>
+      <SectionLabel>My groups</SectionLabel>
 
       {groups === null ? (
-        <p className="text-xs text-ink-faint">Loading…</p>
+        <p className="text-sm text-ink-faint">Loading…</p>
       ) : groups.length === 0 ? (
         <p className="text-sm text-ink-soft">
           No groups yet. Create one to start tracking stats with your
           regulars, or join an existing group with an invite code.
         </p>
       ) : (
-        <ul className="divide-y divide-line-soft border-y border-line-soft">
+        <ul className="space-y-2">
           {groups.map((g) => (
             <li key={g.id}>
               <Link
                 href={`/group/${g.id}`}
-                className="flex items-center justify-between gap-3 py-3 transition hover:bg-surface/40"
+                className="flex items-center justify-between gap-3 rounded-xl border-2 border-line bg-surface/40 px-4 py-3 transition hover:border-ink"
               >
                 <span className="flex items-baseline gap-2">
-                  <span className="text-sm text-ink">{g.name}</span>
+                  <span className="text-base font-semibold text-ink">
+                    {g.name}
+                  </span>
                   {g.role === "owner" && (
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-accent">
+                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
                       Owner
                     </span>
                   )}
                 </span>
-                <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+                <span className="text-xs font-semibold text-ink-faint">
                   {g.memberCount}{" "}
                   {g.memberCount === 1 ? "member" : "members"}
                 </span>
@@ -440,27 +461,27 @@ function MyGroupsSection({
           intent stashed; verify-success returns home and the user
           re-clicks (the buttons are no longer gated). */}
       {!email ? (
-        <div className="rounded-sm border border-accent/30 bg-accent/5 p-3 text-xs text-ink-soft">
+        <div className="rounded-xl border-2 border-accent/30 bg-accent/5 p-4 text-sm text-ink-soft">
           <p>
             Friend groups need an email so your stats follow you
             across devices.
           </p>
           <Link
             href="/auth"
-            className="mt-2 inline-block rounded-sm border border-ink px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
+            className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:brightness-110"
           >
             Sign in to create or join →
           </Link>
         </div>
       ) : (
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           <button
             onClick={() => {
               setCreateOpen((o) => !o);
               setJoinOpen(false);
               setError(null);
             }}
-            className="flex-1 rounded-sm border border-line px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+            className="flex-1 rounded-xl border-2 border-line px-3 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
             {createOpen ? "Cancel" : "Create group"}
           </button>
@@ -470,7 +491,7 @@ function MyGroupsSection({
               setCreateOpen(false);
               setError(null);
             }}
-            className="flex-1 rounded-sm border border-line px-3 py-2 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+            className="flex-1 rounded-xl border-2 border-line px-3 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
             {joinOpen ? "Cancel" : "Join with code"}
           </button>
@@ -478,7 +499,7 @@ function MyGroupsSection({
       )}
 
       {createOpen && (
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           <input
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
@@ -494,7 +515,7 @@ function MyGroupsSection({
             data-1p-ignore="true"
             data-lpignore="true"
             autoFocus
-            className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 text-base text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            className="min-w-0 flex-1 rounded-xl border-2 border-line bg-surface/40 px-3 py-2.5 text-base text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             onKeyDown={(e) => {
               if (e.key === "Enter" && createName.trim() && !pending) create();
             }}
@@ -502,7 +523,7 @@ function MyGroupsSection({
           <button
             onClick={create}
             disabled={pending || createName.trim().length === 0}
-            className="rounded-sm bg-ink px-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl bg-accent px-5 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
           >
             {pending ? "…" : "Create"}
           </button>
@@ -510,7 +531,7 @@ function MyGroupsSection({
       )}
 
       {joinOpen && (
-        <div className="flex gap-2">
+        <div className="flex gap-2.5">
           <input
             value={joinCode}
             onChange={(e) =>
@@ -528,7 +549,7 @@ function MyGroupsSection({
             maxLength={6}
             placeholder="ABCDEF"
             autoFocus
-            className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 text-center font-serif text-xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            className="min-w-0 flex-1 rounded-xl border-2 border-line bg-surface/40 px-3 py-2.5 text-center font-serif text-xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             onKeyDown={(e) => {
               if (e.key === "Enter" && joinCode.trim().length === 6 && !pending)
                 join();
@@ -537,7 +558,7 @@ function MyGroupsSection({
           <button
             onClick={join}
             disabled={pending || joinCode.trim().length !== 6}
-            className="rounded-sm bg-ink px-4 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl bg-accent px-5 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
           >
             {pending ? "…" : "Join"}
           </button>
@@ -545,7 +566,7 @@ function MyGroupsSection({
       )}
 
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
+        <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-3 py-2 text-sm font-medium text-oxblood">
           {error}
         </p>
       )}
@@ -595,22 +616,20 @@ function PersonalStatsCard({ userId }: { userId: string }) {
 
   const g = data.games;
   return (
-    <section className="w-full space-y-3 rounded-sm border border-line-soft bg-surface/40 p-4">
+    <section className="w-full space-y-3 rounded-2xl border-2 border-line bg-surface/50 p-5">
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
-          Your stats
-        </h2>
-        <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+        <SectionLabel>Your stats</SectionLabel>
+        <span className="text-[11px] font-medium text-ink-faint">
           across all groups
         </span>
       </div>
-      <div className="font-serif text-3xl text-ink">
+      <div className="font-serif text-4xl text-ink">
         {data.totalMatches}{" "}
-        <span className="text-base text-ink-faint normal-case">
+        <span className="text-base font-sans font-medium text-ink-faint">
           {data.totalMatches === 1 ? "match" : "matches"} played
         </span>
       </div>
-      <div className="space-y-1.5">
+      <div className="space-y-1.5 border-t-2 border-line-soft pt-3">
         {g.imposter.played > 0 && (
           <PersonalRow
             label="Imposter"
@@ -665,8 +684,8 @@ function PersonalRow({
   detail: string;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-3 text-xs">
-      <span className="text-ink">{label}</span>
+    <div className="flex items-baseline justify-between gap-3 text-sm">
+      <span className="font-semibold text-ink">{label}</span>
       <span className="text-ink-soft">{detail}</span>
     </div>
   );
