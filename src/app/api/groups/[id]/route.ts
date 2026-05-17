@@ -119,6 +119,20 @@ export async function GET(
     }
   }
 
+  // Live rooms attributed to this group — the games members can drop
+  // into. Active = touched within the same recency window.
+  const { data: groupRooms } = await supabaseAdmin
+    .from("rooms")
+    .select("code, kind, state, updated_at")
+    .eq("group_id", groupId)
+    .gte("updated_at", new Date(cutoff).toISOString())
+    .order("updated_at", { ascending: false });
+  const activeRooms = (groupRooms ?? []).map((r) => ({
+    code: r.code as string,
+    kind: r.kind as string,
+    state: r.state as string,
+  }));
+
   const decoratedMembers = (members ?? []).map((m) => {
     const u = userById.get(m.user_id as string);
     return {
@@ -139,6 +153,7 @@ export async function GET(
     ownerUserId: group.owner_user_id as string,
     createdAt: group.created_at as string,
     members: decoratedMembers,
+    activeRooms,
   });
 }
 
