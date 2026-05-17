@@ -45,6 +45,9 @@ function ogTitleFor(match: MatchHistoryEntry | null): string {
   if ("kind" in match && match.kind === "just-one") {
     return `Just One · ${match.score} / ${match.totalCards} · ${match.rating}`;
   }
+  if ("kind" in match && match.kind === "hold") {
+    return `Hold · wave ${match.waveReached} / ${match.totalWaves} · ${match.outcome === "victory" ? "held the line" : "core breached"}`;
+  }
   return `Imposter · "${match.secretWord}" · ${match.winner === "imposter" ? "imposter wins" : match.winner === "crewmates" ? "crewmates win" : "split"}`;
 }
 

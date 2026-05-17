@@ -10,6 +10,8 @@ import { redactForViewer as redactWavelength } from "@/games/wavelength/state";
 import type { WavelengthState } from "@/games/wavelength/types";
 import { redactForViewer as redactJustOne } from "@/games/just-one/state";
 import type { JustOneState } from "@/games/just-one/types";
+import { redactForViewer as redactHold } from "@/games/hold/state";
+import type { HoldState } from "@/games/hold/types";
 
 export async function notifyRoom(code: string, kind: string) {
   await supabaseAdmin.from("room_events").insert({ room_code: code, kind });
@@ -285,7 +287,9 @@ export async function fetchRoomView(
       ? "wavelength"
       : rawKind === "just-one"
         ? "just-one"
-        : "imposter";
+        : rawKind === "hold"
+          ? "hold"
+          : "imposter";
   let gameState: Record<string, unknown> =
     "game_state" in room &&
     room.game_state &&
@@ -307,6 +311,11 @@ export async function fetchRoomView(
   } else if (kind === "just-one" && Object.keys(gameState).length > 0) {
     gameState = redactJustOne(
       gameState as unknown as JustOneState,
+      playerId
+    ) as unknown as Record<string, unknown>;
+  } else if (kind === "hold" && Object.keys(gameState).length > 0) {
+    gameState = redactHold(
+      gameState as unknown as HoldState,
       playerId
     ) as unknown as Record<string, unknown>;
   }

@@ -40,6 +40,9 @@ export type HoldFrame = {
     type: TowerType;
   }[];
   deaths: { x: number; y: number }[];
+  // Core damage dealt by enemies that leaked this tick — lets the
+  // client drain the core HP bar in step with the animation.
+  coreDamage: number;
 };
 
 type SimEnemy = {
@@ -142,6 +145,7 @@ export function simulateWave(
   for (let tick = 0; tick < MAX_TICKS; tick++) {
     const shots: HoldFrame["shots"] = [];
     const deaths: HoldFrame["deaths"] = [];
+    let tickCoreDamage = 0;
 
     // 1. Spawn anything scheduled for this tick.
     while (
@@ -180,6 +184,7 @@ export function simulateWave(
       if (e.pathIndex >= PATH.length - 1) {
         e.alive = false;
         coreHpLost += spec.coreDamage;
+        tickCoreDamage += spec.coreDamage;
         leaked += 1;
       }
     }
@@ -247,6 +252,7 @@ export function simulateWave(
         }),
       shots,
       deaths,
+      coreDamage: tickCoreDamage,
     });
 
     // Done once everything has spawned and nothing is left alive.

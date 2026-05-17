@@ -10,6 +10,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type {
+  HoldMatchEntry,
   ImposterMatchEntry,
   JustOneMatchEntry,
   MatchHistoryEntry,
@@ -74,6 +75,20 @@ function derivePlayerResults(
       role: null,
       won: null,
       delta: j.score,
+    }));
+  }
+
+  // Hold: cooperative — the whole table wins or loses together. Every
+  // user at the table gets a row; won reflects the shared outcome
+  // (victory) and delta carries the wave reached as a progress score.
+  if ("kind" in snapshot && snapshot.kind === "hold") {
+    const h = snapshot as HoldMatchEntry;
+    const won = h.outcome === "victory";
+    return allRoomUserIds.map((uid) => ({
+      user_id: uid,
+      role: null,
+      won,
+      delta: h.waveReached,
     }));
   }
 
