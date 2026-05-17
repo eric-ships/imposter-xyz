@@ -45,6 +45,8 @@ type GroupDetail = {
   members: GroupMember[];
   // Live rooms attributed to this group — members can join / watch.
   activeRooms: { code: string; kind: string; state: string }[];
+  // Whether a Discord channel is linked for match-result posts.
+  discordLinked: boolean;
 };
 
 export default function GroupPage({
@@ -312,6 +314,14 @@ function RosterTab({
             groupId={group.id}
             userId={identity.userId!}
             onLeft={onLeft}
+          />
+        )}
+        {isOwner && (
+          <DiscordWebhookSetting
+            groupId={group.id}
+            userId={identity.userId!}
+            linked={group.discordLinked}
+            onChanged={refetch}
           />
         )}
         {isOwner && (
@@ -1693,6 +1703,134 @@ function DeleteButton({
             ? "Really delete? This cannot be undone."
             : "Delete group"}
       </button>
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// Owner-only: link or unlink a Discord channel that finished matches
+// post to. The webhook URL is write-only — the server never sends it
+// back, so this shows a connected / not-connected state, never the URL.
+function DiscordWebhookSetting({
+  groupId,
+  userId,
+  linked,
+  onChanged,
+}: {
+  groupId: string;
+  userId: string;
+  linked: boolean;
+  onChanged: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [url, setUrl] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save(value: string) {
+    setError(null);
+    setPending(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, discordWebhookUrl: value }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "save failed");
+      setUrl("");
+      setEditing(false);
+      onChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "save failed");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2 rounded-sm border border-line p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="space-y-0.5">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-ink-soft">
+            Discord
+          </div>
+          <div className="text-xs text-ink-faint">
+            {linked
+              ? "Match results post to a linked channel."
+              : "Post finished matches to a Discord channel."}
+          </div>
+        </div>
+        {!editing && (
+          <button
+            type="button"
+            onClick={() => {
+              setEditing(true);
+              setError(null);
+            }}
+            className="shrink-0 rounded-sm border border-line px-3 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+          >
+            {linked ? "Change" : "Connect"}
+          </button>
+        )}
+      </div>
+
+      {editing && (
+        <div className="space-y-2">
+          <input
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            placeholder="https://discord.com/api/webhooks/…"
+            autoFocus
+            spellCheck={false}
+            autoCorrect="off"
+            autoCapitalize="none"
+            className="w-full border-b border-line bg-transparent px-1 pb-1.5 text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+          />
+          <p className="text-xs leading-relaxed text-ink-faint">
+            In Discord: Channel settings → Integrations → Webhooks →
+            New Webhook → Copy Webhook URL.
+          </p>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={pending || url.trim().length === 0}
+              onClick={() => void save(url.trim())}
+              className="rounded-sm bg-ink px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent active:scale-[0.98] disabled:opacity-30"
+            >
+              {pending ? "Saving…" : "Save"}
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                setEditing(false);
+                setUrl("");
+                setError(null);
+              }}
+              className="rounded-sm border border-line px-4 py-2 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {linked && !editing && (
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => void save("")}
+          className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-oxblood disabled:opacity-50"
+        >
+          {pending ? "…" : "Disconnect"}
+        </button>
+      )}
+
       {error && (
         <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
           {error}

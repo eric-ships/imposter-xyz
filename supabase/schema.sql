@@ -457,3 +457,9 @@ alter table users add column if not exists discord_avatar text;
 create unique index if not exists users_discord_id_key
   on users (discord_id)
   where discord_id is not null;
+
+-- ── Discord match-result webhooks ────────────────────────────────────
+-- A friend group can link a Discord channel by storing an incoming
+-- webhook URL here. When set, every finished match attributed to the
+-- group is posted to that channel. NULL = not linked (the default).
+alter table groups add column if not exists discord_webhook_url text;

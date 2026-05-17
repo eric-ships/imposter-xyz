@@ -9,6 +9,7 @@
 // stat queries don't need to re-parse the snapshot.
 
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { postMatchToDiscord } from "@/lib/discord-webhook";
 import type {
   CrewMatchEntry,
   HoldMatchEntry,
@@ -192,6 +193,23 @@ export async function writeMatchResultIfAttributed(args: {
           })
         );
       }
+    }
+
+    // Best-effort: post the finished match to the group's linked
+    // Discord channel, if it has one. postMatchToDiscord swallows its
+    // own errors, so this never disturbs the stat write above.
+    const { data: group } = await supabaseAdmin
+      .from("groups")
+      .select("name, discord_webhook_url")
+      .eq("id", args.groupId)
+      .maybeSingle();
+    if (group?.discord_webhook_url) {
+      await postMatchToDiscord({
+        webhookUrl: group.discord_webhook_url as string,
+        groupName: group.name as string,
+        gameKind: args.gameKind,
+        snapshot: args.snapshot,
+      });
     }
   } catch (e) {
     console.warn(
