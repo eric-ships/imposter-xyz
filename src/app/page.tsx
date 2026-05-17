@@ -69,6 +69,9 @@ export default function HomePage() {
   const [gameKind, setGameKind] = useState<
     "imposter" | "wavelength" | "just-one"
   >("imposter");
+  // Optional friend-group attribution, chosen at room-creation time
+  // (null = casual). Beats hunting for the lobby attribution pill.
+  const [createGroupId, setCreateGroupId] = useState<string | null>(null);
 
   // Shared across the live banner + groups section: the user's groups
   // (with live-room info) and their total-matches count. Lifted here
@@ -122,6 +125,7 @@ export default function HomePage() {
         body: JSON.stringify({
           kind: gameKind,
           userId: identity.userId ?? undefined,
+          groupId: createGroupId ?? undefined,
         }),
       });
       const data = await res.json();
@@ -310,6 +314,57 @@ export default function HomePage() {
                             </span>
                             <span className="text-xs font-medium text-ink-faint">
                               {g.sub}
+                            </span>
+                          </span>
+                          <span
+                            className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold ${
+                              selected
+                                ? "border-accent bg-accent text-white"
+                                : "border-line text-transparent"
+                            }`}
+                          >
+                            ✓
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {mode === "create" && groups && groups.length > 0 && (
+                <div className="space-y-2.5">
+                  <SectionLabel>For a group?</SectionLabel>
+                  <div className="grid grid-cols-1 gap-2.5">
+                    {[
+                      {
+                        id: null as string | null,
+                        title: "Just casual",
+                        sub: "not tracked to a group",
+                      },
+                      ...groups.map((g) => ({
+                        id: g.id as string | null,
+                        title: g.name,
+                        sub: "match counts toward this group",
+                      })),
+                    ].map((opt) => {
+                      const selected = createGroupId === opt.id;
+                      return (
+                        <button
+                          key={opt.id ?? "casual"}
+                          type="button"
+                          onClick={() => setCreateGroupId(opt.id)}
+                          className={`flex items-center justify-between gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-all duration-100 active:scale-[0.98] ${
+                            selected
+                              ? "border-accent bg-accent/10"
+                              : "border-line bg-surface/40 hover:border-ink"
+                          }`}
+                        >
+                          <span className="flex flex-col gap-0.5">
+                            <span className="font-serif text-xl text-ink">
+                              {opt.title}
+                            </span>
+                            <span className="text-xs font-medium text-ink-faint">
+                              {opt.sub}
                             </span>
                           </span>
                           <span
