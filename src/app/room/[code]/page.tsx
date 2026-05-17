@@ -522,9 +522,8 @@ function RoomPlay({
     <main
       className={`mx-auto grid min-h-screen w-full grid-rows-[auto_1fr_auto] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 ${mainWidth}`}
     >
-      <FixedRoomChrome />
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-      <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         <span className="flex items-baseline gap-2">
           <span>Room</span>
           <span className="text-base tracking-[0.25em] text-ink normal-case">
@@ -570,6 +569,7 @@ function RoomPlay({
               </span>
             )}
           </span>
+          <RoomChromeControls />
         </span>
       </header>
 
@@ -953,9 +953,8 @@ function WavelengthRoomShell({
 
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
-      <FixedRoomChrome />
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span className="flex items-baseline gap-2">
             <span>Room</span>
             <span className="text-base tracking-[0.25em] text-ink normal-case">
@@ -995,6 +994,7 @@ function WavelengthRoomShell({
                 </span>
               )}
             </span>
+            <RoomChromeControls />
           </span>
         </header>
         <StreamerCastBanner view={view} />
@@ -1041,9 +1041,8 @@ function JustOneRoomShell({
 
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
-      <FixedRoomChrome />
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span className="flex items-baseline gap-2">
             <span>Room</span>
             <span className="text-base tracking-[0.25em] text-ink normal-case">
@@ -1083,6 +1082,7 @@ function JustOneRoomShell({
                 </span>
               )}
             </span>
+            <RoomChromeControls />
           </span>
         </header>
         <StreamerCastBanner view={view} />
@@ -1129,9 +1129,8 @@ function CrewRoomShell({
 
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
-      <FixedRoomChrome />
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span className="flex items-baseline gap-2">
             <span>Room</span>
             <span className="text-base tracking-[0.25em] text-ink normal-case">
@@ -1171,6 +1170,7 @@ function CrewRoomShell({
                 </span>
               )}
             </span>
+            <RoomChromeControls />
           </span>
         </header>
         <StreamerCastBanner view={view} />
@@ -1216,9 +1216,8 @@ function HoldRoomShell({
 
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
-      <FixedRoomChrome />
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span className="flex items-baseline gap-2">
             <span>Room</span>
             <span className="text-base tracking-[0.25em] text-ink normal-case">
@@ -1258,6 +1257,7 @@ function HoldRoomShell({
                 </span>
               )}
             </span>
+            <RoomChromeControls />
           </span>
         </header>
         <StreamerCastBanner view={view} />
@@ -1328,21 +1328,17 @@ function CasualModeButton({
 // column. Both imposter and wavelength rooms render exactly one of
 // these so the toggles stay reachable on wide screens regardless of
 // the per-phase content width.
-function FixedRoomChrome() {
-  // Top spacing uses max() with env() so the cluster clears an iOS
-  // notch / Dynamic Island regardless of orientation. Inner padding
-  // sized so each tap target hits the iOS-recommended 44pt minimum.
+// Palette / theme / mute controls. Lives inline in the room header
+// (in flow) — previously a fixed top-right cluster, which overlapped
+// the header's own right-side content (Rules / avatar / name) at many
+// widths. In the header it sits in the flex row and can't collide.
+function RoomChromeControls() {
   return (
-    <div
-      className="pointer-events-none fixed right-3 z-50 flex items-center gap-3 sm:right-4"
-      style={{ top: "max(env(safe-area-inset-top), 0.75rem)" }}
-    >
-      <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-line bg-page/95 px-2.5 py-2 shadow-sm backdrop-blur-sm">
-        <PalettePicker />
-        <ThemeToggle />
-        <MuteToggle />
-      </div>
-    </div>
+    <span className="flex items-center gap-0.5">
+      <PalettePicker />
+      <ThemeToggle />
+      <MuteToggle />
+    </span>
   );
 }
 
@@ -4122,7 +4118,7 @@ function VotingPhase({
   return (
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
       <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
-        <section className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <section className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
           <span className="text-sm text-ink-soft normal-case tracking-normal">
             {view.category}
           </span>
