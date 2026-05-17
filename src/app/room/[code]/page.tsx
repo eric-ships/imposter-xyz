@@ -256,7 +256,7 @@ export default function RoomPage({
         </p>
         <button
           onClick={() => router.push("/")}
-          className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
+          className="rounded-xl border-2 border-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
         >
           Back home
         </button>
@@ -286,7 +286,7 @@ export default function RoomPage({
           </p>
           <button
             onClick={() => router.push("/")}
-            className="rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
+            className="rounded-xl border-2 border-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
           >
             Back home
           </button>
@@ -296,7 +296,7 @@ export default function RoomPage({
     return (
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-8 px-8">
         <div className="text-center">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
             Join room
           </div>
           <div className="mt-2 font-serif text-4xl tracking-[0.3em] text-ink">
@@ -305,8 +305,8 @@ export default function RoomPage({
         </div>
 
         {showAttributionPrompt && view?.groupName && (
-          <div className="w-full rounded-sm border border-leaf/40 bg-leaf/5 p-4 text-sm">
-            <div className="text-[11px] uppercase tracking-[0.22em] text-leaf">
+          <div className="w-full rounded-xl border-2 border-leaf/40 bg-leaf/5 p-4 text-sm">
+            <div className="text-xs font-bold uppercase tracking-[0.14em] text-leaf">
               Friend group
             </div>
             <p className="mt-1 text-ink">
@@ -347,13 +347,13 @@ export default function RoomPage({
             data-form-type="other"
             data-1p-ignore="true"
             data-lpignore="true"
-            className="w-full border-b border-line bg-transparent px-1 pb-2 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
           />
         </label>
         <button
           onClick={doJoin}
           disabled={joining || joinNickname.trim().length === 0}
-          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {joining
             ? "Joining"
@@ -523,13 +523,13 @@ function RoomPlay({
       className={`mx-auto grid min-h-screen w-full grid-rows-[auto_1fr_auto] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 ${mainWidth}`}
     >
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-      <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
         <span className="flex items-baseline gap-2">
           <span>Room</span>
           <span className="text-base tracking-[0.25em] text-ink normal-case">
             {code}
           </span>
-          <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+          <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
             Imposter
           </span>
         </span>
@@ -564,7 +564,7 @@ function RoomPlay({
               {nicknameById.get(playerId)}
             </span>
             {you.isHost && (
-              <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-accent">
+              <span className="rounded-xl border-2 border-accent/60 px-1.5 py-0.5 text-[10px] font-bold tracking-[0.12em] text-accent">
                 Host
               </span>
             )}
@@ -857,14 +857,14 @@ function AvatarPicker({
         title="Pick your avatar"
         className={`flex h-7 w-7 items-center justify-center rounded-full transition-all duration-100 hover:ring-2 hover:ring-accent/50 active:scale-90 ${color} ${
           isCustom
-            ? "border border-line text-base"
+            ? "border-2 border-line text-base"
             : "text-xs font-semibold text-white"
         }`}
       >
         {initial}
       </button>
       {open && (
-        <div className="absolute right-0 top-9 z-50 w-72 space-y-3 rounded-sm border border-line bg-page p-4 shadow-lg">
+        <div className="absolute right-0 top-9 z-50 w-72 space-y-3 rounded-xl border-2 border-line bg-page p-4 shadow-lg">
           <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             Pick an avatar
           </div>
@@ -874,7 +874,7 @@ function AvatarPicker({
                 key={emoji}
                 onClick={() => set(emoji)}
                 disabled={pending}
-                className={`flex h-8 w-8 items-center justify-center rounded-sm text-lg transition-all duration-100 hover:bg-surface active:scale-90 ${
+                className={`flex h-8 w-8 items-center justify-center rounded-xl text-lg transition-all duration-100 hover:bg-surface active:scale-90 ${
                   avatar === emoji ? "ring-2 ring-accent" : ""
                 }`}
               >
@@ -897,12 +897,12 @@ function AvatarPicker({
               data-form-type="other"
               data-1p-ignore="true"
               data-lpignore="true"
-              className="w-16 border border-line bg-page px-2 py-1 text-center text-base outline-none focus:border-accent"
+              className="w-16 rounded-xl border-2 border-line bg-page px-2 py-1 text-center text-base outline-none focus:border-accent"
             />
             <button
               onClick={() => custom.trim() && set(custom.trim())}
               disabled={pending || !custom.trim()}
-              className="flex-1 rounded-sm border border-ink px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
+              className="flex-1 rounded-xl border-2 border-ink px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
             >
               Use custom
             </button>
@@ -954,13 +954,13 @@ function WavelengthRoomShell({
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           <span className="flex items-baseline gap-2">
             <span>Room</span>
             <span className="text-base tracking-[0.25em] text-ink normal-case">
               {code}
             </span>
-            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+            <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
               Wavelength
             </span>
           </span>
@@ -989,7 +989,7 @@ function WavelengthRoomShell({
                 {nicknameById.get(playerId)}
               </span>
               {you.isHost && (
-                <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-accent">
+                <span className="rounded-xl border-2 border-accent/60 px-1.5 py-0.5 text-[10px] font-bold tracking-[0.12em] text-accent">
                   Host
                 </span>
               )}
@@ -1042,13 +1042,13 @@ function JustOneRoomShell({
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           <span className="flex items-baseline gap-2">
             <span>Room</span>
             <span className="text-base tracking-[0.25em] text-ink normal-case">
               {code}
             </span>
-            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+            <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
               Just One
             </span>
           </span>
@@ -1077,7 +1077,7 @@ function JustOneRoomShell({
                 {nicknameById.get(playerId)}
               </span>
               {you.isHost && (
-                <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-accent">
+                <span className="rounded-xl border-2 border-accent/60 px-1.5 py-0.5 text-[10px] font-bold tracking-[0.12em] text-accent">
                   Host
                 </span>
               )}
@@ -1130,13 +1130,13 @@ function CrewRoomShell({
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           <span className="flex items-baseline gap-2">
             <span>Room</span>
             <span className="text-base tracking-[0.25em] text-ink normal-case">
               {code}
             </span>
-            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+            <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
               Crew
             </span>
           </span>
@@ -1165,7 +1165,7 @@ function CrewRoomShell({
                 {nicknameById.get(playerId)}
               </span>
               {you.isHost && (
-                <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-accent">
+                <span className="rounded-xl border-2 border-accent/60 px-1.5 py-0.5 text-[10px] font-bold tracking-[0.12em] text-accent">
                   Host
                 </span>
               )}
@@ -1217,13 +1217,13 @@ function HoldRoomShell({
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           <span className="flex items-baseline gap-2">
             <span>Room</span>
             <span className="text-base tracking-[0.25em] text-ink normal-case">
               {code}
             </span>
-            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+            <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
               Hold
             </span>
           </span>
@@ -1252,7 +1252,7 @@ function HoldRoomShell({
                 {nicknameById.get(playerId)}
               </span>
               {you.isHost && (
-                <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-accent">
+                <span className="rounded-xl border-2 border-accent/60 px-1.5 py-0.5 text-[10px] font-bold tracking-[0.12em] text-accent">
                   Host
                 </span>
               )}
@@ -1312,7 +1312,7 @@ function CasualModeButton({
           ? "Shortlist: visible to all"
           : "Shortlist: off (host can enable)"
       }
-      className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] transition-all duration-100 active:scale-[0.95] disabled:opacity-40 disabled:active:scale-100 ${
+      className={`rounded-xl border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] transition-all duration-100 active:scale-[0.95] disabled:opacity-40 disabled:active:scale-100 ${
         enabled
           ? "border-accent/60 bg-accent/10 text-accent hover:bg-accent hover:text-page"
           : "border-line text-ink-faint hover:border-ink hover:text-ink"
@@ -1617,7 +1617,7 @@ function PoliceBadge({
     const isImp = investigation.isImposter;
     return (
       <div
-        className={`mt-5 inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] ${
+        className={`mt-5 inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] ${
           isImp
             ? "border-oxblood/50 bg-oxblood/10 text-oxblood"
             : "border-leaf/50 bg-leaf/10 text-leaf"
@@ -1628,7 +1628,7 @@ function PoliceBadge({
           <span
             className={`flex h-5 w-5 items-center justify-center rounded-full ${av.color} ${
               av.isCustom
-                ? "border border-line text-xs"
+                ? "border-2 border-line text-xs"
                 : "text-[10px] font-semibold text-white"
             }`}
           >
@@ -1651,7 +1651,7 @@ function PoliceBadge({
         type="button"
         onClick={() => setOpen((o) => !o)}
         disabled={!usable}
-        className="rounded-sm border border-accent/60 bg-accent/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-accent transition-all duration-100 hover:bg-accent hover:text-page active:scale-[0.97] disabled:opacity-40"
+        className="rounded-xl border-2 border-accent/60 bg-accent/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-accent transition-all duration-100 hover:bg-accent hover:text-page active:scale-[0.97] disabled:opacity-40"
         title={
           usable
             ? "You're the cop. Investigate one player."
@@ -1661,7 +1661,7 @@ function PoliceBadge({
         Investigate · 1 use left
       </button>
       {open && usable && (
-        <div className="w-full max-w-xs space-y-1 rounded-sm border border-line bg-page p-2 text-left shadow-md">
+        <div className="w-full max-w-xs space-y-1 rounded-xl border-2 border-line bg-page p-2 text-left shadow-md">
           <div className="px-1 pb-1 text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             Pick a player to investigate
           </div>
@@ -1675,12 +1675,12 @@ function PoliceBadge({
                   type="button"
                   onClick={() => pick(p.id)}
                   disabled={pending}
-                  className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-left transition hover:bg-surface disabled:opacity-40"
+                  className="flex w-full items-center gap-2 rounded-xl px-2 py-1.5 text-left transition hover:bg-surface disabled:opacity-40"
                 >
                   <span
                     className={`flex h-6 w-6 items-center justify-center rounded-full ${av.color} ${
                       av.isCustom
-                        ? "border border-line text-xs"
+                        ? "border-2 border-line text-xs"
                         : "text-[10px] font-semibold text-white"
                     }`}
                   >
@@ -1720,13 +1720,13 @@ function MoleModeBadge({
     if (!j) return null;
     const av = avatarFor(j.id, j.nickname, j.avatar, view.players);
     return (
-      <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-leaf/40 bg-leaf/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-leaf">
+      <div className="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-leaf/40 bg-leaf/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-leaf">
         <span>Your jesus:</span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className={`flex h-5 w-5 items-center justify-center rounded-full ${av.color} ${
               av.isCustom
-                ? "border border-line text-xs"
+                ? "border-2 border-line text-xs"
                 : "text-[10px] font-semibold text-white"
             }`}
           >
@@ -1744,7 +1744,7 @@ function MoleModeBadge({
   if (you.isImposter) {
     if (you.teammateIds.length === 0) {
       return (
-        <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-oxblood/40 bg-oxblood/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-oxblood">
+        <div className="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-oxblood/40 bg-oxblood/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-oxblood">
           You&apos;re flying solo
         </div>
       );
@@ -1753,7 +1753,7 @@ function MoleModeBadge({
       .map((id) => playerById.get(id))
       .filter((p): p is NonNullable<typeof p> => !!p);
     return (
-      <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-oxblood/40 bg-oxblood/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-oxblood">
+      <div className="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-oxblood/40 bg-oxblood/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-oxblood">
         <span>Your {teammates.length === 1 ? "partner" : "team"}:</span>
         {teammates.map((p, i) => {
           const av = avatarFor(p.id, p.nickname, p.avatar, view.players);
@@ -1763,7 +1763,7 @@ function MoleModeBadge({
               <span
                 className={`flex h-5 w-5 items-center justify-center rounded-full ${av.color} ${
                   av.isCustom
-                    ? "border border-line text-xs"
+                    ? "border-2 border-line text-xs"
                     : "text-[10px] font-semibold text-white"
                 }`}
               >
@@ -1785,13 +1785,13 @@ function MoleModeBadge({
     if (!p) return null;
     const av = avatarFor(p.id, p.nickname, p.avatar, view.players);
     return (
-      <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-leaf/40 bg-leaf/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-leaf">
+      <div className="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-leaf/40 bg-leaf/5 px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-leaf">
         <span>Your partner:</span>
         <span className="inline-flex items-center gap-1.5">
           <span
             className={`flex h-5 w-5 items-center justify-center rounded-full ${av.color} ${
               av.isCustom
-                ? "border border-line text-xs"
+                ? "border-2 border-line text-xs"
                 : "text-[10px] font-semibold text-white"
             }`}
           >
@@ -1807,7 +1807,7 @@ function MoleModeBadge({
 
   // Mole mode — crewmate without a partner (lone wolf in odd crew counts).
   return (
-    <div className="mt-5 inline-flex items-center gap-2 rounded-sm border border-line px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-ink-soft">
+    <div className="mt-5 inline-flex items-center gap-2 rounded-xl border-2 border-line px-3 py-1.5 text-[11px] uppercase tracking-[0.18em] text-ink-soft">
       You have no partner this round
     </div>
   );
@@ -1835,7 +1835,7 @@ function SpeakerIcon({ className = "" }: { className?: string }) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+    <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
       {children}
     </h2>
   );
@@ -1877,7 +1877,7 @@ function LobbyMatchHistoryPanel({ view }: { view: PublicRoomView }) {
             return (
               <div
                 key={`j${j.matchNumber}`}
-                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -1907,7 +1907,7 @@ function LobbyMatchHistoryPanel({ view }: { view: PublicRoomView }) {
             return (
               <div
                 key={`w${w.matchNumber}`}
-                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -1949,7 +1949,7 @@ function LobbyMatchHistoryPanel({ view }: { view: PublicRoomView }) {
           return (
             <div
               key={`i${im.matchNumber}`}
-              className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+              className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
             >
               <div className="flex items-baseline justify-between gap-3">
                 <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -2033,7 +2033,7 @@ function PlayerList({
             <div
               className={`flex h-9 w-9 items-center justify-center rounded-full ${color} ${
                 isCustom
-                  ? "border border-line text-base"
+                  ? "border-2 border-line text-base"
                   : "text-sm font-semibold text-white"
               }`}
             >
@@ -2043,7 +2043,7 @@ function PlayerList({
               <div className="text-sm text-ink">
                 {p.nickname}
                 {p.id === view.hostId && (
-                  <span className="ml-2 text-[10px] uppercase tracking-[0.18em] text-accent">
+                  <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-accent">
                     Host
                   </span>
                 )}
@@ -2066,8 +2066,8 @@ function PlayerList({
                   p.antePaid || p.hasPermission
                     ? "bg-leaf text-white"
                     : p.walletAddress
-                      ? "border border-accent text-accent"
-                      : "border border-line text-ink-faint"
+                      ? "border-2 border-accent text-accent"
+                      : "border-2 border-line text-ink-faint"
                 }`}
                 title={
                   p.antePaid
@@ -2189,7 +2189,7 @@ function KickButton({
             : `Kick ${targetNickname}`
         }
         aria-label={`Kick ${targetNickname}`}
-        className={`rounded-sm border px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] transition-all duration-100 active:scale-[0.97] disabled:opacity-50 ${
+        className={`rounded-xl border px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] transition-all duration-100 active:scale-[0.97] disabled:opacity-50 ${
           armed
             ? "border-oxblood bg-oxblood text-white hover:bg-oxblood/90"
             : "border-line text-ink-faint hover:border-oxblood hover:text-oxblood"
@@ -2294,7 +2294,7 @@ function PotPanel({
         <button
           onClick={() => toggle(true)}
           disabled={hostToggling}
-          className="w-full rounded-sm border border-ink px-4 py-3 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
+          className="w-full rounded-xl border-2 border-ink px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
         >
           {hostToggling ? "Enabling..." : "Enable 1 USDC pot"}
         </button>
@@ -2315,7 +2315,7 @@ function PotPanel({
   const playerCount = view.players.length;
 
   return (
-    <section className="space-y-3 border border-accent/30 bg-accent/5 p-5">
+    <section className="space-y-3 border-2 border-accent/30 bg-accent/5 p-5">
       <div className="flex items-baseline justify-between">
         <SectionLabel>Pot</SectionLabel>
         {isHost && pot.paidCount === 0 && (
@@ -2350,11 +2350,11 @@ function PotPanel({
       </div>
 
       {me?.antePaid ? (
-        <div className="rounded-sm border border-leaf/40 bg-leaf/10 px-4 py-3 text-sm text-leaf">
+        <div className="rounded-xl border-2 border-leaf/40 bg-leaf/10 px-4 py-3 text-sm text-leaf">
           ✓ You&apos;ve anted · pot locked until reveal
         </div>
       ) : me?.hasPermission ? (
-        <div className="rounded-sm border border-leaf/40 bg-leaf/10 px-4 py-3 text-sm text-leaf">
+        <div className="rounded-xl border-2 border-leaf/40 bg-leaf/10 px-4 py-3 text-sm text-leaf">
           ✓ Authorized · host can begin when everyone&apos;s in
           {address && (
             <div className="mt-1 text-[11px] uppercase tracking-[0.18em] text-leaf/80">
@@ -2373,7 +2373,7 @@ function PotPanel({
           <button
             onClick={doGrantPermission}
             disabled={granting || isConnecting}
-            className="w-full rounded-sm bg-ink px-4 py-3 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:opacity-40"
+            className="w-full rounded-xl bg-ink px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:opacity-40"
           >
             {granting
               ? "Authorizing..."
@@ -2450,17 +2450,17 @@ function PoliceModeToggle({
           <button
             onClick={toggle}
             disabled={pending}
-            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.97] disabled:opacity-40 ${
+            className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.97] disabled:opacity-40 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
-                : "border border-ink text-ink hover:bg-ink hover:text-page"
+                : "border-2 border-ink text-ink hover:bg-ink hover:text-page"
             }`}
           >
             {pending ? "..." : enabled ? "On" : "Off"}
           </button>
         ) : (
           <span
-            className={`shrink-0 rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${
+            className={`shrink-0 rounded-xl border-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${
               enabled
                 ? "border-accent/60 text-accent"
                 : "border-line text-ink-faint"
@@ -2538,17 +2538,17 @@ function JesusModeToggle({
           <button
             onClick={toggle}
             disabled={pending}
-            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
+            className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
-                : "border border-ink text-ink hover:bg-ink hover:text-page"
+                : "border-2 border-ink text-ink hover:bg-ink hover:text-page"
             }`}
           >
             {pending ? "..." : enabled ? "On" : "Off"}
           </button>
         ) : (
           <span
-            className={`shrink-0 rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${
+            className={`shrink-0 rounded-xl border-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${
               enabled
                 ? "border-accent/60 text-accent"
                 : "border-line text-ink-faint"
@@ -2637,17 +2637,17 @@ function MoleModeToggle({
           <button
             onClick={toggle}
             disabled={pending}
-            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
+            className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
-                : "border border-ink text-ink hover:bg-ink hover:text-page"
+                : "border-2 border-ink text-ink hover:bg-ink hover:text-page"
             }`}
           >
             {pending ? "..." : enabled ? "On" : "Off"}
           </button>
         ) : (
           <span
-            className={`shrink-0 rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${
+            className={`shrink-0 rounded-xl border-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${
               enabled
                 ? "border-accent/60 text-accent"
                 : "border-line text-ink-faint"
@@ -2719,17 +2719,17 @@ function CandidatesModeToggle({
           <button
             onClick={toggle}
             disabled={pending}
-            className={`shrink-0 rounded-sm px-4 py-2 text-[11px] uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
+            className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
-                : "border border-ink text-ink hover:bg-ink hover:text-page"
+                : "border-2 border-ink text-ink hover:bg-ink hover:text-page"
             }`}
           >
             {pending ? "..." : enabled ? "On" : "Off"}
           </button>
         ) : (
           <span
-            className={`shrink-0 rounded-sm border px-3 py-1 text-[11px] uppercase tracking-[0.2em] ${
+            className={`shrink-0 rounded-xl border-2 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] ${
               enabled
                 ? "border-accent/60 text-accent"
                 : "border-line text-ink-faint"
@@ -2885,7 +2885,7 @@ function LobbyPhase({
           <input
             readOnly
             value={shareUrl}
-            className="flex-1 border-b border-line bg-transparent px-1 pb-1 text-xs text-ink-soft outline-none"
+            className="flex-1 rounded-xl border-2 border-line bg-surface/40 px-4 py-3 text-xs text-ink-soft outline-none"
           />
           <button
             onClick={() => {
@@ -2904,7 +2904,7 @@ function LobbyPhase({
         <button
           onClick={start}
           disabled={!startReady || starting}
-          className="rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {startLabel}
         </button>
@@ -3068,7 +3068,7 @@ function SkipWordControl({
   }
 
   return (
-    <section className="space-y-2 border border-line-soft bg-surface/30 px-4 py-3">
+    <section className="space-y-2 border-2 border-line-soft bg-surface/30 px-4 py-3">
       <div className="flex items-center justify-between gap-3">
         <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           {votes} / {threshold} want a new word
@@ -3078,8 +3078,8 @@ function SkipWordControl({
           disabled={submitting}
           className={
             iVoted
-              ? "rounded-sm border-2 border-ink px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
-              : "rounded-sm bg-ink px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+              ? "rounded-xl border-2 border-ink px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+              : "rounded-xl bg-ink px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
           }
         >
           {submitting
@@ -3207,7 +3207,7 @@ function PlayingPhase({
       <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
         <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
         <section className="space-y-1">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
             Category
           </div>
           <div className="flex items-baseline justify-between gap-3">
@@ -3221,7 +3221,7 @@ function PlayingPhase({
         </section>
 
         <section className="relative border-y-2 border-line bg-surface/70 px-6 py-5 text-center sm:py-10">
-          <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-[11px] uppercase tracking-[0.22em]">
+          <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-page px-3 text-xs font-bold uppercase tracking-[0.14em]">
             <span className={you.isImposter ? "text-oxblood" : "text-leaf"}>
               {you.isImposter ? "Imposter" : "Your word"}
             </span>
@@ -3282,7 +3282,7 @@ function PlayingPhase({
                   data-form-type="other"
                   data-1p-ignore="true"
                   data-lpignore="true"
-                  className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl  text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
+                  className="min-w-0 flex-1 rounded-xl border-2 border-accent bg-surface/40 px-4 py-3 font-serif text-2xl  text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && word.trim() && !submitting) submit();
                   }}
@@ -3290,7 +3290,7 @@ function PlayingPhase({
                 <button
                   onClick={submit}
                   disabled={submitting || word.trim().length === 0}
-                  className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+                  className="rounded-xl bg-ink px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   {submitting ? "..." : "Submit"}
                 </button>
@@ -3335,7 +3335,7 @@ function PlayingPhase({
 function CandidatesShowcase({ view }: { view: PublicRoomView }) {
   const empty = view.guessCandidates.length === 0;
   return (
-    <section className="space-y-3 border border-line-soft bg-surface/30 p-5">
+    <section className="space-y-3 border-2 border-line-soft bg-surface/30 p-5">
       <div className="flex items-baseline justify-between">
         <SectionLabel>Possible answers</SectionLabel>
         <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -3354,7 +3354,7 @@ function CandidatesShowcase({ view }: { view: PublicRoomView }) {
           {view.guessCandidates.map((c) => (
             <span
               key={c}
-              className="rounded-full border border-line bg-page px-3 py-1 text-sm text-ink-soft"
+              className="rounded-full border-2 border-line bg-page px-3 py-1 text-sm text-ink-soft"
             >
               {c}
             </span>
@@ -3398,7 +3398,7 @@ function Scoreboard({
   const sorted = [...view.players].sort((a, b) => b.score - a.score);
   return (
     <div className="space-y-2">
-      <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
         Scores
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1">
@@ -3467,7 +3467,7 @@ function MatchProgress({ view }: { view: PublicRoomView }) {
 
   return (
     <div className="space-y-2">
-      <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
         Match progress
       </div>
       <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
@@ -3515,7 +3515,7 @@ function PotStatus({ view }: { view: PublicRoomView }) {
   const total = (ante * BigInt(view.pot.paidCount)).toString();
   return (
     <div className="space-y-2">
-      <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
         Pot
       </div>
       <div className="text-xl font-semibold leading-none text-ink tabular-nums">
@@ -3548,7 +3548,7 @@ function ActivePlayerHero({
     players
   );
   return (
-    <div className="relative flex flex-col items-center gap-3 border border-line-soft bg-surface/30 px-6 py-5 sm:gap-5 sm:py-10">
+    <div className="relative flex flex-col items-center gap-3 border-2 border-line-soft bg-surface/30 px-6 py-5 sm:gap-5 sm:py-10">
       <div className="relative">
         <motion.span
           aria-hidden
@@ -3570,7 +3570,7 @@ function ActivePlayerHero({
         <div
           className={`relative flex h-20 w-20 items-center justify-center rounded-full sm:h-32 sm:w-32 ${color} ${
             isCustom
-              ? "border border-line text-3xl sm:text-6xl"
+              ? "border-2 border-line text-3xl sm:text-6xl"
               : "text-3xl font-semibold text-white sm:text-5xl"
           }`}
         >
@@ -3579,12 +3579,12 @@ function ActivePlayerHero({
       </div>
       <div className="space-y-1 text-center sm:space-y-1.5">
         <div className="font-serif text-2xl  text-ink sm:text-3xl">{nickname}</div>
-        <div className="flex items-baseline justify-center gap-1 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <div className="flex items-baseline justify-center gap-1 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           <span>is thinking</span>
           <ThinkingDots />
         </div>
         {iAmNext && (
-          <div className="pt-2 text-[11px] uppercase tracking-[0.22em] text-accent sm:pt-3">
+          <div className="pt-2 text-xs font-bold uppercase tracking-[0.14em] text-accent sm:pt-3">
             You&apos;re up next
           </div>
         )}
@@ -3666,7 +3666,7 @@ function TurnStrip({
                 transition={{ duration: 0.25, ease: "easeOut" }}
                 className={`relative flex h-12 w-12 items-center justify-center rounded-full ${color} ${
                   isCustom
-                    ? "border border-line text-2xl"
+                    ? "border-2 border-line text-2xl"
                     : "text-base font-semibold text-white"
                 }`}
               >
@@ -3893,7 +3893,7 @@ function ClueReactions({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 4 }}
               transition={{ duration: 0.12, ease: "easeOut" }}
-              className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border border-line bg-page p-1 shadow-md"
+              className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border-2 border-line bg-page p-1 shadow-md"
             >
               {REACTION_EMOJI.map((emoji) => {
                 const mine = effective(emoji).mine;
@@ -4072,7 +4072,7 @@ function ClueRoundBlock({
                               <div
                                 className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${color} ${
                                   isCustom
-                                    ? "border border-line text-xs"
+                                    ? "border-2 border-line text-xs"
                                     : "text-[10px] font-semibold text-white"
                                 }`}
                               >
@@ -4210,7 +4210,7 @@ function VotingPhase({
   return (
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
       <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
-        <section className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <section className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           <span className="text-sm text-ink-soft normal-case tracking-normal">
             {view.category}
           </span>
@@ -4278,7 +4278,7 @@ function VotingPhase({
                         ? "Vote locked"
                         : `Vote for ${p.nickname}`
                   }
-                  className={`group/voterow relative flex w-full items-center gap-4 rounded-md border-2 px-4 py-4 text-left transition active:scale-[0.99] ${
+                  className={`group/voterow relative flex w-full items-center gap-4 rounded-xl border-2 px-4 py-4 text-left transition active:scale-[0.99] ${
                     selected
                       ? "border-accent bg-accent/10 shadow-[0_0_0_4px_rgba(168,134,77,0.08)]"
                       : disabled
@@ -4290,7 +4290,7 @@ function VotingPhase({
                     <div
                       className={`flex h-11 w-11 items-center justify-center rounded-full ${color} ${
                         isCustom
-                          ? "border border-line text-2xl"
+                          ? "border-2 border-line text-2xl"
                           : "text-base font-semibold text-white"
                       }`}
                     >
@@ -4305,7 +4305,7 @@ function VotingPhase({
                       </span>
                     )}
                   </div>
-                  <div className="flex flex-1 items-baseline gap-2 text-xl text-ink">
+                  <div className="flex flex-1 items-baseline gap-2 text-xl font-semibold text-ink">
                     <span>{p.nickname}</span>
                     {isYou && (
                       <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -4356,7 +4356,7 @@ function VotingPhase({
                 }}
                 onClick={submit}
                 disabled={submitting}
-                className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {submitting
                   ? "Submitting"
@@ -4401,7 +4401,7 @@ function VotingPhase({
                 stiffness: 380,
                 damping: 28,
               }}
-              className="rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink shadow-lg"
+              className="rounded-full border-2 border-line bg-surface px-4 py-2 text-sm text-ink shadow-lg"
             >
               <span className="font-semibold text-ink">{t.nickname}</span>
               <span className="ml-2 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -4485,8 +4485,8 @@ function GuessPhase({
     return (
       <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
         <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
-          <section className="border border-line bg-surface p-8 text-center">
-            <div className="text-[11px] uppercase tracking-[0.22em] text-accent">
+          <section className="border-2 border-line bg-surface p-8 text-center">
+            <div className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
               Caught
             </div>
             <div className="mt-3 font-serif text-3xl  text-ink">
@@ -4516,7 +4516,7 @@ function GuessPhase({
                   {candidates.map((c) => (
                     <span
                       key={c}
-                      className="rounded-full border border-line bg-page px-3 py-1 text-sm text-ink-soft"
+                      className="rounded-full border-2 border-line bg-page px-3 py-1 text-sm text-ink-soft"
                     >
                       {c}
                     </span>
@@ -4546,7 +4546,7 @@ function GuessPhase({
     <div className="flex flex-col gap-7 lg:grid lg:grid-cols-3 lg:items-start lg:gap-8">
       <div className="flex min-w-0 flex-col gap-7 lg:col-span-1">
         <section className="border-2 border-accent bg-accent/5 p-8 text-center">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-accent">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
             You were caught
           </div>
           <div className="mt-3 font-serif text-3xl  text-ink">
@@ -4576,7 +4576,7 @@ function GuessPhase({
               data-form-type="other"
               data-1p-ignore="true"
               data-lpignore="true"
-              className="min-w-0 flex-1 border-b border-line bg-transparent px-1 pb-2 font-serif text-xl  text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+              className="min-w-0 flex-1 rounded-xl border-2 border-line bg-surface/40 px-4 py-3 font-serif text-xl  text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
               onKeyDown={(e) => {
                 if (e.key === "Enter" && guess.trim() && !submitting) submit();
               }}
@@ -4584,7 +4584,7 @@ function GuessPhase({
             <button
               onClick={submit}
               disabled={submitting || guess.trim().length === 0}
-              className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+              className="rounded-2xl bg-accent px-5 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
             >
               {submitting ? "Judging" : "Submit"}
             </button>
@@ -4627,7 +4627,7 @@ function GuessPhase({
           </div>
         </section>
 
-        <section className="flex items-center justify-between text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <section className="flex items-center justify-between text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           <span>Category</span>
           <span className="text-sm text-ink-soft normal-case tracking-normal">
             {view.category}
@@ -5123,7 +5123,7 @@ function RevealPhase({
             </motion.div>
             <div className="mt-4 text-sm text-ink-soft">{subtitle}</div>
             {pointsEarned > 0 && (
-              <div className="mt-5 inline-block border border-ink px-4 py-1 text-[11px] uppercase tracking-[0.2em] text-ink">
+              <div className="mt-5 inline-block border-2 border-ink px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink">
                 +{pointsEarned} point{pointsEarned === 1 ? "" : "s"}
               </div>
             )}
@@ -5131,8 +5131,8 @@ function RevealPhase({
         )}
       </AnimatePresence>
 
-      <section className="border border-line bg-surface p-8 text-center">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <section className="border-2 border-line bg-surface p-8 text-center">
+        <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Category
         </div>
         <div className="mt-2 flex min-h-[2rem] items-center justify-center font-serif text-2xl text-ink">
@@ -5150,7 +5150,7 @@ function RevealPhase({
         </div>
 
         <div className="mt-6 border-t border-line-soft pt-6">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
             {multiImposter ? "The imposters were" : "The imposter was"}
           </div>
           <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl  text-oxblood">
@@ -5186,7 +5186,7 @@ function RevealPhase({
         </div>
 
         <div className="mt-6 border-t border-line-soft pt-6">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
             Secret word
           </div>
           <div className="mt-2 flex min-h-[2.5rem] items-center justify-center font-serif text-3xl text-ink">
@@ -5206,7 +5206,7 @@ function RevealPhase({
 
         {reveal.guess && (
           <div className="mt-6 border-t border-line-soft pt-6">
-            <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+            <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
               Imposter guessed
             </div>
             <div className="mt-2 flex min-h-[2rem] items-center justify-center gap-3">
@@ -5225,7 +5225,7 @@ function RevealPhase({
                     {reveal.guess}
                   </span>
                   <span
-                    className={`rounded-sm px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] ${
+                    className={`rounded-xl px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] ${
                       reveal.guessOutcome === "exact"
                         ? "bg-leaf text-white"
                         : reveal.guessOutcome === "close"
@@ -5266,7 +5266,7 @@ function RevealPhase({
           >
       {view.guessCandidates.length > 0 && (
         <section className="space-y-3">
-          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
             The shortlist
           </div>
           <div className="flex flex-wrap gap-2">
@@ -5318,7 +5318,7 @@ function RevealPhase({
       </section>
 
       {view.payouts.length > 0 && (
-        <section className="space-y-3 border border-accent/30 bg-accent/5 p-5">
+        <section className="space-y-3 border-2 border-accent/30 bg-accent/5 p-5">
           <div className="flex items-baseline justify-between">
             <SectionLabel>Pot payout</SectionLabel>
             <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -5371,13 +5371,13 @@ function RevealPhase({
           <button
             onClick={playAgain}
             disabled={restarting}
-            className="flex-1 rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex-1 rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
           >
             {restarting ? "..." : "Play again"}
           </button>
           <button
             onClick={() => router.push("/")}
-            className="rounded-sm border border-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
+            className="rounded-xl border-2 border-ink px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
           >
             Exit
           </button>
