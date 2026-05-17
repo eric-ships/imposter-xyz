@@ -40,6 +40,21 @@ export default function AuthPage() {
   const [sent, setSent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Surface a failed Discord round-trip — the OAuth callback redirects
+  // back here with ?discord=error when something went wrong.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("discord") === "error") {
+      setError("Discord sign-in didn't go through. Please try again.");
+    }
+  }, []);
+
+  function signInWithDiscord() {
+    const token = getOrMintDeviceToken();
+    const qs = token ? `?deviceToken=${encodeURIComponent(token)}` : "";
+    window.location.href = `/api/auth/discord/start${qs}`;
+  }
+
   async function send() {
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) return;
@@ -152,6 +167,30 @@ export default function AuthPage() {
               className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
             >
               {pending ? "Sending…" : "Send sign-in link"}
+            </button>
+
+            <div className="flex items-center gap-3" aria-hidden>
+              <span className="h-px flex-1 bg-line" />
+              <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                or
+              </span>
+              <span className="h-px flex-1 bg-line" />
+            </div>
+
+            <button
+              onClick={signInWithDiscord}
+              className="flex w-full items-center justify-center gap-2.5 rounded-sm bg-[#5865F2] px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-white transition-all duration-100 hover:bg-[#4752c4] active:scale-[0.97]"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden
+              >
+                <path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3c-.21.375-.444.88-.608 1.27a18.27 18.27 0 0 0-5.487 0A12.6 12.6 0 0 0 9.847 3 19.74 19.74 0 0 0 6.084 4.37C2.61 9.56 1.67 14.62 2.14 19.61a19.94 19.94 0 0 0 6.05 3.04c.49-.67.927-1.38 1.3-2.13-.713-.27-1.396-.602-2.04-.99.171-.127.34-.26.5-.396 3.927 1.83 8.18 1.83 12.06 0 .163.137.332.27.5.396-.645.39-1.33.722-2.043.992.375.75.81 1.46 1.3 2.13a19.9 19.9 0 0 0 6.053-3.04c.553-5.78-.945-10.79-3.96-15.24ZM8.68 16.54c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.095 2.157 2.42 0 1.335-.955 2.42-2.157 2.42Zm6.64 0c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.095 2.157 2.42 0 1.335-.946 2.42-2.157 2.42Z" />
+              </svg>
+              Continue with Discord
             </button>
 
             <p className="text-xs leading-relaxed text-ink-faint">

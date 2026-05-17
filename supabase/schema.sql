@@ -444,3 +444,16 @@ do $$ begin
     alter publication supabase_realtime add table room_events;
   end if;
 end $$;
+
+-- ── Discord OAuth identity ───────────────────────────────────────────
+-- Lets a Discord account act as a portable Upper identity, alongside
+-- email. discord_id is the stable Discord user snowflake; username and
+-- avatar are display snapshots refreshed on every sign-in. The partial
+-- unique index keeps discord_id one-per-user while still allowing the
+-- many users who never link Discord to share a NULL.
+alter table users add column if not exists discord_id text;
+alter table users add column if not exists discord_username text;
+alter table users add column if not exists discord_avatar text;
+create unique index if not exists users_discord_id_key
+  on users (discord_id)
+  where discord_id is not null;
