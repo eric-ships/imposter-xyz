@@ -463,3 +463,13 @@ create unique index if not exists users_discord_id_key
 -- webhook URL here. When set, every finished match attributed to the
 -- group is posted to that channel. NULL = not linked (the default).
 alter table groups add column if not exists discord_webhook_url text;
+
+-- ── Discord Activity rooms ───────────────────────────────────────────
+-- When Upper runs as a Discord Activity, every player in the same
+-- voice-channel Activity instance shares one room. discord_instance_id
+-- is the Discord-supplied instance id; the unique index keeps it to a
+-- single room per instance. NULL for ordinary web rooms.
+alter table rooms add column if not exists discord_instance_id text;
+create unique index if not exists rooms_discord_instance_id_key
+  on rooms (discord_instance_id)
+  where discord_instance_id is not null;
