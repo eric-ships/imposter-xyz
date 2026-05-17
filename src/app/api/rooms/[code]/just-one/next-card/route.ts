@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
-import { advanceCard, replayMatch } from "@/games/just-one/state";
+import { advanceCard } from "@/games/just-one/state";
 import type { JustOneState } from "@/games/just-one/types";
 import {
   MATCH_HISTORY_CAP,
@@ -44,8 +44,9 @@ export async function POST(
     return NextResponse.json({ error: "no match in progress" }, { status: 400 });
   }
 
-  let nextState: JustOneState;
+  let nextState: JustOneState | null = null;
   let nextHistory: MatchHistoryEntry[] | undefined;
+  let backToLobby = false;
   if (state.phase === "reveal") {
     nextState = advanceCard(state);
   } else if (state.phase === "final") {
@@ -86,7 +87,11 @@ export async function POST(
       })),
     });
 
-    nextState = replayMatch((players ?? []).map((p) => p.id as string));
+    // Match over — return the host to the lobby to pick the next
+    // game (the kind switcher lives there). `players` above is still
+    // used for the group-stats write.
+    void players;
+    backToLobby = true;
   } else {
     return NextResponse.json(
       { error: "can only advance from reveal or final" },
@@ -95,9 +100,14 @@ export async function POST(
   }
 
   const update: Record<string, unknown> = {
-    game_state: nextState,
     updated_at: new Date().toISOString(),
   };
+  if (backToLobby) {
+    update.state = "lobby";
+    update.game_state = {};
+  } else {
+    update.game_state = nextState;
+  }
   if (nextHistory && "match_history" in room) {
     update.match_history = nextHistory;
   }

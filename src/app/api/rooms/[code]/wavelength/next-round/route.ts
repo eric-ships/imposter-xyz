@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { notifyRoom } from "@/lib/room-state";
-import { advanceRound, replayMatch } from "@/games/wavelength/state";
+import { advanceRound } from "@/games/wavelength/state";
 import type { WavelengthState } from "@/games/wavelength/types";
 import {
   MATCH_HISTORY_CAP,
@@ -41,8 +41,9 @@ export async function POST(
     return NextResponse.json({ error: "no match in progress" }, { status: 400 });
   }
 
-  let nextState: WavelengthState;
+  let nextState: WavelengthState | null = null;
   let nextHistory: MatchHistoryEntry[] | undefined;
+  let backToLobby = false;
   if (state.phase === "reveal") {
     nextState = advanceRound(state, state.concept ? [state.concept] : []);
   } else if (state.phase === "final") {
@@ -83,13 +84,9 @@ export async function POST(
       })),
     });
 
-    // Recompute totalRounds from the current player count so a
-    // mid-session table-size change (joined/left between matches) gets
-    // the right "two rounds per player" scaling for the replay.
-    const replayPlayerIds = (playersForSnap ?? []).map(
-      (p) => p.id as string
-    );
-    nextState = replayMatch(replayPlayerIds, replayPlayerIds.length * 2);
+    // Match over — return the host to the lobby to pick the next
+    // game (the kind switcher lives there).
+    backToLobby = true;
   } else {
     return NextResponse.json(
       { error: "can only advance from reveal or final" },
@@ -98,9 +95,14 @@ export async function POST(
   }
 
   const update: Record<string, unknown> = {
-    game_state: nextState,
     updated_at: new Date().toISOString(),
   };
+  if (backToLobby) {
+    update.state = "lobby";
+    update.game_state = {};
+  } else {
+    update.game_state = nextState;
+  }
   if (nextHistory && "match_history" in room) {
     update.match_history = nextHistory;
   }
