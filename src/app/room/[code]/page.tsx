@@ -43,6 +43,7 @@ import { ShareMatchButton } from "@/components/ShareMatchButton";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
 import { StreamerCastBanner } from "@/components/StreamerCastBanner";
 import { StreamerModeToggle } from "@/components/StreamerModeToggle";
+import { GroupLobbyPanel } from "@/components/GroupLobbyPanel";
 import { useIdentity } from "@/lib/identity";
 
 export default function RoomPage({
@@ -532,6 +533,11 @@ function RoomPlay({
           <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
             Imposter
           </span>
+          {view.groupName && (
+            <span className="ml-2 rounded-full border-2 border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
+              {view.groupName}
+            </span>
+          )}
         </span>
         <span className="flex items-center gap-3">
           {you.isHost && (
@@ -978,6 +984,11 @@ function WavelengthRoomShell({
             <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
               Wavelength
             </span>
+            {view.groupName && (
+              <span className="ml-2 rounded-full border-2 border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
+                {view.groupName}
+              </span>
+            )}
           </span>
           <span className="flex items-center gap-3">
             <Link
@@ -1019,6 +1030,9 @@ function WavelengthRoomShell({
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
         {view.state === "lobby" && (
           <StreamerModeToggle view={view} playerId={playerId} code={code} />
+        )}
+        {view.state === "lobby" && view.groupId && (
+          <GroupLobbyPanel view={view} userId={userId} />
         )}
         <WavelengthBody
           view={view}
@@ -1067,6 +1081,11 @@ function JustOneRoomShell({
             <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
               Just One
             </span>
+            {view.groupName && (
+              <span className="ml-2 rounded-full border-2 border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
+                {view.groupName}
+              </span>
+            )}
           </span>
           <span className="flex items-center gap-3">
             <Link
@@ -1108,6 +1127,9 @@ function JustOneRoomShell({
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
         {view.state === "lobby" && (
           <StreamerModeToggle view={view} playerId={playerId} code={code} />
+        )}
+        {view.state === "lobby" && view.groupId && (
+          <GroupLobbyPanel view={view} userId={userId} />
         )}
         <JustOneBody
           view={view}
@@ -1156,6 +1178,11 @@ function CrewRoomShell({
             <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
               Crew
             </span>
+            {view.groupName && (
+              <span className="ml-2 rounded-full border-2 border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
+                {view.groupName}
+              </span>
+            )}
           </span>
           <span className="flex items-center gap-3">
             <Link
@@ -1197,6 +1224,9 @@ function CrewRoomShell({
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
         {view.state === "lobby" && (
           <StreamerModeToggle view={view} playerId={playerId} code={code} />
+        )}
+        {view.state === "lobby" && view.groupId && (
+          <GroupLobbyPanel view={view} userId={userId} />
         )}
         <CrewBody
           view={view}
@@ -1244,6 +1274,11 @@ function HoldRoomShell({
             <span className="ml-2 rounded-full border-2 border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
               Hold
             </span>
+            {view.groupName && (
+              <span className="ml-2 rounded-full border-2 border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
+                {view.groupName}
+              </span>
+            )}
           </span>
           <span className="flex items-center gap-3">
             <Link
@@ -1285,6 +1320,9 @@ function HoldRoomShell({
       <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
         {view.state === "lobby" && (
           <StreamerModeToggle view={view} playerId={playerId} code={code} />
+        )}
+        {view.state === "lobby" && view.groupId && (
+          <GroupLobbyPanel view={view} userId={userId} />
         )}
         <HoldBody
           view={view}
@@ -2897,6 +2935,8 @@ function LobbyPhase({
       <PoliceModeToggle view={view} playerId={playerId} code={code} />
 
       <StreamerModeToggle view={view} playerId={playerId} code={code} />
+
+      {view.groupId && <GroupLobbyPanel view={view} userId={userId} />}
 
       <section className="space-y-3">
         <SectionLabel>Invite</SectionLabel>
