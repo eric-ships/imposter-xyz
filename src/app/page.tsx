@@ -375,21 +375,28 @@ export default function HomePage() {
       </div>
 
       {/* FACE 0 — splash. Identity / groups / stats still settling.
-          A bare centered wordmark so neither real face flashes. */}
+          A bare centered wordmark + loader filling the viewport so
+          neither real face flashes. */}
       {!dataReady && !inFlow && (
-        <main className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center gap-6 px-6">
+        <main className="flex min-h-screen w-full flex-col items-center justify-center gap-8 px-6">
           <h1 className="font-serif text-7xl italic leading-[0.95] tracking-tight text-ink sm:text-8xl">
             Upper
           </h1>
-          <UpperLoader size={44} />
+          <UpperLoader size={48} />
         </main>
       )}
 
       {/* FACE A — new-visitor landing. The marketing front door:
           wordmark, loud hook, the five-game showcase, and the two
-          CTAs into the shared create/join flow. */}
+          CTAs into the shared create/join flow. Full-bleed: on lg+ a
+          two-column split (pitch | showcase) using the whole width;
+          below lg it stacks into a single centered column. */}
       {dataReady && !isReturning && !inFlow && (
-        <main className="mx-auto flex w-full max-w-md flex-col items-center gap-12 px-6 pb-20 pt-14 sm:gap-14 sm:pt-20 lg:max-w-xl lg:pt-24">
+        <main className="flex min-h-screen w-full flex-col items-center justify-center px-6 py-16 sm:py-20 lg:py-12">
+          <div className="flex w-full max-w-md flex-col items-stretch gap-12 sm:gap-14 lg:max-w-6xl lg:flex-row lg:items-center lg:gap-20 xl:max-w-7xl xl:gap-28">
+          {/* LEFT — the pitch: wordmark, hook, supporting line,
+              CTAs, and the how-to-play link. */}
+          <div className="flex w-full flex-col items-stretch gap-10 lg:w-1/2 lg:gap-12">
           <motion.header
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -430,14 +437,45 @@ export default function HomePage() {
             </Link>
           </motion.header>
 
-          {/* The five games, shown off — a showcase, not a picker.
-              Looser than a tidy grid: cards alternate their lean so
-              the stack reads kinetic, not corporate. */}
+          {/* CTAs into the shared flow. */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
+            className="w-full space-y-3"
+          >
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ y: -2 }}
+              onClick={() => {
+                setMode("create");
+                setError(null);
+              }}
+              className="w-full rounded-2xl border-2 border-ink bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-[4px_4px_0_0_var(--color-ink)] transition-[filter] duration-100 hover:brightness-110"
+            >
+              let&apos;s go →
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => {
+                setMode("join");
+                setError(null);
+              }}
+              className="w-full rounded-2xl border-2 border-line px-6 py-3.5 text-sm font-bold lowercase tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
+            >
+              got a code? hop in
+            </motion.button>
+          </motion.div>
+          </div>
+
+          {/* RIGHT — the five games, shown off: a showcase, not a
+              picker. Looser than a tidy grid: cards alternate their
+              lean so the stack reads kinetic, not corporate. */}
           <motion.section
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.24, ease: "easeOut" }}
-            className="w-full"
+            className="w-full lg:w-1/2"
           >
             <h2 className="mb-4 text-sm font-extrabold lowercase tracking-tight text-ink-faint">
               the lineup ↓
@@ -480,36 +518,7 @@ export default function HomePage() {
               })}
             </div>
           </motion.section>
-
-          {/* CTAs into the shared flow. */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
-            className="w-full space-y-3"
-          >
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              whileHover={{ y: -2 }}
-              onClick={() => {
-                setMode("create");
-                setError(null);
-              }}
-              className="w-full rounded-2xl border-2 border-ink bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-[4px_4px_0_0_var(--color-ink)] transition-[filter] duration-100 hover:brightness-110"
-            >
-              let&apos;s go →
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                setMode("join");
-                setError(null);
-              }}
-              className="w-full rounded-2xl border-2 border-line px-6 py-3.5 text-sm font-bold lowercase tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
-            >
-              got a code? hop in
-            </motion.button>
-          </motion.div>
+          </div>
         </main>
       )}
 
