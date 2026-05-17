@@ -695,6 +695,34 @@ function RecentMatchCard({ match }: { match: RecentMatch }) {
     );
   }
 
+  if (
+    "kind" in match.snapshot &&
+    match.snapshot.kind === "crew"
+  ) {
+    const c = match.snapshot;
+    const tasksDone = c.perPlayer.filter((p) => p.taskDone).length;
+    const won = c.outcome === "won";
+    return (
+      <div className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5">
+        <div className="flex items-baseline justify-between gap-3">
+          <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+            Crew · {endedTime}
+          </div>
+          <div
+            className={`text-[11px] uppercase tracking-[0.18em] ${
+              won ? "text-leaf" : "text-oxblood"
+            }`}
+          >
+            {won ? "Mission won" : "Mission lost"}
+          </div>
+        </div>
+        <div className="mt-1 text-sm text-ink-soft">
+          {tasksDone} / {c.taskCount} tasks completed
+        </div>
+      </div>
+    );
+  }
+
   // Imposter
   const im = match.snapshot;
   const winnerLabel =
