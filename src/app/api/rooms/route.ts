@@ -6,7 +6,7 @@ import { generateRoomCode } from "@/lib/room-code";
 // Whitelist of game kinds the create-room endpoint will accept. Keep
 // in lockstep with GameKind in @/lib/game. Anything not in this list
 // (or omitted) falls back to imposter so existing clients keep working.
-const VALID_KINDS = new Set(["imposter", "wavelength", "just-one"]);
+const VALID_KINDS = new Set(["imposter", "wavelength", "just-one", "crew"]);
 
 export async function POST(request: Request) {
   const { nickname, kind, userId, groupId } = (await request.json()) as {

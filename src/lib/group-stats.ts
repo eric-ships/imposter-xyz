@@ -10,6 +10,7 @@
 
 import { supabaseAdmin } from "@/lib/supabase/server";
 import type {
+  CrewMatchEntry,
   ImposterMatchEntry,
   JustOneMatchEntry,
   MatchHistoryEntry,
@@ -74,6 +75,20 @@ function derivePlayerResults(
       role: null,
       won: null,
       delta: j.score,
+    }));
+  }
+
+  // Crew: cooperative — the whole crew wins or loses together. Every
+  // user at the table gets a row; `won` reflects the shared outcome
+  // and `delta` carries how many tasks the crew completed.
+  if ("kind" in snapshot && snapshot.kind === "crew") {
+    const c = snapshot as CrewMatchEntry;
+    const tasksDone = c.perPlayer.filter((p) => p.taskDone).length;
+    return allRoomUserIds.map((uid) => ({
+      user_id: uid,
+      role: null,
+      won: c.outcome === "won",
+      delta: tasksDone,
     }));
   }
 

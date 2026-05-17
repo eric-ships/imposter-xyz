@@ -91,6 +91,8 @@ function Card({
           <WavelengthBody match={match} />
         ) : isJustOne(match) ? (
           <JustOneBody match={match} />
+        ) : isCrew(match) ? (
+          <CrewBodyCard match={match} />
         ) : (
           <ImposterBody match={match} />
         )}
@@ -114,7 +116,9 @@ function Header({
       ? "Wavelength"
       : isJustOne(match)
         ? "Just One"
-        : "Imposter";
+        : isCrew(match)
+          ? "Crew"
+          : "Imposter";
   return (
     <div
       style={{
@@ -216,6 +220,11 @@ function isJustOne(
   m: MatchHistoryEntry
 ): m is Extract<MatchHistoryEntry, { kind: "just-one" }> {
   return "kind" in m && m.kind === "just-one";
+}
+function isCrew(
+  m: MatchHistoryEntry
+): m is Extract<MatchHistoryEntry, { kind: "crew" }> {
+  return "kind" in m && m.kind === "crew";
 }
 
 function ImposterBody({ match }: { match: ImposterEntry }) {
@@ -358,6 +367,63 @@ function WavelengthBody({
         <span style={{ color: INK_FAINT }}>
           &nbsp;points · {match.totalRounds} rounds
         </span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Crew ─────────────────────────────────────────────────────────
+
+function CrewBodyCard({
+  match,
+}: {
+  match: Extract<MatchHistoryEntry, { kind: "crew" }>;
+}) {
+  const won = match.outcome === "won";
+  const tasksDone = match.perPlayer.filter((p) => p.taskDone).length;
+  const resultColor = won ? LEAF : OXBLOOD;
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 24,
+        alignItems: "center",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          fontSize: 16,
+          textTransform: "uppercase",
+          letterSpacing: 4,
+          color: INK_FAINT,
+        }}
+      >
+        Mission {match.matchNumber}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          fontFamily: 'ui-serif, Georgia, "Iowan Old Style", serif',
+          fontStyle: "italic",
+          fontSize: 110,
+          color: resultColor,
+          letterSpacing: -2,
+          lineHeight: 1,
+        }}
+      >
+        {won ? "Mission won" : "Mission lost"}
+      </div>
+      <div
+        style={{
+          display: "flex",
+          fontSize: 28,
+          color: INK,
+        }}
+      >
+        {tasksDone} / {match.taskCount}
+        <span style={{ color: INK_FAINT }}>&nbsp;tasks completed</span>
       </div>
     </div>
   );

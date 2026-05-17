@@ -35,6 +35,7 @@ import { useTheme } from "@/lib/theme";
 import { PalettePicker } from "@/components/PalettePicker";
 import { WavelengthBody } from "@/games/wavelength/WavelengthBody";
 import { JustOneBody } from "@/games/just-one/JustOneBody";
+import { CrewBody } from "@/games/crew/CrewBody";
 import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { ShareMatchButton } from "@/components/ShareMatchButton";
@@ -410,6 +411,17 @@ function RoomPlay({
   if (view.kind === "just-one") {
     return (
       <JustOneRoomShell
+        view={view}
+        playerId={playerId}
+        code={code}
+        onRefetch={onRefetch}
+        userId={userId}
+      />
+    );
+  }
+  if (view.kind === "crew") {
+    return (
+      <CrewRoomShell
         view={view}
         playerId={playerId}
         code={code}
@@ -1069,6 +1081,94 @@ function JustOneRoomShell({
           <StreamerModeToggle view={view} playerId={playerId} code={code} />
         )}
         <JustOneBody
+          view={view}
+          playerId={playerId}
+          code={code}
+          userId={userId}
+        />
+      </div>
+    </main>
+  );
+}
+
+// Crew room shell. Mirrors JustOneRoomShell — same chrome (room code +
+// game badge, theme/mute cluster, you-pill with avatar) but routes the
+// body to CrewBody.
+function CrewRoomShell({
+  view,
+  playerId,
+  code,
+  onRefetch,
+  userId,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+  onRefetch: () => void;
+  userId: string | null;
+}) {
+  const you = view.you!;
+  const nicknameById = useMemo(
+    () => new Map(view.players.map((p) => [p.id, p.nickname])),
+    [view.players]
+  );
+  useAudioPriming();
+  void onRefetch;
+
+  return (
+    <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
+      <FixedRoomChrome />
+      <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
+        <header className="flex items-center justify-between border-b border-line pb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <span className="flex items-baseline gap-2">
+            <span>Room</span>
+            <span className="text-base tracking-[0.25em] text-ink normal-case">
+              {code}
+            </span>
+            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+              Crew
+            </span>
+          </span>
+          <span className="flex items-center gap-3">
+            <Link
+              href="/rules#crew"
+              target="_blank"
+              rel="noreferrer"
+              className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
+              title="How to play"
+            >
+              Rules
+            </Link>
+            <span className="flex items-center gap-2">
+              <AvatarPicker
+                code={code}
+                playerId={playerId}
+                nickname={nicknameById.get(playerId) ?? ""}
+                avatar={
+                  view.players.find((p) => p.id === playerId)?.avatar ??
+                  null
+                }
+                players={view.players}
+              />
+              <span className="text-base text-ink normal-case tracking-normal">
+                {nicknameById.get(playerId)}
+              </span>
+              {you.isHost && (
+                <span className="rounded-sm border border-accent/60 px-1.5 py-0.5 text-[10px] tracking-[0.18em] text-accent">
+                  Host
+                </span>
+              )}
+            </span>
+          </span>
+        </header>
+        <StreamerCastBanner view={view} />
+      </div>
+
+      <div className="flex min-h-0 flex-col gap-5 sm:gap-6 lg:gap-7">
+        {view.state === "lobby" && (
+          <StreamerModeToggle view={view} playerId={playerId} code={code} />
+        )}
+        <CrewBody
           view={view}
           playerId={playerId}
           code={code}
