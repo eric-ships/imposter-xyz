@@ -268,6 +268,11 @@ export async function fetchRoomView(
     "guess_candidates" in room && Array.isArray(room.guess_candidates)
       ? (room.guess_candidates as string[])
       : [];
+
+  const skipVotes: string[] =
+    "skip_votes" in room && Array.isArray(room.skip_votes)
+      ? (room.skip_votes as string[]).filter(Boolean)
+      : [];
   const showCandidatesAlways: boolean =
     "show_candidates_always" in room && !!room.show_candidates_always;
 
@@ -380,6 +385,7 @@ export async function fetchRoomView(
     payouts: payoutList,
     guessCandidates,
     showCandidatesAlways,
+    skipVotes,
     moleMode,
     jesusMode,
     policeMode,

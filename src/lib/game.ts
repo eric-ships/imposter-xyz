@@ -135,6 +135,10 @@ export type PublicRoomView = {
     // result so you can re-read it across refreshes.
     investigation: { targetId: string; isImposter: boolean } | null;
   } | null;
+  // Player ids of crewmates currently voting to skip the secret word.
+  // Empty when no votes are pending; cleared when a skip lands or a new
+  // round begins. Imposter game mode only.
+  skipVotes: string[];
   // Mole mode toggle (host-controlled, lobby only).
   moleMode: boolean;
   // Jesus christ mode toggle (host-controlled, lobby only).

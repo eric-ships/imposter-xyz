@@ -3008,6 +3008,96 @@ function LeaveRoomButton({
   );
 }
 
+// Crewmate-only control to vote a bad secret word out of play. Shown
+// only while the current round has fewer than 2 clues; hidden entirely
+// for imposters. A majority of crewmates draws a fresh word.
+function SkipWordControl({
+  view,
+  playerId,
+  code,
+}: {
+  view: PublicRoomView;
+  playerId: string;
+  code: string;
+}) {
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const you = view.you!;
+  // Imposters never see this. Crewmates only while the skip window is open.
+  if (you.isImposter) return null;
+  const cluesThisRound = view.clues.filter(
+    (c) => c.round === view.round
+  ).length;
+  if (cluesThisRound >= 2) return null;
+
+  // crewmateCount = players minus imposters. The client doesn't get the
+  // imposter set, so derive the count from the standard imposter scaling
+  // (3-4 → 1, 5-7 → 2, 8 → 3) — mole mode always seats 2. The server is
+  // the source of truth; this only drives the displayed tally.
+  const playerCount = view.players.length;
+  const imposters = view.moleMode
+    ? Math.min(2, playerCount - 1)
+    : playerCount >= 8
+      ? 3
+      : playerCount >= 5
+        ? 2
+        : 1;
+  const crewmateCount = playerCount - imposters;
+  const threshold = Math.max(1, Math.ceil(crewmateCount / 2));
+
+  const votes = view.skipVotes.length;
+  const iVoted = view.skipVotes.includes(playerId);
+
+  async function toggle() {
+    setError(null);
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/skip-vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <section className="space-y-2 border border-line-soft bg-surface/30 px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+          {votes} / {threshold} want a new word
+        </span>
+        <button
+          onClick={toggle}
+          disabled={submitting}
+          className={
+            iVoted
+              ? "rounded-sm border-2 border-ink px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+              : "rounded-sm bg-ink px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          }
+        >
+          {submitting
+            ? "..."
+            : iVoted
+              ? "Undo skip vote"
+              : "Skip this word"}
+        </button>
+      </div>
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </section>
+  );
+}
+
 function PlayingPhase({
   view,
   playerId,
@@ -3148,6 +3238,8 @@ function PlayingPhase({
           <MoleModeBadge view={view} you={you} />
           <PoliceBadge view={view} code={code} you={you} />
         </section>
+
+        <SkipWordControl view={view} playerId={playerId} code={code} />
 
         {isMyTurn ? (
           <motion.div

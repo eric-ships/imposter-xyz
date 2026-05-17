@@ -117,6 +117,12 @@ alter table rooms
 alter table rooms add column if not exists imposter_ids uuid[] not null default '{}';
 alter table rooms add column if not exists caught_imposter_id uuid;
 
+-- Skip-the-word votes. During the imposter clue phase, crewmates can
+-- vote to discard a bad secret word and draw a new one. Holds the
+-- player ids of crewmates currently voting to skip; cleared when a
+-- skip lands and at every round boundary.
+alter table rooms add column if not exists skip_votes uuid[] not null default '{}';
+
 -- Pot / escrow fields.
 alter table rooms add column if not exists pot_enabled boolean not null default false;
 -- Ante stored as the exact integer string in token base units (USDC: 6 decimals),
