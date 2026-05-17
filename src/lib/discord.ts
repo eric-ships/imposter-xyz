@@ -77,6 +77,35 @@ export async function exchangeCode(args: {
   return { ok: true, accessToken: data.access_token };
 }
 
+// Exchange an authorization code minted by the Embedded App SDK's
+// `authorize` command. Unlike the web redirect flow there is no
+// redirect_uri — the SDK handles the round-trip inside Discord.
+export async function exchangeActivityCode(
+  code: string
+): Promise<
+  { ok: true; accessToken: string } | { ok: false; error: string }
+> {
+  const body = new URLSearchParams({
+    client_id: discordClientId(),
+    client_secret: requireEnv("DISCORD_CLIENT_SECRET"),
+    grant_type: "authorization_code",
+    code,
+  });
+  const res = await fetch(`${DISCORD_API}/oauth2/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  if (!res.ok) {
+    return { ok: false, error: `token exchange failed (${res.status})` };
+  }
+  const data = (await res.json()) as { access_token?: string };
+  if (!data.access_token) {
+    return { ok: false, error: "token exchange returned no access_token" };
+  }
+  return { ok: true, accessToken: data.access_token };
+}
+
 // Fetch the authenticated user's profile with an access token.
 export async function fetchDiscordUser(
   accessToken: string
