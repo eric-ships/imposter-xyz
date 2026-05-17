@@ -38,6 +38,8 @@ type GroupDetail = {
   ownerUserId: string;
   createdAt: string;
   members: GroupMember[];
+  // Live rooms attributed to this group — members can join / watch.
+  activeRooms: { code: string; kind: string; state: string }[];
 };
 
 export default function GroupPage({
@@ -215,6 +217,9 @@ function RosterTab({
   onLeft: () => void;
   onDeleted: () => void;
 }) {
+  const myNickname =
+    group.members.find((m) => m.userId === identity.userId)?.nickname ??
+    "?";
   return (
     <>
       <section className="space-y-3">
@@ -284,6 +289,13 @@ function RosterTab({
           })}
         </ul>
       </section>
+
+      <GamesSection
+        groupId={group.id}
+        userId={identity.userId!}
+        myNickname={myNickname}
+        activeRooms={group.activeRooms ?? []}
+      />
 
       <section className="space-y-3">
         <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
@@ -430,6 +442,137 @@ function RoomPresencePill({
       <span className="h-1.5 w-1.5 rounded-full bg-leaf" />
       In {label} · {room.code}
     </Link>
+  );
+}
+
+// Games section: start a room attributed to this group, and jump
+// into any group room that's already live. Joining is only possible
+// while a room is in its lobby; in-progress rooms offer a watch link.
+function GamesSection({
+  groupId,
+  userId,
+  myNickname,
+  activeRooms,
+}: {
+  groupId: string;
+  userId: string;
+  myNickname: string;
+  activeRooms: { code: string; kind: string; state: string }[];
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function savePlayer(code: string, playerId: string) {
+    try {
+      localStorage.setItem(`ci:${code}:playerId`, playerId);
+      localStorage.setItem(`ci:${code}:nickname`, myNickname);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  async function startGame() {
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nickname: myNickname,
+          kind: "imposter",
+          userId,
+          groupId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      savePlayer(data.code, data.playerId);
+      router.push(`/room/${data.code}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+      setBusy(false);
+    }
+  }
+
+  async function joinRoom(code: string) {
+    setError(null);
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname: myNickname, userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      savePlayer(code, data.playerId);
+      router.push(`/room/${code}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="space-y-3">
+      <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        Games
+      </h2>
+
+      {activeRooms.length > 0 && (
+        <ul className="space-y-2">
+          {activeRooms.map((r) => {
+            const label = ROOM_KIND_LABEL[r.kind] ?? "Game";
+            const joinable = r.state === "lobby";
+            return (
+              <li
+                key={r.code}
+                className="flex items-center justify-between gap-3 rounded-sm border border-line-soft bg-surface/40 px-3 py-2.5"
+              >
+                <span className="flex items-baseline gap-2">
+                  <span className="text-sm text-ink">{label}</span>
+                  <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+                    {r.code} · {joinable ? "in lobby" : "in progress"}
+                  </span>
+                </span>
+                {joinable ? (
+                  <button
+                    onClick={() => joinRoom(r.code)}
+                    disabled={busy}
+                    className="rounded-sm bg-ink px-4 py-1.5 text-[11px] uppercase tracking-[0.18em] text-page transition hover:bg-accent active:scale-[0.97] disabled:opacity-40"
+                  >
+                    Join
+                  </button>
+                ) : (
+                  <Link
+                    href={`/spectate/${r.code}`}
+                    className="rounded-sm border border-line px-4 py-1.5 text-[11px] uppercase tracking-[0.18em] text-ink-soft transition hover:border-ink hover:text-ink"
+                  >
+                    Watch
+                  </Link>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <button
+        onClick={startGame}
+        disabled={busy}
+        className="w-full rounded-sm bg-ink px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-page transition hover:bg-accent active:scale-[0.97] disabled:opacity-40"
+      >
+        {busy ? "…" : "Start a game for this group"}
+      </button>
+
+      {error && (
+        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-sm text-oxblood">
+          {error}
+        </p>
+      )}
+    </section>
   );
 }
 
