@@ -25,6 +25,7 @@ import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
 import { ShareMatchButton } from "@/components/ShareMatchButton";
+import { SquadPayoffCard } from "@/components/SquadPayoffCard";
 
 // Per-viewer audio cues. Watches state transitions and fires chimes
 // for the local player based on what just changed:
@@ -1155,6 +1156,10 @@ function WavelengthFinal({
           })}
         </ul>
       </section>
+
+      {view.you?.squadStanding && (
+        <SquadPayoffCard standing={view.you.squadStanding} />
+      )}
 
       {isHost ? (
         <button

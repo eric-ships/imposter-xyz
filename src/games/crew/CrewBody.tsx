@@ -29,6 +29,7 @@ import type { MatchHistoryEntry } from "@/lib/match-history";
 import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
+import { SquadPayoffCard } from "@/components/SquadPayoffCard";
 
 // ─── Card visuals ──────────────────────────────────────────────────
 
@@ -761,6 +762,10 @@ function CrewReveal({
           ))}
         </div>
       </section>
+
+      {view.you?.squadStanding && (
+        <SquadPayoffCard standing={view.you.squadStanding} />
+      )}
 
       {isHost ? (
         <button

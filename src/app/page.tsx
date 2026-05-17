@@ -7,6 +7,9 @@ import { motion } from "motion/react";
 import { useTheme } from "@/lib/theme";
 import { PalettePicker } from "@/components/PalettePicker";
 import { useIdentity, getOrMintDeviceToken } from "@/lib/identity";
+import { avatarFor } from "@/lib/avatar";
+import { UpperLoader } from "@/components/UpperLoader";
+import { GAME_VIGNETTES } from "@/components/GameVignettes";
 
 type Mode = "choose" | "create" | "join";
 
@@ -372,93 +375,85 @@ export default function HomePage() {
       </div>
 
       {/* FACE 0 — splash. Identity / groups / stats still settling.
-          A bare centered wordmark so neither real face flashes. */}
+          A bare centered wordmark + loader filling the viewport so
+          neither real face flashes. */}
       {!dataReady && !inFlow && (
-        <main className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col items-center justify-center px-6">
+        <main className="flex min-h-screen w-full flex-col items-center justify-center gap-8 px-6">
           <h1 className="font-serif text-7xl italic leading-[0.95] tracking-tight text-ink sm:text-8xl">
             Upper
           </h1>
+          <UpperLoader size={48} />
         </main>
       )}
 
       {/* FACE A — new-visitor landing. The marketing front door:
-          wordmark, hook, the five-game showcase, and the two CTAs
-          into the shared create/join flow. */}
+          wordmark, loud hook, the five-game showcase, and the two
+          CTAs into the shared create/join flow. Full-bleed: on lg+ a
+          two-column split (pitch | showcase) using the whole width;
+          below lg it stacks into a single centered column. */}
       {dataReady && !isReturning && !inFlow && (
-        <main className="mx-auto flex w-full max-w-md flex-col items-center gap-9 px-6 pb-16 pt-12 sm:gap-11 sm:pt-20 lg:max-w-xl lg:pt-24">
+        <main className="flex min-h-screen w-full flex-col items-center justify-center px-6 py-16 sm:py-20 lg:py-12">
+          <div className="flex w-full max-w-md flex-col items-stretch gap-12 sm:gap-14 lg:max-w-6xl lg:flex-row lg:items-center lg:gap-20 xl:max-w-7xl xl:gap-28">
+          {/* LEFT — the pitch: wordmark, hook, supporting line,
+              CTAs, and the how-to-play link. */}
+          <div className="flex w-full flex-col items-stretch gap-10 lg:w-1/2 lg:gap-12">
           <motion.header
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="flex flex-col items-center text-center"
+            className="flex w-full flex-col items-start"
           >
+            {/* Classic serif anchor — the one quiet element. */}
             <h1 className="font-serif text-7xl italic leading-[0.95] tracking-tight text-ink sm:text-8xl">
               Upper
             </h1>
-            <span className="mt-4 inline-block rounded-full bg-accent px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
-              Party games for the group
-            </span>
-            <p className="mt-6 text-lg font-medium leading-snug text-ink-soft">
-              Party games for your crew. Free, instant, no app.
-            </p>
+            {/* The hook — oversized, loud, lowercase. */}
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
+              className="mt-5 text-[2.75rem] font-extrabold leading-[0.95] tracking-tight text-ink sm:text-6xl"
+            >
+              round up
+              <br />
+              the{" "}
+              <span className="-rotate-2 inline-block rounded-xl bg-accent px-2 pb-1 text-white">
+                squad.
+              </span>
+            </motion.p>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.16, ease: "easeOut" }}
+              className="mt-5 text-lg font-semibold lowercase leading-snug text-ink-soft"
+            >
+              five games, one room. pick a chaos.
+            </motion.p>
             <Link
               href="/rules"
-              className="mt-4 text-sm font-semibold text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
+              className="mt-4 text-sm font-bold lowercase text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
             >
-              How to play →
+              how to play →
             </Link>
           </motion.header>
-
-          {/* The five games, shown off — a showcase, not a picker. */}
-          <motion.section
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
-            className="w-full space-y-3"
-          >
-            <SectionLabel>Five games to play tonight</SectionLabel>
-            <div className="grid grid-cols-1 gap-2.5">
-              {GAMES.map((g, i) => (
-                <motion.div
-                  key={g.kind}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.3,
-                    delay: 0.12 + i * 0.05,
-                    ease: "easeOut",
-                  }}
-                  className="flex items-center gap-3 rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5"
-                >
-                  <span className="flex flex-col gap-0.5">
-                    <span className="font-serif text-xl text-ink">
-                      {g.title}
-                    </span>
-                    <span className="text-xs font-medium text-ink-faint">
-                      {g.sub}
-                    </span>
-                  </span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
 
           {/* CTAs into the shared flow. */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4, ease: "easeOut" }}
-            className="w-full space-y-2.5"
+            transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
+            className="w-full space-y-3"
           >
             <motion.button
               whileTap={{ scale: 0.97 }}
+              whileHover={{ y: -2 }}
               onClick={() => {
                 setMode("create");
                 setError(null);
               }}
-              className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md"
+              className="w-full rounded-2xl border-2 border-ink bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-[4px_4px_0_0_var(--color-ink)] transition-[filter] duration-100 hover:brightness-110"
             >
-              Start playing
+              let&apos;s go →
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.97 }}
@@ -466,11 +461,64 @@ export default function HomePage() {
                 setMode("join");
                 setError(null);
               }}
-              className="w-full rounded-xl border-2 border-line px-6 py-3.5 text-sm font-bold tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
+              className="w-full rounded-2xl border-2 border-line px-6 py-3.5 text-sm font-bold lowercase tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
             >
-              Join with a code
+              got a code? hop in
             </motion.button>
           </motion.div>
+          </div>
+
+          {/* RIGHT — the five games, shown off: a showcase, not a
+              picker. Looser than a tidy grid: cards alternate their
+              lean so the stack reads kinetic, not corporate. */}
+          <motion.section
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.24, ease: "easeOut" }}
+            className="w-full lg:w-1/2"
+          >
+            <h2 className="mb-4 text-sm font-extrabold lowercase tracking-tight text-ink-faint">
+              the lineup ↓
+            </h2>
+            <div className="flex flex-col gap-3">
+              {GAMES.map((g, i) => {
+                const Vignette = GAME_VIGNETTES[g.kind];
+                // Alternate lean + offset so the stack feels hand-set.
+                const lean = i % 2 === 0 ? "-rotate-1" : "rotate-1";
+                const nudge = i % 2 === 0 ? "self-start" : "self-end";
+                return (
+                  <motion.div
+                    key={g.kind}
+                    initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{
+                      duration: 0.32,
+                      delay: 0.3 + i * 0.06,
+                      ease: "easeOut",
+                    }}
+                    whileHover={{ rotate: 0, scale: 1.02 }}
+                    className={`flex w-[92%] items-center gap-4 rounded-2xl border-2 border-ink bg-surface px-4 py-3.5 shadow-[3px_3px_0_0_var(--color-ink)] ${lean} ${nudge}`}
+                  >
+                    {/* Animated game vignette — the card's visual. */}
+                    {Vignette && (
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center">
+                        <Vignette />
+                      </span>
+                    )}
+                    <span className="flex flex-col gap-0.5">
+                      <span className="font-serif text-2xl text-ink">
+                        {g.title}
+                      </span>
+                      <span className="text-xs font-semibold lowercase text-ink-faint">
+                        {g.sub}
+                      </span>
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.section>
+          </div>
         </main>
       )}
 
@@ -508,38 +556,58 @@ export default function HomePage() {
             />
           )}
 
-          {/* Your groups — each a one-tap "Start a game" launcher. */}
-          {identity.userId && (
-            <MyGroupsSection
-              userId={identity.userId}
-              email={identity.email}
-              groups={groups}
-              totalMatches={totalMatches}
-            />
-          )}
-
-          {/* New-game entry into the shared flow; join is secondary. */}
-          <div className="w-full space-y-2.5">
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              onClick={() => {
-                setMode("create");
-                setError(null);
-              }}
-              className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md"
-            >
-              + New game
-            </motion.button>
-            <button
-              onClick={() => {
-                setMode("join");
-                setError(null);
-              }}
-              className="block w-full text-center text-sm font-semibold text-ink-faint transition hover:text-ink"
-            >
-              Join a room with a code
-            </button>
-          </div>
+          {/* Squads section + the new-game action, ordered by squad
+              count. With squads: the cards lead, "+ New game" is the
+              secondary option. With none: flip it — lead with a clear
+              "Start a game" hero and let the make-a-squad nudge sit
+              below. A low-squad home should be about playing, not an
+              empty section. */}
+          {(() => {
+            const hasSquads = (groups?.length ?? 0) > 0;
+            const squadsBlock = identity.userId ? (
+              <SquadsSection
+                key="squads"
+                userId={identity.userId}
+                email={identity.email}
+                groups={groups}
+                totalMatches={totalMatches}
+              />
+            ) : null;
+            const playBlock = (
+              <div key="play" className="w-full space-y-2.5">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => {
+                    setMode("create");
+                    setError(null);
+                  }}
+                  className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md"
+                >
+                  {hasSquads ? "+ New game" : "Start a game"}
+                </motion.button>
+                <button
+                  onClick={() => {
+                    setMode("join");
+                    setError(null);
+                  }}
+                  className="block w-full text-center text-sm font-semibold text-ink-faint transition hover:text-ink"
+                >
+                  Join a room with a code
+                </button>
+              </div>
+            );
+            return hasSquads ? (
+              <>
+                {squadsBlock}
+                {playBlock}
+              </>
+            ) : (
+              <>
+                {playBlock}
+                {squadsBlock}
+              </>
+            );
+          })()}
 
           {/* Stats tucked small — a glance, not the hero. */}
           {identity.userId && (
@@ -775,14 +843,21 @@ function IdentityLine({
   );
 }
 
-// "My groups" section — fetches the caller's groups, lets them
-// create a new one or join via code. Renders only after identity
-// is ready (we need a userId to query). Always shown thereafter,
-// even with 0 groups, so first-time users have a path in.
+// "Your squads" section — the user's friend groups, rendered as
+// visual squad cards led by their people. Lets the user create a new
+// squad or join via code. Renders only after identity is ready (we
+// need a userId to query). Always shown thereafter, even with 0
+// squads, so first-time users have a path in.
 type ActiveRoom = {
   code: string;
   kind: string;
   state: string;
+};
+
+type GroupMemberPreview = {
+  userId: string;
+  nickname: string;
+  avatar: string | null;
 };
 
 type GroupRow = {
@@ -793,6 +868,7 @@ type GroupRow = {
   memberCount: number;
   role: string;
   activeRoom: ActiveRoom | null;
+  members: GroupMemberPreview[];
 };
 
 // Live group-activity banner — the top-of-page "a game is happening
@@ -891,7 +967,164 @@ function LiveGroupActivityBanner({
   );
 }
 
-function MyGroupsSection({
+// Avatar cluster — the visual hero of a SquadCard. A squad IS its
+// people, so we lead with overlapping circular avatars. Shows up to 6
+// faces then a "+N" chip for the rest. Uses the shared `avatarFor`
+// helper (passing the preview list as the roster so colors are
+// distinct within the cluster).
+function AvatarCluster({
+  members,
+  memberCount,
+}: {
+  members: GroupMemberPreview[];
+  memberCount: number;
+}) {
+  const SHOWN = 6;
+  const roster = members.map((m) => ({ id: m.userId }));
+  const shown = members.slice(0, SHOWN);
+  // Remainder beyond what's drawn — counts members we have no preview
+  // for too, so a big squad still reads as big.
+  const extra = Math.max(0, memberCount - shown.length);
+  return (
+    <div className="flex items-center">
+      <div className="flex items-center">
+        {shown.map((m, i) => {
+          const av = avatarFor(m.userId, m.nickname, m.avatar, roster);
+          return (
+            <span
+              key={m.userId}
+              title={m.nickname}
+              style={{ zIndex: SHOWN - i }}
+              className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-surface text-sm font-bold text-white ${
+                i > 0 ? "-ml-2.5" : ""
+              } ${av.color} ${av.isCustom ? "text-ink" : ""}`}
+            >
+              {av.initial}
+            </span>
+          );
+        })}
+      </div>
+      {extra > 0 && (
+        <span
+          className={`flex h-9 items-center justify-center rounded-full border-2 border-surface bg-ink px-2 text-xs font-bold text-surface ${
+            shown.length > 0 ? "-ml-2.5" : ""
+          }`}
+        >
+          +{extra}
+        </span>
+      )}
+    </div>
+  );
+}
+
+// SquadCard — one friend group, rendered as a visual card led by its
+// people. A live squad (activeRoom present) gets a lit accent
+// treatment + bright action; a quiet squad stays calm + neutral.
+function SquadCard({
+  group,
+  starting,
+  onStart,
+  onJoinRoom,
+}: {
+  group: GroupRow;
+  starting: boolean;
+  onStart: () => void;
+  onJoinRoom: (code: string) => void;
+}) {
+  const room = group.activeRoom;
+  const live = !!room;
+  const inLobby = room?.state === "lobby";
+
+  // Activity line: live → game kind; quiet → member count.
+  const activity = live ? (
+    <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-accent">
+      <span className="text-[9px] leading-none">●</span>
+      live · {room!.kind}
+    </span>
+  ) : (
+    <span className="text-xs font-medium text-ink-faint">
+      {group.memberCount}{" "}
+      {group.memberCount === 1 ? "member" : "members"}
+    </span>
+  );
+
+  // Action: lobby room → Join; in-progress → Watch; no room → Start.
+  let action: React.ReactNode;
+  if (live && inLobby) {
+    action = (
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={() => onJoinRoom(room!.code)}
+        className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
+      >
+        Join the game →
+      </motion.button>
+    );
+  } else if (live && !inLobby) {
+    action = (
+      <Link
+        href={`/spectate/${room!.code}`}
+        className="block w-full rounded-xl bg-accent px-5 py-3 text-center text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
+      >
+        Watch →
+      </Link>
+    );
+  } else {
+    action = (
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={onStart}
+        disabled={starting}
+        className="w-full rounded-xl bg-ink px-5 py-3 text-sm font-bold tracking-tight text-surface shadow-sm transition-all duration-100 hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-40"
+      >
+        {starting ? "Starting…" : "Start a game →"}
+      </motion.button>
+    );
+  }
+
+  return (
+    <li
+      className={`rounded-2xl p-3.5 space-y-3 transition-colors ${
+        live
+          ? "border-2 border-accent bg-accent/10"
+          : "border-2 border-line bg-surface/40"
+      }`}
+    >
+      {/* Header — squad name in serif + activity line. Name links to
+          the group detail page (the manage surface). */}
+      <div className="flex items-start justify-between gap-3">
+        <Link
+          href={`/group/${group.id}`}
+          className="flex min-w-0 items-baseline gap-2 transition hover:text-accent"
+        >
+          <span className="truncate font-serif text-xl text-ink">
+            {group.name}
+          </span>
+          {group.role === "owner" && (
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
+              Owner
+            </span>
+          )}
+        </Link>
+        <span className="shrink-0 pt-1">{activity}</span>
+      </div>
+
+      {/* Avatar cluster — the visual hero. */}
+      {group.members.length > 0 ? (
+        <AvatarCluster
+          members={group.members}
+          memberCount={group.memberCount}
+        />
+      ) : (
+        <p className="text-xs text-ink-faint">No members yet</p>
+      )}
+
+      {action}
+    </li>
+  );
+}
+
+function SquadsSection({
   userId,
   email,
   groups,
@@ -909,7 +1142,7 @@ function MyGroupsSection({
   const [joinCode, setJoinCode] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Tracks which group's "start a game" button is mid-flight.
+  // Tracks which squad's "start a game" button is mid-flight.
   const [startingGroupId, setStartingGroupId] = useState<string | null>(
     null
   );
@@ -933,6 +1166,25 @@ function MyGroupsSection({
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
       setStartingGroupId(null);
+    }
+  }
+
+  // Join a squad's live lobby room. Identity is server-derived from
+  // userId — no nickname needed.
+  async function joinGroupRoom(code: string) {
+    setError(null);
+    try {
+      const res = await fetch(`/api/rooms/${code}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      localStorage.setItem(`ci:${code}:playerId`, data.playerId);
+      router.push(`/room/${code}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
     }
   }
 
@@ -979,21 +1231,28 @@ function MyGroupsSection({
     }
   }
 
+  // Activity-driven order: live squads sort to the top.
+  const sortedGroups = groups
+    ? [...groups].sort(
+        (a, b) => Number(!!b.activeRoom) - Number(!!a.activeRoom)
+      )
+    : null;
+
   return (
     <section className="w-full space-y-3">
-      <SectionLabel>My groups</SectionLabel>
+      <SectionLabel>Your squads</SectionLabel>
 
-      {groups === null ? (
+      {sortedGroups === null ? (
         <p className="text-sm text-ink-faint">Loading…</p>
-      ) : groups.length === 0 ? (
+      ) : sortedGroups.length === 0 ? (
         // Post-match nudge: a user who's played a couple of games but
-        // has no group gets an active prompt to make one (keeping
+        // has no squad gets an active prompt to make one (keeping
         // score is the payoff). A brand-new user with 0 matches still
         // gets the quiet empty state — no pressure on first visit.
         totalMatches !== null && totalMatches >= 2 ? (
           <div className="rounded-2xl border-2 border-accent bg-accent/10 p-5 space-y-3">
             <p className="text-base font-bold text-ink">
-              You&apos;ve played {totalMatches} games — make a group to
+              You&apos;ve played {totalMatches} games — make a squad to
               keep score with your crew.
             </p>
             {email ? (
@@ -1005,79 +1264,38 @@ function MyGroupsSection({
                 }}
                 className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
               >
-                Create a group
+                Create a squad
               </button>
             ) : (
               <Link
                 href="/auth"
                 className="block w-full rounded-xl bg-accent px-5 py-3 text-center text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110"
               >
-                Sign in to create a group →
+                Sign in to create a squad →
               </Link>
             )}
           </div>
         ) : (
           <p className="text-sm text-ink-soft">
-            No groups yet. Create one to start tracking stats with your
-            regulars, or join an existing group with an invite code.
+            No squads yet. Create one to start tracking stats with your
+            regulars, or join an existing squad with an invite code.
           </p>
         )
       ) : (
         <ul className="space-y-2.5">
-          {groups.map((g) => (
-            <li
+          {sortedGroups.map((g) => (
+            <SquadCard
               key={g.id}
-              className="rounded-2xl border-2 border-line bg-surface/40 p-3.5 space-y-3"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <Link
-                  href={`/group/${g.id}`}
-                  className="flex min-w-0 items-baseline gap-2 transition hover:text-accent"
-                >
-                  <span className="truncate text-base font-semibold text-ink">
-                    {g.name}
-                  </span>
-                  {g.role === "owner" && (
-                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
-                      Owner
-                    </span>
-                  )}
-                </Link>
-                <Link
-                  href={`/group/${g.id}`}
-                  className="shrink-0 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-faint transition hover:text-ink"
-                >
-                  {g.memberCount}{" "}
-                  {g.memberCount === 1 ? "member" : "members"} · Manage
-                </Link>
-              </div>
-              {g.activeRoom && g.activeRoom.state === "lobby" ? (
-                // A game is already gathering for this group — point
-                // at it instead of starting a competing room.
-                <Link
-                  href={`/room/${g.activeRoom.code}`}
-                  className="block w-full rounded-xl bg-leaf px-5 py-3 text-center text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
-                >
-                  🟢 Join {g.name}&apos;s game →
-                </Link>
-              ) : (
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => startGroupGame(g.id)}
-                  disabled={startingGroupId !== null}
-                  className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  {startingGroupId === g.id
-                    ? "Starting…"
-                    : `Start a game with ${g.name} →`}
-                </motion.button>
-              )}
-            </li>
+              group={g}
+              starting={startingGroupId === g.id}
+              onStart={() => startGroupGame(g.id)}
+              onJoinRoom={joinGroupRoom}
+            />
           ))}
         </ul>
       )}
 
-      {/* Inline create / join controls. Friend groups need an email
+      {/* Inline create / join controls. Squads need an email
           (cross-device identity is the whole point), so the buttons
           gate on identity.email. Anonymous click → /auth with the
           intent stashed; verify-success returns home and the user
@@ -1085,8 +1303,8 @@ function MyGroupsSection({
       {!email ? (
         <div className="rounded-xl border-2 border-accent/30 bg-accent/5 p-4 text-sm text-ink-soft">
           <p>
-            Friend groups need an email so your stats follow you
-            across devices.
+            Squads need an email so your stats follow you across
+            devices.
           </p>
           <Link
             href="/auth"
@@ -1105,7 +1323,7 @@ function MyGroupsSection({
             }}
             className="flex-1 rounded-xl border-2 border-line px-3 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
-            {createOpen ? "Cancel" : "Create group"}
+            {createOpen ? "Cancel" : "Create squad"}
           </button>
           <button
             onClick={() => {
@@ -1126,7 +1344,7 @@ function MyGroupsSection({
             value={createName}
             onChange={(e) => setCreateName(e.target.value)}
             maxLength={60}
-            placeholder="Group name"
+            placeholder="Squad name"
             type="text"
             name="group-name"
             autoComplete="off"
