@@ -183,7 +183,7 @@ function HoldLobby({
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Crew · {count} aboard {count > 5 && "(needs 3-5)"}
         </h2>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -194,7 +194,7 @@ function HoldLobby({
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${av.color} ${
                     av.isCustom
-                      ? "border border-line text-base"
+                      ? "border-2 border-line text-base"
                       : "text-sm font-semibold text-white"
                   }`}
                 >
@@ -203,7 +203,7 @@ function HoldLobby({
                 <span className="text-sm text-ink">
                   {p.nickname}
                   {p.id === view.hostId && (
-                    <span className="ml-2 text-[10px] uppercase tracking-[0.18em] text-accent">
+                    <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
                       Host
                     </span>
                   )}
@@ -214,8 +214,8 @@ function HoldLobby({
         </ul>
       </section>
 
-      <section className="space-y-3 rounded-sm border border-line-soft bg-surface/40 p-4">
-        <h3 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <section className="space-y-3 rounded-xl border-2 border-line-soft bg-surface/40 p-4">
+        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           How Hold works
         </h3>
         <p className="text-sm text-ink-soft">
@@ -233,7 +233,7 @@ function HoldLobby({
         <button
           onClick={start}
           disabled={!canStart || starting}
-          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {starting
             ? "Deploying…"
@@ -339,7 +339,7 @@ function HoldBoard({
   return (
     <svg
       viewBox={`0 0 ${GRID_W} ${GRID_H}`}
-      className="w-full rounded-sm border border-line bg-surface/30"
+      className="w-full rounded-xl border-2 border-line bg-surface/30"
       style={{ touchAction: "manipulation" }}
     >
       {/* Cells */}
@@ -501,7 +501,7 @@ function CoreHpBar({ hp, max }: { hp: number; max: number }) {
   const frac = Math.max(0, hp) / max;
   return (
     <div className="flex items-center gap-2">
-      <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+      <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
         Core
       </span>
       <div className="h-2.5 w-32 overflow-hidden rounded-full bg-line-soft">
@@ -598,7 +598,7 @@ function HoldPlanning({
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
             Wave {state.waveNumber + 1} of {state.totalWaves} · incoming
           </span>
           <span className="text-sm text-ink">
@@ -625,7 +625,7 @@ function HoldPlanning({
 
       {/* Selected tower actions */}
       {selTower && (
-        <div className="flex items-center gap-3 rounded-sm border border-line-soft bg-surface/40 p-3">
+        <div className="flex items-center gap-3 rounded-xl border-2 border-line-soft bg-surface/40 p-3">
           <span
             className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
             style={{ background: TOWER_COLOR[selTower.type] }}
@@ -650,7 +650,7 @@ function HoldPlanning({
                     });
                     setSelectedTowerId(null);
                   }}
-                  className="rounded-sm border border-accent/50 px-3 py-1.5 text-[11px] uppercase tracking-[0.16em] text-accent disabled:opacity-40"
+                  className="rounded-xl border-2 border-accent/50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-accent disabled:opacity-40"
                 >
                   Upgrade · {TOWER_SPECS[selTower.type].upgradeCost}
                 </button>
@@ -661,13 +661,13 @@ function HoldPlanning({
                   void post("sell", { playerId, towerId: selTower.id });
                   setSelectedTowerId(null);
                 }}
-                className="rounded-sm border border-oxblood/50 px-3 py-1.5 text-[11px] uppercase tracking-[0.16em] text-oxblood disabled:opacity-40"
+                className="rounded-xl border-2 border-oxblood/50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-oxblood disabled:opacity-40"
               >
                 Sell
               </button>
             </span>
           ) : (
-            <span className="ml-auto text-[11px] uppercase tracking-[0.16em] text-ink-faint">
+            <span className="ml-auto text-[11px] font-bold uppercase tracking-[0.16em] text-ink-faint">
               Not yours
             </span>
           )}
@@ -676,7 +676,7 @@ function HoldPlanning({
 
       {/* Tower palette */}
       <section className="space-y-2">
-        <h3 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Build {tool && "· tap an open tile"}
         </h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -688,7 +688,7 @@ function HoldPlanning({
               <button
                 key={t}
                 onClick={() => setTool((cur) => (cur === t ? null : t))}
-                className={`flex flex-col gap-1 rounded-sm border p-2.5 text-left transition ${
+                className={`flex flex-col gap-1 rounded-xl border-2 p-2.5 text-left transition ${
                   active
                     ? "border-accent bg-accent/10"
                     : "border-line-soft bg-surface/30"
@@ -723,15 +723,15 @@ function HoldPlanning({
 
       {/* Ready */}
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+        <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-faint">
           {readyCount} of {state.order.length} ready
         </span>
         <button
           disabled={busy}
           onClick={() => post("ready", { playerId, ready: !myReady })}
-          className={`rounded-sm px-6 py-3 text-[11px] uppercase tracking-[0.2em] transition-all active:scale-[0.97] disabled:opacity-40 ${
+          className={`rounded-xl px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all active:scale-[0.97] disabled:opacity-40 ${
             myReady
-              ? "border border-leaf/50 bg-leaf/10 text-leaf"
+              ? "border-2 border-leaf/50 bg-leaf/10 text-leaf"
               : "bg-ink text-page hover:bg-accent"
           }`}
         >
@@ -804,13 +804,13 @@ function HoldReveal({
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between gap-3">
-        <span className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Wave {(result?.waveNumber ?? 0) + 1} · {done ? "resolved" : "incoming"}
         </span>
         {!done && (
           <button
             onClick={() => setIdx(frames.length - 1)}
-            className="text-[11px] uppercase tracking-[0.16em] text-ink-faint transition hover:text-ink"
+            className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-faint transition hover:text-ink"
           >
             Skip ▸▸
           </button>
@@ -829,13 +829,13 @@ function HoldReveal({
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`rounded-sm border p-4 ${
+          className={`rounded-xl border-2 p-4 ${
             state.coreHp > 0
               ? "border-leaf/40 bg-leaf/5"
               : "border-oxblood/40 bg-oxblood/5"
           }`}
         >
-          <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+          <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-faint">
             Wave {result.waveNumber + 1} report
           </div>
           <div className="mt-1 text-sm text-ink">
@@ -858,7 +858,7 @@ function HoldReveal({
           <button
             onClick={nextWave}
             disabled={busy}
-            className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all hover:bg-accent active:scale-[0.97] disabled:opacity-40"
+            className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
           >
             {busy ? "…" : "Continue"}
           </button>
@@ -914,14 +914,14 @@ function HoldEnd({
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`rounded-sm border p-6 text-center ${
+        className={`rounded-xl border-2 p-6 text-center ${
           won
             ? "border-leaf/50 bg-leaf/5"
             : "border-oxblood/50 bg-oxblood/5"
         }`}
       >
         <div
-          className={`text-[11px] uppercase tracking-[0.24em] ${
+          className={`text-[11px] font-bold uppercase tracking-[0.24em] ${
             won ? "text-leaf" : "text-oxblood"
           }`}
         >
@@ -941,7 +941,7 @@ function HoldEnd({
       <HoldBoard towers={state.towers} coreHp={state.coreHp} />
 
       <section className="space-y-2">
-        <h3 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Crew
         </h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -952,7 +952,7 @@ function HoldEnd({
             return (
               <div
                 key={pid}
-                className="rounded-sm border border-line-soft bg-surface/30 p-2 text-sm"
+                className="rounded-xl border-2 border-line-soft bg-surface/30 p-2 text-sm"
               >
                 <div className="truncate text-ink">
                   {pid === playerId ? "You" : (nameById.get(pid) ?? "?")}
@@ -976,7 +976,7 @@ function HoldEnd({
         <button
           onClick={playAgain}
           disabled={busy}
-          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all hover:bg-accent active:scale-[0.97] disabled:opacity-40"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
         >
           {busy ? "Redeploying…" : "New defense"}
         </button>
@@ -997,7 +997,7 @@ function HoldHistoryPanel({ history }: { history: MatchHistoryEntry[] }) {
   if (history.length === 0) return null;
   return (
     <section className="space-y-3">
-      <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
         Past matches · {history.length}
       </h2>
       <div className="space-y-2">
@@ -1015,7 +1015,7 @@ function HoldHistoryPanel({ history }: { history: MatchHistoryEntry[] }) {
             return (
               <div
                 key={`x${m.matchNumber}`}
-                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5 text-[11px] uppercase tracking-[0.2em] text-ink-faint"
+                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] text-ink-faint"
               >
                 Match {m.matchNumber} · {"kind" in m ? m.kind : "imposter"}
                 {endedTime && <> · {endedTime}</>}
@@ -1026,15 +1026,15 @@ function HoldHistoryPanel({ history }: { history: MatchHistoryEntry[] }) {
           return (
             <div
               key={`h${m.matchNumber}`}
-              className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+              className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
             >
               <div className="flex items-baseline justify-between gap-3">
-                <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-faint">
                   Match {m.matchNumber} · Hold
                   {endedTime && <> · {endedTime}</>}
                 </div>
                 <div
-                  className={`text-[11px] uppercase tracking-[0.18em] ${
+                  className={`text-[11px] font-bold uppercase tracking-[0.18em] ${
                     won ? "text-leaf" : "text-oxblood"
                   }`}
                 >

@@ -196,7 +196,7 @@ function JustOneLobby({
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Players · {view.players.length} of 7
         </h2>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -207,7 +207,7 @@ function JustOneLobby({
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${av.color} ${
                     av.isCustom
-                      ? "border border-line text-base"
+                      ? "border-2 border-line text-base"
                       : "text-sm font-semibold text-white"
                   }`}
                 >
@@ -216,7 +216,7 @@ function JustOneLobby({
                 <span className="text-sm text-ink">
                   {p.nickname}
                   {p.id === view.hostId && (
-                    <span className="ml-2 text-[10px] uppercase tracking-[0.18em] text-accent">
+                    <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-accent">
                       Host
                     </span>
                   )}
@@ -227,8 +227,8 @@ function JustOneLobby({
         </ul>
       </section>
 
-      <section className="space-y-3 rounded-sm border border-line-soft bg-surface/40 p-4">
-        <h3 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <section className="space-y-3 rounded-xl border-2 border-line-soft bg-surface/40 p-4">
+        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           How Just One works
         </h3>
         <p className="text-sm text-ink-soft">
@@ -245,7 +245,7 @@ function JustOneLobby({
         <button
           onClick={start}
           disabled={!canStart || starting}
-          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {starting
             ? "Starting…"
@@ -254,7 +254,7 @@ function JustOneLobby({
               : "Begin the match"}
         </button>
       ) : (
-        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+        <p className="text-center text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Awaiting the host
         </p>
       )}
@@ -312,10 +312,10 @@ function JustOneMatch({
       {/* Card header + countdown. Card label on left, big timer right. */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <span className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
             Card {state.cardIndex + 1} of {state.totalCards}
           </span>
-          <span className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
             Guesser ·{" "}
             <span className="text-accent">
               {isGuesser ? "you" : guesserName}
@@ -421,8 +421,8 @@ function ClueGiverPhase({
 
   return (
     <div className="space-y-5">
-      <div className="rounded-sm border border-accent/30 bg-accent/5 p-6 text-center">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <div className="rounded-xl border-2 border-accent/30 bg-accent/5 p-6 text-center">
+        <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Secret word
         </div>
         <div className="mt-2 font-serif text-3xl text-ink">
@@ -438,8 +438,8 @@ function ClueGiverPhase({
       </p>
 
       {locked ? (
-        <div className="rounded-sm border border-leaf/40 bg-leaf/5 px-4 py-3 text-center">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-leaf">
+        <div className="rounded-xl border-2 border-leaf/40 bg-leaf/5 px-4 py-3 text-center">
+          <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-leaf">
             Locked in
           </div>
           <div className="mt-1 font-serif text-xl italic text-ink">
@@ -463,7 +463,7 @@ function ClueGiverPhase({
             data-form-type="other"
             data-1p-ignore="true"
             data-lpignore="true"
-            className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
+            className="min-w-0 flex-1 rounded-xl border-2 border-accent bg-surface/40 px-4 py-3 font-serif text-2xl text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
             onKeyDown={(e) => {
               if (e.key === "Enter" && word.trim() && !submitting) submit();
             }}
@@ -471,7 +471,7 @@ function ClueGiverPhase({
           <button
             onClick={submit}
             disabled={submitting || word.trim().length === 0}
-            className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl bg-ink px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
           >
             {submitting ? "…" : "Submit"}
           </button>
@@ -488,7 +488,7 @@ function ClueGiverPhase({
           return (
             <span
               key={p.id}
-              className={`rounded-full border px-3 py-1 text-xs ${
+              className={`rounded-full border-2 px-3 py-1 text-xs font-semibold ${
                 submitted
                   ? "border-leaf bg-leaf/10 text-leaf"
                   : "border-line text-ink-soft"
@@ -525,8 +525,8 @@ function GuesserWaitingForClues({
   const submittedSet = new Set(state.clues.map((c) => c.playerId));
   return (
     <div className="space-y-5">
-      <div className="rounded-sm border border-line-soft bg-surface/40 p-6 text-center">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <div className="rounded-xl border-2 border-line-soft bg-surface/40 p-6 text-center">
+        <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Your turn to guess
         </div>
         <div className="mt-2 font-serif text-2xl text-ink">
@@ -543,7 +543,7 @@ function GuesserWaitingForClues({
           return (
             <li
               key={id}
-              className={`rounded-full border px-3 py-1 text-xs ${
+              className={`rounded-full border-2 px-3 py-1 text-xs font-semibold ${
                 submitted
                   ? "border-leaf bg-leaf/10 text-leaf"
                   : "border-line text-ink-soft"
@@ -599,7 +599,7 @@ function GuesserPhase({
   return (
     <div className="space-y-5">
       <div className="text-center">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Surviving clues · {surviving.length}
         </div>
         {surviving.length === 0 ? (
@@ -611,7 +611,7 @@ function GuesserPhase({
             {surviving.map((c, i) => (
               <li
                 key={i}
-                className="rounded-full border border-line bg-page px-4 py-2 font-serif text-lg italic text-ink"
+                className="rounded-full border-2 border-line bg-page px-4 py-2 font-serif text-lg italic text-ink"
               >
                 {c.word}
               </li>
@@ -636,7 +636,7 @@ function GuesserPhase({
           data-form-type="other"
           data-1p-ignore="true"
           data-lpignore="true"
-          className="min-w-0 flex-1 border-b-2 border-accent bg-transparent px-1 pb-2 font-serif text-2xl text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
+          className="min-w-0 flex-1 rounded-xl border-2 border-accent bg-surface/40 px-4 py-3 font-serif text-2xl text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
           onKeyDown={(e) => {
             if (e.key === "Enter" && guess.trim() && !submitting) submit(false);
           }}
@@ -644,7 +644,7 @@ function GuesserPhase({
         <button
           onClick={() => submit(false)}
           disabled={submitting || guess.trim().length === 0}
-          className="rounded-sm bg-ink px-5 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-xl bg-ink px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {submitting ? "…" : "Guess"}
         </button>
@@ -654,7 +654,7 @@ function GuesserPhase({
         type="button"
         onClick={() => submit(true)}
         disabled={submitting}
-        className="w-full text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-oxblood disabled:opacity-50"
+        className="w-full text-xs font-bold uppercase tracking-[0.14em] text-ink-faint transition hover:text-oxblood disabled:opacity-50"
       >
         Skip this card
       </button>
@@ -689,8 +689,8 @@ function ClueGiverWaitingForGuess({
   );
   return (
     <div className="space-y-5">
-      <div className="rounded-sm border border-line-soft bg-surface/40 p-6 text-center">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <div className="rounded-xl border-2 border-line-soft bg-surface/40 p-6 text-center">
+        <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Now guessing
         </div>
         <div className="mt-2 font-serif text-2xl text-ink">
@@ -704,14 +704,14 @@ function ClueGiverWaitingForGuess({
 
       {myClue && (
         <div
-          className={`rounded-sm border px-4 py-3 text-center ${
+          className={`rounded-xl border-2 px-4 py-3 text-center ${
             eliminated
               ? "border-oxblood/40 bg-oxblood/5"
               : "border-leaf/40 bg-leaf/5"
           }`}
         >
           <div
-            className={`text-[11px] uppercase tracking-[0.18em] ${
+            className={`text-[11px] font-bold uppercase tracking-[0.14em] ${
               eliminated ? "text-oxblood" : "text-leaf"
             }`}
           >
@@ -736,7 +736,7 @@ function ClueGiverWaitingForGuess({
           return (
             <li
               key={p.id}
-              className={`rounded-full border px-3 py-1 text-xs ${
+              className={`rounded-full border-2 px-3 py-1 text-xs font-semibold ${
                 !wrote
                   ? "border-line text-ink-faint"
                   : elim
@@ -820,7 +820,7 @@ function RevealPhase({
         initial={{ opacity: 0, scale: 0.92, y: -6 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 360, damping: 22 }}
-        className={`rounded-sm border-2 px-4 py-4 text-center ${
+        className={`rounded-xl border-2 px-4 py-4 text-center ${
           state.outcome === "correct"
             ? "border-leaf bg-leaf/5"
             : state.outcome === "skipped"
@@ -829,7 +829,7 @@ function RevealPhase({
         }`}
       >
         <div
-          className={`text-[11px] uppercase tracking-[0.22em] ${
+          className={`text-xs font-bold uppercase tracking-[0.14em] ${
             state.outcome === "correct"
               ? "text-leaf"
               : state.outcome === "skipped"
@@ -881,7 +881,7 @@ function RevealPhase({
                     {c.word}
                   </span>
                   <span
-                    className={`min-w-[5rem] rounded-full px-2 py-0.5 text-center text-[10px] uppercase tracking-[0.18em] ${
+                    className={`min-w-[5rem] rounded-full px-2 py-0.5 text-center text-[10px] font-bold uppercase tracking-[0.12em] ${
                       elim
                         ? "bg-oxblood/10 text-oxblood"
                         : "bg-leaf/10 text-leaf"
@@ -900,7 +900,7 @@ function RevealPhase({
         <button
           onClick={next}
           disabled={advancing}
-          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {advancing
             ? "…"
@@ -909,7 +909,7 @@ function RevealPhase({
               : "Next card"}
         </button>
       ) : (
-        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+        <p className="text-center text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           {isLastCard
             ? "Awaiting the host for the final score"
             : "Awaiting the host for the next card"}
@@ -982,8 +982,8 @@ function JustOneFinal({
 
   return (
     <div className="space-y-7">
-      <section className="border-2 border-leaf bg-leaf/5 p-8 text-center">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <section className="rounded-xl border-2 border-leaf bg-leaf/5 p-8 text-center">
+        <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Final score
         </div>
         <div className="mt-3 font-serif text-5xl text-leaf">
@@ -993,7 +993,7 @@ function JustOneFinal({
       </section>
 
       <section>
-        <h2 className="mb-3 text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Card recap
         </h2>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -1015,7 +1015,7 @@ function JustOneFinal({
                   {nicknameById.get(h.guesserId) ?? "?"}
                 </span>
                 <span
-                  className={`min-w-[3rem] rounded-full px-2 py-0.5 text-center text-[10px] uppercase tracking-[0.18em] ${
+                  className={`min-w-[3rem] rounded-full px-2 py-0.5 text-center text-[10px] font-bold uppercase tracking-[0.12em] ${
                     h.outcome === "correct"
                       ? "bg-leaf text-white"
                       : h.outcome === "skipped"
@@ -1039,12 +1039,12 @@ function JustOneFinal({
         <button
           onClick={replay}
           disabled={restarting}
-          className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {restarting ? "…" : "Back to lobby"}
         </button>
       ) : (
-        <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+        <p className="text-center text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           Awaiting the host
         </p>
       )}
@@ -1075,8 +1075,8 @@ function ScoreStrip({
   total: number;
 }) {
   return (
-    <section className="flex items-center justify-between rounded-sm border border-line-soft bg-surface/40 px-4 py-3">
-      <span className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+    <section className="flex items-center justify-between rounded-xl border-2 border-line-soft bg-surface/40 px-4 py-3">
+      <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
         Score
       </span>
       <span className="text-base tabular-nums text-ink">
@@ -1173,7 +1173,7 @@ function JustOneHistoryPanel({
   if (history.length === 0) return null;
   return (
     <section className="space-y-3">
-      <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
         Past matches · {history.length}
       </h2>
       <div className="space-y-2">
@@ -1191,14 +1191,14 @@ function JustOneHistoryPanel({
             return (
               <div
                 key={`j${m.matchNumber}`}
-                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
                     Match {m.matchNumber} · Just One
                     {endedTime && <> · {endedTime}</>}
                   </div>
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-leaf">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-leaf">
                     {m.score} / {m.totalCards}
                   </div>
                 </div>
@@ -1218,14 +1218,14 @@ function JustOneHistoryPanel({
             return (
               <div
                 key={`w${m.matchNumber}`}
-                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
                     Match {m.matchNumber} · Wavelength
                     {endedTime && <> · {endedTime}</>}
                   </div>
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-leaf">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-leaf">
                     {m.winnerIds.length === 1 ? "Winner" : "Tied"}
                   </div>
                 </div>
@@ -1246,15 +1246,15 @@ function JustOneHistoryPanel({
             return (
               <div
                 key={`c${m.matchNumber}`}
-                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
                     Match {m.matchNumber} · Crew
                     {endedTime && <> · {endedTime}</>}
                   </div>
                   <div
-                    className={`text-[11px] uppercase tracking-[0.18em] ${
+                    className={`text-[11px] font-bold uppercase tracking-[0.14em] ${
                       won ? "text-leaf" : "text-oxblood"
                     }`}
                   >
@@ -1277,15 +1277,15 @@ function JustOneHistoryPanel({
             return (
               <div
                 key={`h${m.matchNumber}`}
-                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
                     Match {m.matchNumber} · Hold
                     {endedTime && <> · {endedTime}</>}
                   </div>
                   <div
-                    className={`text-[11px] uppercase tracking-[0.18em] ${
+                    className={`text-[11px] font-bold uppercase tracking-[0.14em] ${
                       victory ? "text-leaf" : "text-oxblood"
                     }`}
                   >
@@ -1307,10 +1307,10 @@ function JustOneHistoryPanel({
           return (
             <div
               key={`i${m.matchNumber}`}
-              className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+              className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
             >
               <div className="flex items-baseline justify-between gap-3">
-                <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
                   Match {m.matchNumber} · Imposter
                   {endedTime && <> · {endedTime}</>}
                 </div>
