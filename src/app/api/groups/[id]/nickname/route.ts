@@ -3,9 +3,13 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 // POST /api/groups/[id]/nickname
 // Body: { userId, nickname }
-// A member sets their own per-group display name. Membership-gated;
-// you can only rename yourself. group_members.nickname is a
-// per-group name by design, so this doesn't touch users.
+// Sets — or CLEARS — the caller's optional per-group display-name
+// override. Membership-gated; you can only rename yourself.
+//
+// One-identity: group_members.nickname is an optional override on top
+// of the user's authored identity. A non-empty `nickname` sets the
+// override; an empty/blank `nickname` clears it (column → null), so
+// the member falls back to inheriting their users.default_nickname.
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -16,14 +20,15 @@ export async function POST(
     nickname?: string;
   };
   const userId = body.userId?.trim();
-  const nickname = body.nickname?.trim();
-  if (!userId || !nickname) {
+  if (!userId) {
     return NextResponse.json(
-      { error: "userId and nickname required" },
+      { error: "userId required" },
       { status: 400 }
     );
   }
-  if (nickname.length > 20) {
+  // Empty/blank → clear the override (inherit identity).
+  const nicknameOverride = body.nickname?.trim() || null;
+  if (nicknameOverride && nicknameOverride.length > 20) {
     return NextResponse.json(
       { error: "name must be ≤20 chars" },
       { status: 400 }
@@ -44,11 +49,11 @@ export async function POST(
 
   const { error: updErr } = await supabaseAdmin
     .from("group_members")
-    .update({ nickname })
+    .update({ nickname: nicknameOverride })
     .eq("group_id", groupId)
     .eq("user_id", userId);
   if (updErr) {
     return NextResponse.json({ error: updErr.message }, { status: 500 });
   }
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, nicknameOverride });
 }

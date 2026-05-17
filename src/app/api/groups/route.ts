@@ -8,9 +8,11 @@ import { generateRoomCode } from "@/lib/room-code";
 // group_members row with role=owner. Generates a 6-char invite code
 // (retries on collision).
 //
-// nickname defaults to the user's default_nickname if not passed
-// (shouldn't be missing in practice but the bootstrap might race a
-// fast click).
+// One-identity: group_members.nickname is an OPTIONAL per-group
+// override. Left null (the normal case) the member inherits their
+// users.default_nickname. Only an explicit non-empty `nickname` in
+// the body — an intentional "use a different name in this group" —
+// gets written.
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     userId?: string;
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
   // Verify the user exists.
   const { data: user, error: userErr } = await supabaseAdmin
     .from("users")
-    .select("id, default_nickname")
+    .select("id")
     .eq("id", userId)
     .maybeSingle();
   if (userErr) {
@@ -45,8 +47,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "user not found" }, { status: 404 });
   }
 
-  const nickname =
-    body.nickname?.trim() || user.default_nickname?.trim() || "?";
+  // null = inherit the user's identity. Only set when the body
+  // explicitly passes a non-empty override.
+  const nicknameOverride = body.nickname?.trim() || null;
 
   // Allocate a unique invite_code. 6-char from the room-code alphabet
   // (no ambiguous chars). Retry on collision.
@@ -91,7 +94,7 @@ export async function POST(request: Request) {
     .insert({
       group_id: created.id,
       user_id: userId,
-      nickname,
+      nickname: nicknameOverride,
       role: "owner",
     });
   if (memberErr) {
