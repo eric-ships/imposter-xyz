@@ -114,8 +114,9 @@ export async function POST(request: Request) {
 }
 
 // GET /api/groups?userId=X
-// Returns the caller's groups, each with a member count + their role.
-// Used by the home page "My groups" section.
+// Returns the caller's groups, each with a member count, their role,
+// the group's live room (if any), and an avatar-preview array of up
+// to 8 members. Used by the home page "Your squads" section.
 export async function GET(request: Request) {
   const userId = new URL(request.url).searchParams.get("userId")?.trim();
   if (!userId) {
@@ -162,6 +163,66 @@ export async function GET(request: Request) {
     countByGroup.set(gid, (countByGroup.get(gid) ?? 0) + 1);
   }
 
+  // Member previews — up to 8 per group, so the home can draw an
+  // avatar cluster per squad. One batched query for every membership
+  // row across all the user's groups, plus a single lookup to `users`
+  // for the canonical nickname + avatar — no N+1.
+  const { data: memberRows, error: memberRowsErr } = await supabaseAdmin
+    .from("group_members")
+    .select("group_id, user_id, nickname, joined_at")
+    .in("group_id", groupIds)
+    .order("joined_at", { ascending: true });
+  if (memberRowsErr) {
+    return NextResponse.json(
+      { error: memberRowsErr.message },
+      { status: 500 }
+    );
+  }
+  // Resolve identity (default_nickname + default_avatar) for every
+  // distinct member in one go.
+  const previewUserIds = Array.from(
+    new Set((memberRows ?? []).map((m) => m.user_id as string))
+  );
+  const identityByUser = new Map<
+    string,
+    { defaultNickname: string | null; defaultAvatar: string | null }
+  >();
+  if (previewUserIds.length > 0) {
+    const { data: identities, error: identErr } = await supabaseAdmin
+      .from("users")
+      .select("id, default_nickname, default_avatar")
+      .in("id", previewUserIds);
+    if (identErr) {
+      return NextResponse.json({ error: identErr.message }, { status: 500 });
+    }
+    for (const u of identities ?? []) {
+      identityByUser.set(u.id as string, {
+        defaultNickname: (u.default_nickname as string | null) ?? null,
+        defaultAvatar: (u.default_avatar as string | null) ?? null,
+      });
+    }
+  }
+  // Up to 8 member previews per group, joined-order. One-identity:
+  // nickname resolves to the per-group override, else the user's
+  // default_nickname.
+  const membersByGroup = new Map<
+    string,
+    { userId: string; nickname: string; avatar: string | null }[]
+  >();
+  for (const m of memberRows ?? []) {
+    const gid = m.group_id as string;
+    const list = membersByGroup.get(gid) ?? [];
+    if (list.length >= 8) continue;
+    const identity = identityByUser.get(m.user_id as string);
+    const override = (m.nickname as string | null) ?? null;
+    list.push({
+      userId: m.user_id as string,
+      nickname: override ?? identity?.defaultNickname ?? "?",
+      avatar: identity?.defaultAvatar ?? null,
+    });
+    membersByGroup.set(gid, list);
+  }
+
   // Live room per group: the single most-recently-updated room
   // attributed to each group that's still active. Same recency rule
   // as the single-group detail route (30-min updated_at window).
@@ -202,6 +263,7 @@ export async function GET(request: Request) {
     role: roleByGroup.get(g.id as string) ?? "member",
     createdAt: g.created_at as string,
     activeRoom: activeRoomByGroup.get(g.id as string) ?? null,
+    members: membersByGroup.get(g.id as string) ?? [],
   }));
 
   return NextResponse.json({ groups: result });
