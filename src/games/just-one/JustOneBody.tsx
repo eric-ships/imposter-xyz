@@ -1041,7 +1041,7 @@ function JustOneFinal({
           disabled={restarting}
           className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
-          {restarting ? "…" : "Play again"}
+          {restarting ? "…" : "Back to lobby"}
         </button>
       ) : (
         <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
