@@ -41,6 +41,7 @@ import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { ShareMatchButton } from "@/components/ShareMatchButton";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
+import { SquadPayoffCard } from "@/components/SquadPayoffCard";
 import { StreamerCastBanner } from "@/components/StreamerCastBanner";
 import { StreamerModeToggle } from "@/components/StreamerModeToggle";
 import { GroupLobbyPanel } from "@/components/GroupLobbyPanel";
@@ -5424,6 +5425,10 @@ function RevealPhase({
           deltas={roundDeltas}
         />
       </section>
+
+      {view.you?.squadStanding && (
+        <SquadPayoffCard standing={view.you.squadStanding} />
+      )}
 
       {isHost ? (
         <div className="flex gap-3">

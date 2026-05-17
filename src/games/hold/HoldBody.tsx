@@ -37,6 +37,7 @@ import type { MatchHistoryEntry } from "@/lib/match-history";
 import { avatarFor } from "@/lib/avatar";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
+import { SquadPayoffCard } from "@/components/SquadPayoffCard";
 
 // ── Visual constants ───────────────────────────────────────────────
 
@@ -970,6 +971,10 @@ function HoldEnd({
         <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
           {error}
         </p>
+      )}
+
+      {view.you?.squadStanding && (
+        <SquadPayoffCard standing={view.you.squadStanding} />
       )}
 
       {isHost ? (

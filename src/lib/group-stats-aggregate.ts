@@ -97,6 +97,66 @@ export function rollupByUser(args: {
   return out;
 }
 
+// ─── Squad standings ───────────────────────────────────────────────
+//
+// A squad's standings rank its members by total points (sum of
+// match_player_results.delta across every one of the group's
+// matches). Tiebreak: more matches played, then nickname A→Z.
+//
+// Used by /api/groups/[id]/stats AND room-state.ts (the post-game
+// payoff card), so it lives here next to the other pure aggregators.
+
+export type StandingRow = {
+  userId: string;
+  nickname: string;
+  avatar: string | null;
+  totalPoints: number;
+  matchesPlayed: number;
+  rank: number;
+};
+
+// Build the ranked standings. Caller passes the group's full member
+// list (so members who've never played still get a row) plus the
+// already-fetched player-result rows. Pure — no DB access here.
+export function computeStandings(args: {
+  members: { userId: string; nickname: string; avatar: string | null }[];
+  playerResults: { user_id: string; delta: number }[];
+}): StandingRow[] {
+  // Tally points + matches per user from the result rows.
+  const tally = new Map<string, { points: number; played: number }>();
+  for (const pr of args.playerResults) {
+    const cur = tally.get(pr.user_id) ?? { points: 0, played: 0 };
+    cur.points += pr.delta;
+    cur.played += 1;
+    tally.set(pr.user_id, cur);
+  }
+
+  const rows = args.members.map((m) => {
+    const t = tally.get(m.userId) ?? { points: 0, played: 0 };
+    return {
+      userId: m.userId,
+      nickname: m.nickname,
+      avatar: m.avatar,
+      totalPoints: t.points,
+      matchesPlayed: t.played,
+      rank: 0, // filled in after the sort below
+    };
+  });
+
+  // Rank: total points desc, then matches played desc, then name A→Z.
+  rows.sort((a, b) => {
+    if (b.totalPoints !== a.totalPoints)
+      return b.totalPoints - a.totalPoints;
+    if (b.matchesPlayed !== a.matchesPlayed)
+      return b.matchesPlayed - a.matchesPlayed;
+    return a.nickname.localeCompare(b.nickname);
+  });
+  rows.forEach((r, i) => {
+    r.rank = i + 1;
+  });
+  return rows;
+}
+
 // Win-rate helpers for the UI. Returns a 0-1 ratio or null if 0
 // matches played in that bucket.
 export function winRate(played: number, won: number): number | null {
