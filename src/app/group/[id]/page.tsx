@@ -21,7 +21,12 @@ import type { MatchHistoryEntry } from "@/lib/match-history";
 
 type GroupMember = {
   userId: string;
+  // Resolved display name: the per-group override if set, else the
+  // member's authored users.default_nickname, else "?".
   nickname: string;
+  // The raw per-group override (group_members.nickname). null = the
+  // member inherits their identity. Lets the UI tell the two apart.
+  nicknameOverride: string | null;
   role: string;
   joinedAt: string;
   defaultAvatar: string | null;
@@ -255,6 +260,7 @@ function RosterTab({
                       groupId={group.id}
                       userId={identity.userId!}
                       nickname={m.nickname}
+                      nicknameOverride={m.nicknameOverride}
                       onSaved={refetch}
                     />
                   ) : (
@@ -320,40 +326,56 @@ function RosterTab({
   );
 }
 
-// Inline editor for your own per-group nickname. Members who signed
-// in by email and never played a room have no name, so the roster
-// shows "?" until they set one here.
+// Inline editor for your own roster name.
+//
+// One-identity: the PRIMARY edit changes your authored identity on
+// `users` (via the /api/users/me PATCH) — it changes your name
+// everywhere, in every room and group. The per-group override is a
+// secondary, tucked-away affordance: "use a different name in this
+// group" writes group_members.nickname via /api/groups/[id]/nickname,
+// and can be cleared (back to inheriting your identity).
 function EditableNickname({
   groupId,
   userId,
   nickname,
+  nicknameOverride,
   onSaved,
 }: {
   groupId: string;
   userId: string;
+  // Resolved display name (override if set, else identity).
   nickname: string;
+  // Raw per-group override; null = inheriting the identity.
+  nicknameOverride: string | null;
   onSaved: () => void;
 }) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(nickname);
+  // editMode: null = display, "identity" = editing the everywhere
+  // name, "override" = editing the per-group override.
+  const [editMode, setEditMode] = useState<null | "identity" | "override">(
+    null
+  );
+  const [value, setValue] = useState("");
   const [saving, setSaving] = useState(false);
+  const [overrideOpen, setOverrideOpen] = useState(false);
   const unset = !nickname || nickname === "?";
+  const hasOverride = !!nicknameOverride;
 
-  async function save() {
+  // Save the authored identity — changes the name everywhere.
+  async function saveIdentity() {
     const next = value.trim();
-    if (!next || next === nickname) {
-      setEditing(false);
+    if (!next) {
+      setEditMode(null);
       return;
     }
     setSaving(true);
     try {
-      const res = await fetch(`/api/groups/${groupId}/nickname`, {
-        method: "POST",
+      const res = await fetch("/api/users/me", {
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, nickname: next }),
+        body: JSON.stringify({ userId, defaultNickname: next }),
       });
       if (!res.ok) throw new Error();
-      setEditing(false);
+      setEditMode(null);
       onSaved();
     } catch {
       /* leave the editor open so the user can retry */
@@ -362,58 +384,142 @@ function EditableNickname({
     }
   }
 
-  if (editing) {
+  // Save (or clear) the per-group override. Empty value clears it.
+  async function saveOverride(clear = false) {
+    const next = clear ? "" : value.trim();
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/nickname`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, nickname: next }),
+      });
+      if (!res.ok) throw new Error();
+      setEditMode(null);
+      setOverrideOpen(false);
+      onSaved();
+    } catch {
+      /* leave the editor open so the user can retry */
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editMode) {
+    const isIdentity = editMode === "identity";
     return (
-      <span className="flex items-center gap-1.5">
-        <input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          maxLength={20}
-          placeholder="Your name"
-          autoFocus
-          className="w-28 border-b border-line bg-transparent text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") save();
-            if (e.key === "Escape") {
-              setValue(nickname);
-              setEditing(false);
+      <span className="flex flex-col gap-1">
+        <span className="flex items-center gap-1.5">
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            maxLength={20}
+            placeholder={isIdentity ? "Your name" : "Name in this group"}
+            autoFocus
+            className="w-36 border-b border-line bg-transparent text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            onKeyDown={(e) => {
+              if (e.key === "Enter")
+                isIdentity ? saveIdentity() : saveOverride();
+              if (e.key === "Escape") setEditMode(null);
+            }}
+          />
+          <button
+            onClick={() =>
+              isIdentity ? saveIdentity() : saveOverride()
             }
-          }}
-        />
-        <button
-          onClick={save}
-          disabled={saving}
-          className="text-[10px] uppercase tracking-[0.16em] text-accent disabled:opacity-40"
-        >
-          {saving ? "…" : "Save"}
-        </button>
+            disabled={saving}
+            className="text-[10px] uppercase tracking-[0.16em] text-accent disabled:opacity-40"
+          >
+            {saving ? "…" : "Save"}
+          </button>
+          <button
+            onClick={() => setEditMode(null)}
+            className="text-[10px] uppercase tracking-[0.16em] text-ink-faint"
+          >
+            Cancel
+          </button>
+        </span>
+        <span className="text-[10px] text-ink-faint">
+          {isIdentity
+            ? "Changes your name everywhere"
+            : "Only changes your name in this group"}
+        </span>
       </span>
     );
   }
-  if (unset) {
-    return (
-      <button
-        onClick={() => {
-          setValue("");
-          setEditing(true);
-        }}
-        className="text-sm font-semibold text-accent"
-      >
-        + Add your name
-      </button>
-    );
-  }
+
   return (
-    <button
-      onClick={() => {
-        setValue(nickname);
-        setEditing(true);
-      }}
-      className="text-sm text-ink underline decoration-dotted decoration-ink-faint underline-offset-4 transition hover:decoration-ink"
-      title="Tap to rename"
-    >
-      {nickname}
-    </button>
+    <span className="flex flex-col gap-0.5">
+      <span className="flex items-center gap-2">
+        {unset ? (
+          <button
+            onClick={() => {
+              setValue("");
+              setEditMode("identity");
+            }}
+            className="text-sm font-semibold text-accent"
+          >
+            + Add your name
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              // Primary edit targets the identity unless an override
+              // is active, in which case editing the visible name
+              // means editing that override.
+              setValue(hasOverride ? nicknameOverride ?? "" : nickname);
+              setEditMode(hasOverride ? "override" : "identity");
+            }}
+            className="text-sm text-ink underline decoration-dotted decoration-ink-faint underline-offset-4 transition hover:decoration-ink"
+            title={
+              hasOverride
+                ? "Tap to edit your name in this group"
+                : "Tap to rename yourself everywhere"
+            }
+          >
+            {nickname}
+          </button>
+        )}
+        {hasOverride && (
+          <span className="text-[10px] uppercase tracking-[0.14em] text-ink-faint">
+            group name
+          </span>
+        )}
+      </span>
+
+      {/* Secondary, tucked-away per-group override affordance. */}
+      {!unset && (
+        <span className="text-[10px] text-ink-faint">
+          {hasOverride ? (
+            <button
+              onClick={() => saveOverride(true)}
+              disabled={saving}
+              className="underline decoration-dotted underline-offset-2 transition hover:text-ink disabled:opacity-40"
+            >
+              Use your normal name here
+            </button>
+          ) : overrideOpen ? (
+            <button
+              onClick={() => {
+                setValue("");
+                setEditMode("override");
+                setOverrideOpen(false);
+              }}
+              className="underline decoration-dotted underline-offset-2 transition hover:text-ink"
+            >
+              Set a name just for this group →
+            </button>
+          ) : (
+            <button
+              onClick={() => setOverrideOpen(true)}
+              className="transition hover:text-ink"
+            >
+              Use a different name in this group
+            </button>
+          )}
+        </span>
+      )}
+    </span>
   );
 }
 

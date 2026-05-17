@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion } from "motion/react";
 import { useTheme } from "@/lib/theme";
 import { PalettePicker } from "@/components/PalettePicker";
-import { useIdentity } from "@/lib/identity";
+import { useIdentity, getOrMintDeviceToken } from "@/lib/identity";
 
 type Mode = "choose" | "create" | "join";
 
@@ -48,13 +48,20 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 export default function HomePage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("choose");
-  const [nickname, setNickname] = useState("");
   const [joinCode, setJoinCode] = useState("");
   // Identity bootstrap: ensures the device has a userId in
   // localStorage, upserts the users row server-side, bumps presence.
   // userId is forwarded into create/join calls so the resulting
   // players row is bound to this device's user.
   const identity = useIdentity();
+  // One-identity: a person names themselves ONCE, on `users`. After a
+  // save we don't get a fresh identity ping, so we mirror it locally.
+  // `name` resolves to the local edit first, then the bootstrapped
+  // identity. Create/join flows read from this — they never ask for a
+  // name once one is set.
+  const [localName, setLocalName] = useState<string | null>(null);
+  const name = (localName ?? identity.defaultNickname ?? "").trim();
+  const hasName = name.length > 0;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Game picker. Defaults to imposter so existing UX is unchanged for
@@ -63,9 +70,9 @@ export default function HomePage() {
     "imposter" | "wavelength" | "just-one"
   >("imposter");
 
-  function savePlayer(code: string, playerId: string, nickname: string) {
+  function savePlayer(code: string, playerId: string) {
     localStorage.setItem(`ci:${code}:playerId`, playerId);
-    localStorage.setItem(`ci:${code}:nickname`, nickname);
+    localStorage.setItem(`ci:${code}:nickname`, name);
   }
 
   async function createRoom() {
@@ -76,14 +83,13 @@ export default function HomePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nickname: nickname.trim(),
           kind: gameKind,
           userId: identity.userId ?? undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
-      savePlayer(data.code, data.playerId, nickname.trim());
+      savePlayer(data.code, data.playerId);
       router.push(`/room/${data.code}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
@@ -100,13 +106,12 @@ export default function HomePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nickname: nickname.trim(),
           userId: identity.userId ?? undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
-      savePlayer(code, data.playerId, nickname.trim());
+      savePlayer(code, data.playerId);
       router.push(`/room/${code}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
@@ -115,7 +120,7 @@ export default function HomePage() {
   }
 
   const canSubmit =
-    nickname.trim().length > 0 &&
+    hasName &&
     !submitting &&
     (mode === "create" ||
       (mode === "join" && joinCode.trim().length === 4));
@@ -152,6 +157,14 @@ export default function HomePage() {
           </Link>
         </motion.header>
 
+        {identity.ready && hasName && (
+          <IdentityLine
+            name={name}
+            userId={identity.userId}
+            onRenamed={(next) => setLocalName(next)}
+          />
+        )}
+
         {identity.ready && identity.userId && (
           <PersonalStatsCard userId={identity.userId} />
         )}
@@ -164,7 +177,18 @@ export default function HomePage() {
         )}
 
         <div className="w-full">
-          {mode === "choose" ? (
+          {mode !== "choose" && identity.ready && !hasName ? (
+            // One-identity: name yourself ONCE before the first
+            // create/join. Saved on `users`; every later flow inherits it.
+            <NamePrompt
+              userId={identity.userId}
+              onSaved={(next) => setLocalName(next)}
+              onCancel={() => {
+                setMode("choose");
+                setError(null);
+              }}
+            />
+          ) : mode === "choose" ? (
             <div className="space-y-3.5">
               <motion.button
                 whileTap={{ scale: 0.97 }}
@@ -246,27 +270,6 @@ export default function HomePage() {
                   </div>
                 </div>
               )}
-              <label className="block space-y-2">
-                <SectionLabel>Your name</SectionLabel>
-                <input
-                  value={nickname}
-                  onChange={(e) => setNickname(e.target.value)}
-                  maxLength={20}
-                  placeholder="Alice"
-                  type="text"
-                  name="player-nickname"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="words"
-                  spellCheck={false}
-                  data-form-type="other"
-                  data-1p-ignore="true"
-                  data-lpignore="true"
-                  autoFocus
-                  className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-                />
-              </label>
-
               {mode === "join" && (
                 <label className="block space-y-2">
                   <SectionLabel>Room code</SectionLabel>
@@ -326,6 +329,206 @@ export default function HomePage() {
         </div>
       </main>
     </>
+  );
+}
+
+// One-identity: the single "what should we call you?" prompt. Shown
+// once, the first time a nameless user tries to create or join. On
+// submit it POSTs the name to /api/users/me so it lands on the
+// `users` row — the one authored identity — then the caller proceeds
+// into the chosen create/join flow.
+function NamePrompt({
+  userId,
+  onSaved,
+  onCancel,
+}: {
+  userId: string | null;
+  onSaved: (name: string) => void;
+  onCancel: () => void;
+}) {
+  const [value, setValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save() {
+    const next = value.trim();
+    if (!next || saving) return;
+    setError(null);
+    setSaving(true);
+    try {
+      // If we already have a userId, PATCH is the explicit-update path
+      // (POST only seeds default_nickname when it's currently null —
+      // a fresh user with a never-set name). Either lands the name on
+      // the `users` row, the one authored identity.
+      let res: Response;
+      if (userId) {
+        res = await fetch("/api/users/me", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, defaultNickname: next }),
+        });
+      } else {
+        const deviceToken = getOrMintDeviceToken();
+        res = await fetch("/api/users/me", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceToken, defaultNickname: next }),
+        });
+      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      onSaved((data.defaultNickname as string | null)?.trim() || next);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
+      className="space-y-5"
+    >
+      <label className="block space-y-2">
+        <SectionLabel>What should we call you?</SectionLabel>
+        <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          maxLength={20}
+          placeholder="Alice"
+          type="text"
+          name="player-nickname"
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="words"
+          spellCheck={false}
+          data-form-type="other"
+          data-1p-ignore="true"
+          data-lpignore="true"
+          autoFocus
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+          }}
+          className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+        />
+        <p className="text-xs text-ink-faint">
+          This is your name everywhere — in every room and group. You
+          can change it any time.
+        </p>
+      </label>
+
+      <motion.button
+        whileTap={{ scale: 0.97 }}
+        onClick={save}
+        disabled={value.trim().length === 0 || saving}
+        className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
+      >
+        {saving ? "Saving…" : "Continue"}
+      </motion.button>
+
+      <button
+        onClick={onCancel}
+        className="block w-full text-center text-sm font-semibold text-ink-faint transition hover:text-ink"
+      >
+        ← Back
+      </button>
+
+      {error && (
+        <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-medium text-oxblood">
+          {error}
+        </p>
+      )}
+    </motion.div>
+  );
+}
+
+// Low-key "you're playing as <name>" line with an inline edit
+// affordance. Editing here updates the user's authored identity on
+// `users` (via the /api/users/me PATCH — the explicit profile-change
+// path), so it changes everywhere at once.
+function IdentityLine({
+  name,
+  userId,
+  onRenamed,
+}: {
+  name: string;
+  userId: string | null;
+  onRenamed: (name: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(name);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    const next = value.trim();
+    if (!next || next === name || !userId) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/users/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, defaultNickname: next }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error();
+      onRenamed((data.defaultNickname as string | null)?.trim() || next);
+      setEditing(false);
+    } catch {
+      /* leave the editor open so the user can retry */
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-2 text-sm text-ink-soft">
+        <span>Playing as</span>
+        <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          maxLength={20}
+          autoFocus
+          className="w-32 border-b border-line bg-transparent text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") {
+              setValue(name);
+              setEditing(false);
+            }
+          }}
+        />
+        <button
+          onClick={save}
+          disabled={saving}
+          className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent disabled:opacity-40"
+        >
+          {saving ? "…" : "Save"}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <p className="text-sm text-ink-faint">
+      Playing as{" "}
+      <span className="font-semibold text-ink-soft">{name}</span>
+      {" · "}
+      <button
+        onClick={() => {
+          setValue(name);
+          setEditing(true);
+        }}
+        className="font-semibold text-accent transition hover:text-ink"
+      >
+        edit
+      </button>
+    </p>
   );
 }
 

@@ -21,13 +21,29 @@ export async function POST(request: Request) {
     userId?: string;
     groupId?: string;
   };
-  const trimmed = nickname?.trim();
-  if (!trimmed) {
-    return NextResponse.json({ error: "nickname required" }, { status: 400 });
-  }
   const roomKind = kind && VALID_KINDS.has(kind) ? kind : "imposter";
   const trimmedUserId = userId?.trim() || null;
   const trimmedGroupId = groupId?.trim() || null;
+
+  // One-identity: the player's nickname + avatar are a snapshot of the
+  // caller's authored users identity, not typed fresh per room. Look
+  // them up from the users row. A `nickname` in the body is accepted
+  // only as a fallback for callers that haven't stopped sending it.
+  let identityNickname: string | null = null;
+  let identityAvatar: string | null = null;
+  if (trimmedUserId) {
+    const { data: user } = await supabaseAdmin
+      .from("users")
+      .select("default_nickname, default_avatar")
+      .eq("id", trimmedUserId)
+      .maybeSingle();
+    identityNickname = user?.default_nickname?.trim() || null;
+    identityAvatar = user?.default_avatar?.trim() || null;
+  }
+  const trimmed = identityNickname ?? nickname?.trim() ?? null;
+  if (!trimmed) {
+    return NextResponse.json({ error: "nickname required" }, { status: 400 });
+  }
 
   // Validate group membership at attribution time. Same rule as
   // /api/rooms/[code]/attribute — host must be a member.
@@ -97,12 +113,14 @@ export async function POST(request: Request) {
   // Bind to user_id if the client passed one (identity layer
   // bootstraps it from localStorage). Pre-migration DBs without the
   // column don't get the field set; we only include it when present.
+  // nickname/avatar are denormalized snapshots of the user identity.
   const playerRow: Record<string, unknown> = {
     id: hostId,
     room_code: code,
     nickname: trimmed,
   };
   if (trimmedUserId) playerRow.user_id = trimmedUserId;
+  if (identityAvatar) playerRow.avatar = identityAvatar;
   const { error: playerErr } = await supabaseAdmin
     .from("players")
     .insert(playerRow);

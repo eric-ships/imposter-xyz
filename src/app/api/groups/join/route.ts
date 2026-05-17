@@ -13,6 +13,11 @@ import {
 //
 // Idempotent: if the user is already a member, returns the existing
 // row without erroring. Lets a stale tab re-fire without surprise.
+//
+// One-identity: group_members.nickname is an OPTIONAL per-group
+// override. Left null (the normal case) the member inherits their
+// users.default_nickname. Only an explicit non-empty `nickname` in
+// the body gets written.
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     userId?: string;
@@ -28,8 +33,8 @@ export async function POST(request: Request) {
     );
   }
 
-  // Look up the group + the user (we'll use default_nickname if the
-  // body didn't supply one).
+  // Look up the group + the user (existence check only — the member's
+  // display name inherits from the user's identity).
   const [{ data: group }, { data: user }] = await Promise.all([
     supabaseAdmin
       .from("groups")
@@ -38,7 +43,7 @@ export async function POST(request: Request) {
       .maybeSingle(),
     supabaseAdmin
       .from("users")
-      .select("id, default_nickname")
+      .select("id")
       .eq("id", userId)
       .maybeSingle(),
   ]);
@@ -80,15 +85,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const nickname =
-    body.nickname?.trim() || user.default_nickname?.trim() || "?";
+  // null = inherit the user's identity. Only set when the body
+  // explicitly passes a non-empty override.
+  const nicknameOverride = body.nickname?.trim() || null;
 
   const { error: memberErr } = await supabaseAdmin
     .from("group_members")
     .insert({
       group_id: group.id,
       user_id: userId,
-      nickname,
+      nickname: nicknameOverride,
       role: "member",
     });
   if (memberErr) {

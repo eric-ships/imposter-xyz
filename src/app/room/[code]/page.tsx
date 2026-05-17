@@ -559,6 +559,7 @@ function RoomPlay({
                 view.players.find((p) => p.id === playerId)?.avatar ?? null
               }
               players={view.players}
+              userId={userId}
             />
             <span className="text-base text-ink normal-case tracking-normal">
               {nicknameById.get(playerId)}
@@ -804,12 +805,14 @@ function AvatarPicker({
   nickname,
   avatar,
   players,
+  userId,
 }: {
   code: string;
   playerId: string;
   nickname: string;
   avatar: string | null;
   players: PublicRoomView["players"];
+  userId: string | null;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(false);
@@ -834,10 +837,22 @@ function AvatarPicker({
     return () => document.removeEventListener("mousedown", onDown);
   }, [open]);
 
+  // One-identity: the avatar is part of the authored identity on
+  // `users` — one avatar everywhere. Write it via the /api/users/me
+  // PATCH. The per-room players.avatar is a denormalized copy written
+  // at join; also update it here so the change shows in this room
+  // immediately without waiting for a rejoin.
   async function set(next: string | null) {
     if (pending) return;
     setPending(true);
     try {
+      if (userId) {
+        await fetch("/api/users/me", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, defaultAvatar: next ?? "" }),
+        });
+      }
       await fetch(`/api/rooms/${code}/avatar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -984,6 +999,7 @@ function WavelengthRoomShell({
                   null
                 }
                 players={view.players}
+                userId={userId}
               />
               <span className="text-base text-ink normal-case tracking-normal">
                 {nicknameById.get(playerId)}
@@ -1072,6 +1088,7 @@ function JustOneRoomShell({
                   null
                 }
                 players={view.players}
+                userId={userId}
               />
               <span className="text-base text-ink normal-case tracking-normal">
                 {nicknameById.get(playerId)}
@@ -1160,6 +1177,7 @@ function CrewRoomShell({
                   null
                 }
                 players={view.players}
+                userId={userId}
               />
               <span className="text-base text-ink normal-case tracking-normal">
                 {nicknameById.get(playerId)}
@@ -1247,6 +1265,7 @@ function HoldRoomShell({
                   null
                 }
                 players={view.players}
+                userId={userId}
               />
               <span className="text-base text-ink normal-case tracking-normal">
                 {nicknameById.get(playerId)}

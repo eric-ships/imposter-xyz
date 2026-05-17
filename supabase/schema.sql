@@ -261,6 +261,30 @@ create table if not exists group_members (
 create index if not exists group_members_user_idx
   on group_members(user_id);
 
+-- One-identity migration. A person's identity is now authored once on
+-- their users row (default_nickname / default_avatar). players.nickname
+-- and group_members.nickname become denormalized snapshots written FROM
+-- that identity, never typed fresh. group_members.nickname additionally
+-- becomes an OPTIONAL per-group override: null = inherit the user's
+-- identity (the normal case), set = override the display name in that
+-- group only. The statements below are idempotent and safe to re-run.
+
+-- 1. group_members.nickname is now nullable (null = inherit identity).
+alter table group_members alter column nickname drop not null;
+
+-- 2. Backfill the canonical identity for users who never authored one,
+-- copying from their most recent players row so existing players keep
+-- their name. Only touches users with a missing/empty default_nickname.
+update users set default_nickname = sub.nickname
+from (select distinct on (user_id) user_id, nickname from players
+      where user_id is not null order by user_id, joined_at desc) sub
+where users.id = sub.user_id
+  and (users.default_nickname is null or users.default_nickname = '');
+
+-- 3. Null out the broken "?" group memberships left by the old
+-- default-nickname fallback so they inherit the user's identity instead.
+update group_members set nickname = null where nickname = '?';
+
 -- Match attribution (Phase 3 of friend-groups). A room can optionally
 -- belong to a group — if set, the match-end flow snapshots a
 -- match_results row for stat aggregation. Casual rooms (group_id

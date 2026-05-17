@@ -12,11 +12,7 @@ export async function POST(
     nickname?: string;
     userId?: string;
   };
-  const trimmed = nickname?.trim();
   const trimmedUserId = userId?.trim() || null;
-  if (!trimmed) {
-    return NextResponse.json({ error: "nickname required" }, { status: 400 });
-  }
 
   const { data: room } = await supabaseAdmin
     .from("rooms")
@@ -26,6 +22,26 @@ export async function POST(
 
   if (!room) {
     return NextResponse.json({ error: "room not found" }, { status: 404 });
+  }
+
+  // One-identity: the player's nickname + avatar are a snapshot of the
+  // caller's authored users identity, not typed fresh per room. A
+  // `nickname` in the body is accepted only as a fallback for callers
+  // that haven't stopped sending it.
+  let identityNickname: string | null = null;
+  let identityAvatar: string | null = null;
+  if (trimmedUserId) {
+    const { data: user } = await supabaseAdmin
+      .from("users")
+      .select("default_nickname, default_avatar")
+      .eq("id", trimmedUserId)
+      .maybeSingle();
+    identityNickname = user?.default_nickname?.trim() || null;
+    identityAvatar = user?.default_avatar?.trim() || null;
+  }
+  const trimmed = identityNickname ?? nickname?.trim() ?? null;
+  if (!trimmed) {
+    return NextResponse.json({ error: "nickname required" }, { status: 400 });
   }
 
   // Reclaim by user_id first: if the same device already has a
@@ -98,6 +114,7 @@ export async function POST(
     nickname: trimmed,
   };
   if (trimmedUserId) insertRow.user_id = trimmedUserId;
+  if (identityAvatar) insertRow.avatar = identityAvatar;
   const { data: player, error } = await supabaseAdmin
     .from("players")
     .insert(insertRow)

@@ -135,9 +135,15 @@ export async function GET(
 
   const decoratedMembers = (members ?? []).map((m) => {
     const u = userById.get(m.user_id as string);
+    // One-identity: group_members.nickname is an optional per-group
+    // override. null = inherit the user's authored identity. Resolve
+    // the display name here; expose the raw override separately so the
+    // UI can tell an override apart from an inherited name.
+    const override = (m.nickname as string | null) ?? null;
     return {
       userId: m.user_id as string,
-      nickname: m.nickname as string,
+      nickname: override ?? u?.defaultNickname ?? "?",
+      nicknameOverride: override,
       role: m.role as string,
       joinedAt: m.joined_at as string,
       defaultAvatar: u?.defaultAvatar ?? null,
