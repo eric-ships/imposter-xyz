@@ -70,6 +70,43 @@ export default function HomePage() {
     "imposter" | "wavelength" | "just-one"
   >("imposter");
 
+  // Shared across the live banner + groups section: the user's groups
+  // (with live-room info) and their total-matches count. Lifted here
+  // so the top-of-page activity banner and MyGroupsSection read the
+  // same data without duplicate fetches.
+  const [groups, setGroups] = useState<GroupRow[] | null>(null);
+  const [totalMatches, setTotalMatches] = useState<number | null>(null);
+
+  const refetchGroups = useCallback(async () => {
+    if (!identity.userId) return;
+    try {
+      const res = await fetch(`/api/groups?userId=${identity.userId}`);
+      const data = await res.json();
+      if (res.ok) setGroups(data.groups as GroupRow[]);
+    } catch {
+      /* leave previous value */
+    }
+  }, [identity.userId]);
+
+  useEffect(() => {
+    refetchGroups();
+  }, [refetchGroups]);
+
+  useEffect(() => {
+    if (!identity.userId) return;
+    let cancelled = false;
+    fetch(`/api/users/me/stats?userId=${identity.userId}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((d) => {
+        if (cancelled || !d) return;
+        setTotalMatches((d as PersonalStats).totalMatches);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [identity.userId]);
+
   function savePlayer(code: string, playerId: string) {
     localStorage.setItem(`ci:${code}:playerId`, playerId);
     localStorage.setItem(`ci:${code}:nickname`, name);
@@ -157,6 +194,16 @@ export default function HomePage() {
           </Link>
         </motion.header>
 
+        {/* Live group-activity banner — highest priority on the page.
+            If a group the user belongs to has a game going right now,
+            this is the fastest path back into it. */}
+        {identity.ready && identity.userId && groups && (
+          <LiveGroupActivityBanner
+            groups={groups}
+            userId={identity.userId}
+          />
+        )}
+
         {identity.ready && hasName && (
           <IdentityLine
             name={name}
@@ -173,6 +220,8 @@ export default function HomePage() {
           <MyGroupsSection
             userId={identity.userId}
             email={identity.email}
+            groups={groups}
+            totalMatches={totalMatches}
           />
         )}
 
@@ -189,21 +238,29 @@ export default function HomePage() {
               }}
             />
           ) : mode === "choose" ? (
-            <div className="space-y-3.5">
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setMode("create")}
-                className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md"
-              >
-                Create a room
-              </motion.button>
-              <motion.button
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setMode("join")}
-                className="w-full rounded-2xl border-2 border-ink bg-transparent px-6 py-5 text-lg font-bold tracking-tight text-ink transition-all duration-100 hover:bg-ink hover:text-page"
-              >
-                Join a room
-              </motion.button>
+            // Secondary path: starting a game with a group (above) is
+            // now the primary launch. These generic room actions stay
+            // available but smaller / lower-emphasis.
+            <div className="space-y-2.5">
+              <p className="text-center text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+                Or play without a group
+              </p>
+              <div className="flex gap-2.5">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setMode("create")}
+                  className="flex-1 rounded-xl border-2 border-line px-4 py-3 text-sm font-bold tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
+                >
+                  Create a room
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setMode("join")}
+                  className="flex-1 rounded-xl border-2 border-line px-4 py-3 text-sm font-bold tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
+                >
+                  Join a room
+                </motion.button>
+              </div>
             </div>
           ) : (
             <motion.div
@@ -536,6 +593,12 @@ function IdentityLine({
 // create a new one or join via code. Renders only after identity
 // is ready (we need a userId to query). Always shown thereafter,
 // even with 0 groups, so first-time users have a path in.
+type ActiveRoom = {
+  code: string;
+  kind: string;
+  state: string;
+};
+
 type GroupRow = {
   id: string;
   name: string;
@@ -543,38 +606,149 @@ type GroupRow = {
   ownerUserId: string;
   memberCount: number;
   role: string;
+  activeRoom: ActiveRoom | null;
 };
+
+// Live group-activity banner — the top-of-page "a game is happening
+// right now" callout. Shows the most-recently-updated active room
+// among the user's groups. Lobby rooms get a one-tap Join (identity
+// is server-derived, no nickname); in-progress rooms get a Watch
+// link to the spectate view.
+function LiveGroupActivityBanner({
+  groups,
+  userId,
+}: {
+  groups: GroupRow[];
+  userId: string;
+}) {
+  const router = useRouter();
+  const [joining, setJoining] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // The groups API returns each group's single most-recent active
+  // room; the rooms themselves arrive newest-first per group. We
+  // can't compare across groups by updated_at here (not exposed), so
+  // we just take the first group that has one — good enough, and we
+  // stack the rest below if there are several.
+  const live = groups.filter((g) => g.activeRoom);
+  if (live.length === 0) return null;
+
+  async function joinRoom(code: string) {
+    setError(null);
+    setJoining(true);
+    try {
+      const res = await fetch(`/api/rooms/${code}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      localStorage.setItem(`ci:${code}:playerId`, data.playerId);
+      router.push(`/room/${code}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "failed");
+      setJoining(false);
+    }
+  }
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="w-full space-y-2.5"
+    >
+      {live.map((g) => {
+        const room = g.activeRoom!;
+        const inLobby = room.state === "lobby";
+        return (
+          <div
+            key={g.id}
+            className="flex items-center justify-between gap-3 rounded-2xl border-2 border-leaf bg-leaf/10 px-4 py-3.5"
+          >
+            <span className="flex min-w-0 flex-col gap-0.5">
+              <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-leaf">
+                <span className="text-[10px]">🟢</span>
+                {inLobby ? "Game starting" : "Game in progress"}
+              </span>
+              <span className="truncate text-base font-bold text-ink">
+                {g.name} has a game going
+              </span>
+            </span>
+            {inLobby ? (
+              <motion.button
+                whileTap={{ scale: 0.96 }}
+                onClick={() => joinRoom(room.code)}
+                disabled={joining}
+                className="shrink-0 rounded-xl bg-leaf px-5 py-2.5 text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                {joining ? "Joining…" : "Join"}
+              </motion.button>
+            ) : (
+              <Link
+                href={`/spectate/${room.code}`}
+                className="shrink-0 rounded-xl border-2 border-leaf px-5 py-2.5 text-sm font-bold tracking-tight text-leaf transition-all duration-100 hover:bg-leaf hover:text-white"
+              >
+                Watch
+              </Link>
+            )}
+          </div>
+        );
+      })}
+      {error && (
+        <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-3 py-2 text-sm font-medium text-oxblood">
+          {error}
+        </p>
+      )}
+    </motion.section>
+  );
+}
 
 function MyGroupsSection({
   userId,
   email,
+  groups,
+  totalMatches,
 }: {
   userId: string;
   email: string | null;
+  groups: GroupRow[] | null;
+  totalMatches: number | null;
 }) {
   const router = useRouter();
-  const [groups, setGroups] = useState<GroupRow[] | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [createName, setCreateName] = useState("");
   const [joinCode, setJoinCode] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Tracks which group's "start a game" button is mid-flight.
+  const [startingGroupId, setStartingGroupId] = useState<string | null>(
+    null
+  );
 
-  const refetch = useCallback(async () => {
+  // Create a fresh imposter room attributed to a group, then drop the
+  // host straight into it. Identity is server-derived from userId —
+  // no nickname needed.
+  async function startGroupGame(groupId: string) {
+    setError(null);
+    setStartingGroupId(groupId);
     try {
-      const res = await fetch(`/api/groups?userId=${userId}`);
+      const res = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "imposter", userId, groupId }),
+      });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "load failed");
-      setGroups(data.groups as GroupRow[]);
+      if (!res.ok) throw new Error(data.error ?? "failed");
+      localStorage.setItem(`ci:${data.code}:playerId`, data.playerId);
+      router.push(`/room/${data.code}`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "load failed");
+      setError(e instanceof Error ? e.message : "failed");
+      setStartingGroupId(null);
     }
-  }, [userId]);
-
-  useEffect(() => {
-    refetch();
-  }, [refetch]);
+  }
 
   async function create() {
     const name = createName.trim();
@@ -626,33 +800,92 @@ function MyGroupsSection({
       {groups === null ? (
         <p className="text-sm text-ink-faint">Loading…</p>
       ) : groups.length === 0 ? (
-        <p className="text-sm text-ink-soft">
-          No groups yet. Create one to start tracking stats with your
-          regulars, or join an existing group with an invite code.
-        </p>
-      ) : (
-        <ul className="space-y-2">
-          {groups.map((g) => (
-            <li key={g.id}>
-              <Link
-                href={`/group/${g.id}`}
-                className="flex items-center justify-between gap-3 rounded-xl border-2 border-line bg-surface/40 px-4 py-3 transition hover:border-ink"
+        // Post-match nudge: a user who's played a couple of games but
+        // has no group gets an active prompt to make one (keeping
+        // score is the payoff). A brand-new user with 0 matches still
+        // gets the quiet empty state — no pressure on first visit.
+        totalMatches !== null && totalMatches >= 2 ? (
+          <div className="rounded-2xl border-2 border-accent bg-accent/10 p-5 space-y-3">
+            <p className="text-base font-bold text-ink">
+              You&apos;ve played {totalMatches} games — make a group to
+              keep score with your crew.
+            </p>
+            {email ? (
+              <button
+                onClick={() => {
+                  setCreateOpen(true);
+                  setJoinOpen(false);
+                  setError(null);
+                }}
+                className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
               >
-                <span className="flex items-baseline gap-2">
-                  <span className="text-base font-semibold text-ink">
+                Create a group
+              </button>
+            ) : (
+              <Link
+                href="/auth"
+                className="block w-full rounded-xl bg-accent px-5 py-3 text-center text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110"
+              >
+                Sign in to create a group →
+              </Link>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-ink-soft">
+            No groups yet. Create one to start tracking stats with your
+            regulars, or join an existing group with an invite code.
+          </p>
+        )
+      ) : (
+        <ul className="space-y-2.5">
+          {groups.map((g) => (
+            <li
+              key={g.id}
+              className="rounded-2xl border-2 border-line bg-surface/40 p-3.5 space-y-3"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <Link
+                  href={`/group/${g.id}`}
+                  className="flex min-w-0 items-baseline gap-2 transition hover:text-accent"
+                >
+                  <span className="truncate text-base font-semibold text-ink">
                     {g.name}
                   </span>
                   {g.role === "owner" && (
-                    <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
+                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
                       Owner
                     </span>
                   )}
-                </span>
-                <span className="text-xs font-semibold text-ink-faint">
+                </Link>
+                <Link
+                  href={`/group/${g.id}`}
+                  className="shrink-0 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-faint transition hover:text-ink"
+                >
                   {g.memberCount}{" "}
-                  {g.memberCount === 1 ? "member" : "members"}
-                </span>
-              </Link>
+                  {g.memberCount === 1 ? "member" : "members"} · Manage
+                </Link>
+              </div>
+              {g.activeRoom && g.activeRoom.state === "lobby" ? (
+                // A game is already gathering for this group — point
+                // at it instead of starting a competing room.
+                <Link
+                  href={`/room/${g.activeRoom.code}`}
+                  className="block w-full rounded-xl bg-leaf px-5 py-3 text-center text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
+                >
+                  🟢 Join {g.name}&apos;s game →
+                </Link>
+              ) : (
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => startGroupGame(g.id)}
+                  disabled={startingGroupId !== null}
+                  className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {startingGroupId === g.id
+                    ? "Starting…"
+                    : `Start a game with ${g.name} →`}
+                </motion.button>
+              )}
             </li>
           ))}
         </ul>
