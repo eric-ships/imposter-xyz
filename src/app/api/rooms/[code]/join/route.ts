@@ -128,6 +128,17 @@ export async function POST(
     );
   }
 
+  // Bot-created rooms (the Discord /upper command) open with no
+  // players and a host_id pointing at nobody. The first human to join
+  // inherits the host seat. Normal rooms always have their creator as
+  // player 0, so playerCount === 0 only ever holds for bot rooms.
+  if ((playerCount ?? 0) === 0) {
+    await supabaseAdmin
+      .from("rooms")
+      .update({ host_id: player.id })
+      .eq("code", code);
+  }
+
   await notifyRoom(code, "player_joined");
 
   return NextResponse.json({ playerId: player.id });
