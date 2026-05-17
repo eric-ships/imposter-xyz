@@ -73,6 +73,52 @@ export async function GET(
     ])
   );
 
+  // Current-room presence: each member's most recently joined room,
+  // surfaced only if that room is still active (touched within the
+  // window). Lets the roster show "in a game right now" so groupmates
+  // can hop in / watch. Rooms have no "ended" state, so updated_at
+  // recency is the liveness signal.
+  const PRESENCE_WINDOW_MS = 30 * 60 * 1000;
+  const { data: playerRows } = await supabaseAdmin
+    .from("players")
+    .select("user_id, room_code, joined_at")
+    .in("user_id", memberUserIds)
+    .order("joined_at", { ascending: false });
+  const roomCodes = [
+    ...new Set((playerRows ?? []).map((p) => p.room_code as string)),
+  ];
+  const { data: rooms } = roomCodes.length
+    ? await supabaseAdmin
+        .from("rooms")
+        .select("code, kind, state, updated_at")
+        .in("code", roomCodes)
+    : { data: [] as Record<string, unknown>[] };
+  const roomByCode = new Map(
+    (rooms ?? []).map((r) => [r.code as string, r])
+  );
+  const cutoff = Date.now() - PRESENCE_WINDOW_MS;
+  const currentRoomByUser = new Map<
+    string,
+    { code: string; kind: string; state: string }
+  >();
+  const seenUser = new Set<string>();
+  for (const p of playerRows ?? []) {
+    const uid = p.user_id as string;
+    if (seenUser.has(uid)) continue; // most recent players row only
+    seenUser.add(uid);
+    const room = roomByCode.get(p.room_code as string);
+    if (
+      room &&
+      new Date(room.updated_at as string).getTime() >= cutoff
+    ) {
+      currentRoomByUser.set(uid, {
+        code: room.code as string,
+        kind: room.kind as string,
+        state: room.state as string,
+      });
+    }
+  }
+
   const decoratedMembers = (members ?? []).map((m) => {
     const u = userById.get(m.user_id as string);
     return {
@@ -82,6 +128,7 @@ export async function GET(
       joinedAt: m.joined_at as string,
       defaultAvatar: u?.defaultAvatar ?? null,
       lastSeenAt: u?.lastSeenAt ?? null,
+      currentRoom: currentRoomByUser.get(m.user_id as string) ?? null,
     };
   });
 
