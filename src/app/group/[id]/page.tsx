@@ -695,6 +695,15 @@ type GameRollup = {
   justOne: { played: number; totalDelta: number };
 };
 
+type StandingRow = {
+  userId: string;
+  nickname: string;
+  avatar: string | null;
+  totalPoints: number;
+  matchesPlayed: number;
+  rank: number;
+};
+
 type StatsResponse = {
   totalMatches: number;
   perMember: Array<{
@@ -704,6 +713,8 @@ type StatsResponse = {
     defaultAvatar: string | null;
     games: GameRollup;
   }>;
+  // Members ranked by total points — the scoreboard centerpiece.
+  standings: StandingRow[];
 };
 
 function StatsTab({
@@ -772,75 +783,185 @@ function StatsTab({
     return bPlayed - aPlayed;
   });
 
+  const standings = data.standings ?? [];
+
   return (
-    <div className="space-y-5">
-      <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
-        {data.totalMatches}{" "}
-        {data.totalMatches === 1 ? "match" : "matches"} total
-      </div>
-      <ul className="space-y-3">
-        {sorted.map((m) => {
-          const av = avatarFor(
-            m.userId,
-            m.nickname,
-            m.defaultAvatar,
-            sorted.map((s) => ({ id: s.userId }))
-          );
-          const totalPlayed =
-            m.games.imposter.played +
-            m.games.wavelength.played +
-            m.games.justOne.played;
-          return (
-            <li
-              key={m.userId}
-              className="rounded-sm border border-line-soft bg-page/40 p-3"
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${av.color} ${
-                    av.isCustom
-                      ? "border border-line text-base"
-                      : "text-sm font-semibold text-white"
-                  }`}
-                >
-                  {av.initial}
+    <div className="space-y-7">
+      {/* ── Standings: the centerpiece scoreboard ── */}
+      <section className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="font-serif text-2xl text-ink">Standings</h2>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+            {data.totalMatches}{" "}
+            {data.totalMatches === 1 ? "match" : "matches"}
+          </span>
+        </div>
+        <ol className="space-y-2">
+          {standings.map((row) => (
+            <StandingRowCard
+              key={row.userId}
+              row={row}
+              isMe={row.userId === userId}
+              roster={standings}
+            />
+          ))}
+        </ol>
+      </section>
+
+      {/* ── Per-game breakdown, below the scoreboard ── */}
+      <section className="space-y-3">
+        <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          By game
+        </h2>
+        <ul className="space-y-3">
+          {sorted.map((m) => {
+            const av = avatarFor(
+              m.userId,
+              m.nickname,
+              m.defaultAvatar,
+              sorted.map((s) => ({ id: s.userId }))
+            );
+            const totalPlayed =
+              m.games.imposter.played +
+              m.games.wavelength.played +
+              m.games.justOne.played;
+            return (
+              <li
+                key={m.userId}
+                className="rounded-sm border border-line-soft bg-page/40 p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${av.color} ${
+                      av.isCustom
+                        ? "border border-line text-base"
+                        : "text-sm font-semibold text-white"
+                    }`}
+                  >
+                    {av.initial}
+                  </div>
+                  <div className="flex flex-1 items-baseline gap-2">
+                    <span className="text-sm text-ink">{m.nickname}</span>
+                    {m.role === "owner" && (
+                      <span className="text-[10px] uppercase tracking-[0.18em] text-accent">
+                        Owner
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
+                    {totalPlayed} played
+                  </span>
                 </div>
-                <div className="flex flex-1 items-baseline gap-2">
-                  <span className="text-sm text-ink">{m.nickname}</span>
-                  {m.role === "owner" && (
-                    <span className="text-[10px] uppercase tracking-[0.18em] text-accent">
-                      Owner
-                    </span>
+
+                {/* Per-game breakdown — only show games this player
+                    has actually played to keep the panel lean. */}
+                <div className="mt-2 space-y-1.5">
+                  {m.games.imposter.played > 0 && (
+                    <ImposterStatRow stats={m.games.imposter} />
+                  )}
+                  {m.games.wavelength.played > 0 && (
+                    <WavelengthStatRow stats={m.games.wavelength} />
+                  )}
+                  {m.games.justOne.played > 0 && (
+                    <JustOneStatRow stats={m.games.justOne} />
+                  )}
+                  {totalPlayed === 0 && (
+                    <p className="text-[11px] text-ink-faint">
+                      Hasn&apos;t played a group-attributed match yet.
+                    </p>
                   )}
                 </div>
-                <span className="text-[11px] uppercase tracking-[0.18em] text-ink-faint">
-                  {totalPlayed} played
-                </span>
-              </div>
-
-              {/* Per-game breakdown — only show games this player has
-                  actually played to keep the panel lean. */}
-              <div className="mt-2 space-y-1.5">
-                {m.games.imposter.played > 0 && (
-                  <ImposterStatRow stats={m.games.imposter} />
-                )}
-                {m.games.wavelength.played > 0 && (
-                  <WavelengthStatRow stats={m.games.wavelength} />
-                )}
-                {m.games.justOne.played > 0 && (
-                  <JustOneStatRow stats={m.games.justOne} />
-                )}
-                {totalPlayed === 0 && (
-                  <p className="text-[11px] text-ink-faint">
-                    Hasn&apos;t played a group-attributed match yet.
-                  </p>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
     </div>
+  );
+}
+
+// One row of the squad standings scoreboard. #1 gets the accent
+// treatment; the viewing user's own row is highlighted.
+function StandingRowCard({
+  row,
+  isMe,
+  roster,
+}: {
+  row: StandingRow;
+  isMe: boolean;
+  roster: StandingRow[];
+}) {
+  const av = avatarFor(
+    row.userId,
+    row.nickname,
+    row.avatar,
+    roster.map((r) => ({ id: r.userId }))
+  );
+  const isTop = row.rank === 1;
+  return (
+    <li
+      className={`flex items-center gap-3 rounded-xl border-2 px-3 py-3 transition ${
+        isTop
+          ? "border-accent bg-accent/10"
+          : isMe
+            ? "border-ink bg-surface"
+            : "border-line-soft bg-page/40"
+      }`}
+    >
+      {/* Rank badge — #1 emphasized. */}
+      <div
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold tabular-nums ${
+          isTop
+            ? "bg-accent text-white"
+            : "border-2 border-line text-ink-soft"
+        }`}
+      >
+        {row.rank}
+      </div>
+
+      {/* Avatar. */}
+      <div
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${av.color} ${
+          av.isCustom
+            ? "border-2 border-line text-base"
+            : "text-sm font-semibold text-white"
+        }`}
+      >
+        {av.initial}
+      </div>
+
+      {/* Name + matches played. */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-baseline gap-2">
+          <span className="truncate text-sm font-semibold text-ink">
+            {row.nickname}
+          </span>
+          {isMe && (
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
+              you
+            </span>
+          )}
+        </div>
+        <span className="text-[11px] uppercase tracking-[0.16em] text-ink-faint">
+          {row.matchesPlayed}{" "}
+          {row.matchesPlayed === 1 ? "match" : "matches"}
+        </span>
+      </div>
+
+      {/* Total points. */}
+      <div className="flex shrink-0 flex-col items-end">
+        <span
+          className={`font-serif text-2xl tabular-nums ${
+            isTop ? "text-accent" : "text-ink"
+          }`}
+        >
+          {row.totalPoints}
+        </span>
+        <span className="text-[10px] uppercase tracking-[0.16em] text-ink-faint">
+          pts
+        </span>
+      </div>
+    </li>
   );
 }
 

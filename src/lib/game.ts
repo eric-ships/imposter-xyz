@@ -39,6 +39,24 @@ export type Payout = {
   kind: "payout" | "refund";
 };
 
+// Post-game payoff for a group-attributed room: where the viewer
+// landed in their squad's standings after the match they just
+// finished. Null when the room isn't group-attributed, or the
+// viewer isn't a group member with results. See room-state.ts.
+export type SquadStanding = {
+  groupId: string;
+  groupName: string;
+  // The viewer's delta from the most recent match for this group
+  // (0 if they weren't in it).
+  lastDelta: number;
+  // The viewer's rank / total points in the squad standings, and the
+  // squad's member count. Standings reflect all matches including the
+  // one just finished.
+  rank: number;
+  memberCount: number;
+  totalPoints: number;
+};
+
 export type Clue = {
   id: number;
   player_id: string;
@@ -135,6 +153,9 @@ export type PublicRoomView = {
     // If you've already used your one investigation, this carries the
     // result so you can re-read it across refreshes.
     investigation: { targetId: string; isImposter: boolean } | null;
+    // Post-game payoff: the viewer's standing in the room's squad
+    // after the latest match. Null for casual rooms or non-members.
+    squadStanding: SquadStanding | null;
   } | null;
   // Player ids of crewmates currently voting to skip the secret word.
   // Empty when no votes are pending; cleared when a skip lands or a new

@@ -4,6 +4,7 @@ import type {
   GuessOutcome,
   PublicRoomView,
   RoomState,
+  SquadStanding,
 } from "@/lib/game";
 import type { MatchHistoryEntry } from "@/lib/match-history";
 import { redactForViewer as redactWavelength } from "@/games/wavelength/state";
@@ -14,6 +15,7 @@ import { redactForViewer as redactCrew } from "@/games/crew/state";
 import type { CrewState } from "@/games/crew/types";
 import { redactForViewer as redactHold } from "@/games/hold/state";
 import type { HoldState } from "@/games/hold/types";
+import { computeStandings } from "@/lib/group-stats-aggregate";
 
 export async function notifyRoom(code: string, kind: string) {
   await supabaseAdmin.from("room_events").insert({ room_code: code, kind });
@@ -33,6 +35,103 @@ export function tallyVotes(votes: { target_id: string }[]): {
     .filter(([, n]) => n === topCount)
     .map(([id]) => id);
   return { topTargets, topCount, tied: topTargets.length > 1 };
+}
+
+// Post-game payoff: compute the viewer's standing in a group's squad
+// after the most recent match. Returns null when the room isn't
+// group-attributed, the group has no matches yet, or the viewer
+// isn't a member of the group / has no results.
+//
+// `userId` is the viewer's identity (players.user_id), not the
+// per-room player id — standings are keyed on the durable user.
+async function computeSquadStanding(
+  groupId: string,
+  groupName: string | null,
+  userId: string | null
+): Promise<SquadStanding | null> {
+  if (!userId) return null;
+
+  // Viewer must be a member of the group.
+  const { data: membership } = await supabaseAdmin
+    .from("group_members")
+    .select("user_id")
+    .eq("group_id", groupId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!membership) return null;
+
+  // The group's matches, newest first — so matchList[0] is the most
+  // recent one (the match that just finished).
+  const { data: matches } = await supabaseAdmin
+    .from("match_results")
+    .select("id, created_at")
+    .eq("group_id", groupId)
+    .order("created_at", { ascending: false });
+  const matchList = matches ?? [];
+  if (matchList.length === 0) return null;
+
+  const matchIds = matchList.map((m) => m.id as string);
+  const { data: playerResults } = await supabaseAdmin
+    .from("match_player_results")
+    .select("match_id, user_id, delta")
+    .in("match_id", matchIds);
+  const prRows = (playerResults ?? []) as {
+    match_id: string;
+    user_id: string;
+    delta: number;
+  }[];
+
+  // The group's members + their resolved identity (the one-identity
+  // model: per-group override nickname, else users.default_nickname,
+  // else "?"; avatar from users.default_avatar).
+  const { data: members } = await supabaseAdmin
+    .from("group_members")
+    .select("user_id, nickname")
+    .eq("group_id", groupId);
+  const memberRows = members ?? [];
+  const memberUserIds = memberRows.map((m) => m.user_id as string);
+  const { data: users } = await supabaseAdmin
+    .from("users")
+    .select("id, default_nickname, default_avatar")
+    .in("id", memberUserIds);
+  const userByID = new Map(
+    (users ?? []).map((u) => [u.id as string, u])
+  );
+  const memberIdentity = memberRows.map((m) => {
+    const uid = m.user_id as string;
+    const u = userByID.get(uid);
+    return {
+      userId: uid,
+      nickname:
+        (m.nickname as string | null) ??
+        (u?.default_nickname as string | null) ??
+        "?",
+      avatar: (u?.default_avatar as string | null) ?? null,
+    };
+  });
+
+  const standings = computeStandings({
+    members: memberIdentity,
+    playerResults: prRows,
+  });
+  const mine = standings.find((s) => s.userId === userId);
+  if (!mine) return null;
+
+  // lastDelta: this viewer's delta from the most recent match (0 if
+  // they weren't in it).
+  const latestMatchId = matchList[0].id as string;
+  const lastDelta = prRows
+    .filter((r) => r.match_id === latestMatchId && r.user_id === userId)
+    .reduce((sum, r) => sum + r.delta, 0);
+
+  return {
+    groupId,
+    groupName: groupName ?? "your squad",
+    lastDelta,
+    rank: mine.rank,
+    memberCount: standings.length,
+    totalPoints: mine.totalPoints,
+  };
 }
 
 export async function fetchRoomView(
@@ -215,6 +314,8 @@ export async function fetchRoomView(
         partnerId: myPartnerId,
         isPolice,
         investigation: myInvestigation,
+        // Filled in below once group attribution is resolved.
+        squadStanding: null as SquadStanding | null,
       }
     : null;
 
@@ -352,6 +453,21 @@ export async function fetchRoomView(
       .maybeSingle();
     groupName = (g?.name as string | null) ?? null;
     groupInviteCode = (g?.invite_code as string | null) ?? null;
+  }
+
+  // Post-game payoff: when the room is group-attributed, attach the
+  // viewer's squad standing to `you`. Keyed on the viewer's durable
+  // user_id (from their player row), not the per-room player id.
+  if (you && groupId) {
+    const myUserId =
+      ((players ?? []).find((p) => p.id === playerId)?.user_id as
+        | string
+        | null) ?? null;
+    you.squadStanding = await computeSquadStanding(
+      groupId,
+      groupName,
+      myUserId
+    );
   }
 
   return {
