@@ -68,6 +68,11 @@ export async function POST(
     state: nextState,
     updated_at: new Date().toISOString(),
   };
+  // A new round means a fresh skip window — clear any carried-over
+  // skip votes so the next round's tally starts from zero.
+  if (nextRound !== room.round && "skip_votes" in room) {
+    clueUpdate.skip_votes = [];
+  }
   if ("phase_deadline" in room) {
     clueUpdate.phase_deadline = deadlineFor(nextState, turnOrder.length);
   }
