@@ -26,6 +26,9 @@ type GroupMember = {
   joinedAt: string;
   defaultAvatar: string | null;
   lastSeenAt: string | null;
+  // The room this member is currently in (active within the last
+  // ~30min), or null. Lets groupmates see + watch live games.
+  currentRoom: { code: string; kind: string; state: string } | null;
 };
 
 type GroupDetail = {
@@ -241,8 +244,17 @@ function RosterTab({
                 >
                   {av.initial}
                 </div>
-                <div className="flex flex-1 items-baseline gap-2">
-                  <span className="text-sm text-ink">{m.nickname}</span>
+                <div className="flex flex-1 flex-wrap items-baseline gap-x-2 gap-y-1">
+                  {isMe ? (
+                    <EditableNickname
+                      groupId={group.id}
+                      userId={identity.userId!}
+                      nickname={m.nickname}
+                      onSaved={refetch}
+                    />
+                  ) : (
+                    <span className="text-sm text-ink">{m.nickname}</span>
+                  )}
                   {m.role === "owner" && (
                     <span className="text-[10px] uppercase tracking-[0.18em] text-accent">
                       Owner
@@ -254,6 +266,9 @@ function RosterTab({
                     </span>
                   )}
                   <PresencePill lastSeenAt={m.lastSeenAt} />
+                  {m.currentRoom && (
+                    <RoomPresencePill room={m.currentRoom} />
+                  )}
                 </div>
                 {isOwner && !isMe && (
                   <KickMemberButton
@@ -290,6 +305,131 @@ function RosterTab({
         )}
       </section>
     </>
+  );
+}
+
+// Inline editor for your own per-group nickname. Members who signed
+// in by email and never played a room have no name, so the roster
+// shows "?" until they set one here.
+function EditableNickname({
+  groupId,
+  userId,
+  nickname,
+  onSaved,
+}: {
+  groupId: string;
+  userId: string;
+  nickname: string;
+  onSaved: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(nickname);
+  const [saving, setSaving] = useState(false);
+  const unset = !nickname || nickname === "?";
+
+  async function save() {
+    const next = value.trim();
+    if (!next || next === nickname) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/groups/${groupId}/nickname`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, nickname: next }),
+      });
+      if (!res.ok) throw new Error();
+      setEditing(false);
+      onSaved();
+    } catch {
+      /* leave the editor open so the user can retry */
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (editing) {
+    return (
+      <span className="flex items-center gap-1.5">
+        <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          maxLength={20}
+          placeholder="Your name"
+          autoFocus
+          className="w-28 border-b border-line bg-transparent text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") {
+              setValue(nickname);
+              setEditing(false);
+            }
+          }}
+        />
+        <button
+          onClick={save}
+          disabled={saving}
+          className="text-[10px] uppercase tracking-[0.16em] text-accent disabled:opacity-40"
+        >
+          {saving ? "…" : "Save"}
+        </button>
+      </span>
+    );
+  }
+  if (unset) {
+    return (
+      <button
+        onClick={() => {
+          setValue("");
+          setEditing(true);
+        }}
+        className="text-sm font-semibold text-accent"
+      >
+        + Add your name
+      </button>
+    );
+  }
+  return (
+    <button
+      onClick={() => {
+        setValue(nickname);
+        setEditing(true);
+      }}
+      className="text-sm text-ink underline decoration-dotted decoration-ink-faint underline-offset-4 transition hover:decoration-ink"
+      title="Tap to rename"
+    >
+      {nickname}
+    </button>
+  );
+}
+
+const ROOM_KIND_LABEL: Record<string, string> = {
+  imposter: "Imposter",
+  wavelength: "Wavelength",
+  "just-one": "Just One",
+  crew: "Crew",
+  hold: "Hold",
+};
+
+// Shows that a member is in a live room right now, linking to the
+// read-only spectator view so groupmates can watch.
+function RoomPresencePill({
+  room,
+}: {
+  room: { code: string; kind: string; state: string };
+}) {
+  const label = ROOM_KIND_LABEL[room.kind] ?? "a game";
+  return (
+    <Link
+      href={`/spectate/${room.code}`}
+      className="flex items-center gap-1.5 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-leaf transition hover:bg-leaf/20"
+      title={`Watch ${label} · room ${room.code}`}
+    >
+      <span className="h-1.5 w-1.5 rounded-full bg-leaf" />
+      In {label} · {room.code}
+    </Link>
   );
 }
 
