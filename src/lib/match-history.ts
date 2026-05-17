@@ -60,6 +60,23 @@ export type JustOneMatchEntry = {
   rating: string; // human label ("Telepathic", "Sharp", etc.)
 };
 
+export type CrewMatchEntry = {
+  kind: "crew";
+  matchNumber: number;
+  endedAt: string;
+  // Cooperative outcome for the whole crew.
+  outcome: "won" | "lost";
+  // Number of tasks in the mission (one per player).
+  taskCount: number;
+  perPlayer: Array<{
+    playerId: string;
+    nickname: string;
+    avatar: string | null;
+    // Whether this player's own task was completed.
+    taskDone: boolean;
+  }>;
+};
+
 // Hold is a cooperative tower defense — the whole table wins or loses
 // together. The snapshot carries the run outcome plus a per-player
 // breakdown of how many towers each builder put down.
@@ -83,6 +100,7 @@ export type MatchHistoryEntry =
   | ImposterMatchEntry
   | WavelengthMatchEntry
   | JustOneMatchEntry
+  | CrewMatchEntry
   | HoldMatchEntry;
 
 // Cap so a single lobby can't accumulate unbounded history. Lobbies are
@@ -180,6 +198,35 @@ export function snapshotJustOneMatch(args: {
     totalCards: args.totalCards,
     score: args.score,
     rating,
+  };
+}
+
+// Crew-side snapshot. Called from the next-mission route when the
+// host advances from reveal → replay. Crew is cooperative: the whole
+// crew wins or loses together, so `outcome` is shared. perPlayer
+// records whether each player's own task was completed.
+export function snapshotCrewMatch(args: {
+  matchNumber: number;
+  outcome: "won" | "lost";
+  tasks: Array<{ ownerId: string; done: boolean }>;
+  players: Array<{ id: string; nickname: string; avatar: string | null }>;
+}): CrewMatchEntry {
+  const doneByOwner = new Map(
+    args.tasks.map((t) => [t.ownerId, t.done])
+  );
+  const perPlayer = args.players.map((p) => ({
+    playerId: p.id,
+    nickname: p.nickname,
+    avatar: p.avatar,
+    taskDone: doneByOwner.get(p.id) ?? false,
+  }));
+  return {
+    kind: "crew",
+    matchNumber: args.matchNumber,
+    endedAt: new Date().toISOString(),
+    outcome: args.outcome,
+    taskCount: args.tasks.length,
+    perPlayer,
   };
 }
 

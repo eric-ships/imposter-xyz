@@ -347,6 +347,40 @@ function WavelengthHistoryPanel({
               </div>
             );
           }
+          if ("kind" in m && m.kind === "crew") {
+            const tasksDone = m.perPlayer.filter(
+              (p) => p.taskDone
+            ).length;
+            const won = m.outcome === "won";
+            return (
+              <div
+                key={`c${m.matchNumber}`}
+                className="rounded-sm border border-line-soft bg-page/40 px-3 py-2.5"
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+                    Match {m.matchNumber} · Crew
+                    {endedTime && <> · {endedTime}</>}
+                  </div>
+                  <div
+                    className={`text-[11px] uppercase tracking-[0.18em] ${
+                      won ? "text-leaf" : "text-oxblood"
+                    }`}
+                  >
+                    {won ? "Mission won" : "Mission lost"}
+                  </div>
+                </div>
+                <div className="mt-1 text-sm text-ink">
+                  <span className="font-semibold">
+                    {tasksDone} / {m.taskCount}
+                  </span>
+                  <span className="ml-2 text-ink-faint">
+                    tasks completed
+                  </span>
+                </div>
+              </div>
+            );
+          }
           if ("kind" in m && m.kind === "hold") {
             const victory = m.outcome === "victory";
             return (

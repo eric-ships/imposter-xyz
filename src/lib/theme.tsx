@@ -39,23 +39,23 @@ export const PALETTE_META: Record<
 > = {
   parchment: {
     label: "Parchment",
-    description: "Warm cream and sepia. The original.",
-    swatch: "#8b7355",
+    description: "Warm paper with a vermilion punch.",
+    swatch: "#d6471f",
   },
   noir: {
     label: "Noir",
-    description: "High-contrast monochrome with crimson ink.",
-    swatch: "#b40000",
+    description: "Stark monochrome lit by electric cobalt.",
+    swatch: "#2f5cff",
   },
   marine: {
     label: "Marine",
-    description: "Cool seafoam and deep navy. Brass accents.",
-    swatch: "#2d7575",
+    description: "Deep teal cut with hot coral.",
+    swatch: "#ff6b4a",
   },
   bloom: {
     label: "Bloom",
-    description: "Dusty rose and plum. Garden-party warmth.",
-    swatch: "#c25c44",
+    description: "Bright and poppy — vivid magenta.",
+    swatch: "#e0207a",
   },
 };
 

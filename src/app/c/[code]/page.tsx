@@ -45,6 +45,10 @@ function ogTitleFor(match: MatchHistoryEntry | null): string {
   if ("kind" in match && match.kind === "just-one") {
     return `Just One · ${match.score} / ${match.totalCards} · ${match.rating}`;
   }
+  if ("kind" in match && match.kind === "crew") {
+    const done = match.perPlayer.filter((p) => p.taskDone).length;
+    return `Crew · ${match.outcome === "won" ? "mission won" : "mission lost"} · ${done} / ${match.taskCount} tasks`;
+  }
   if ("kind" in match && match.kind === "hold") {
     return `Hold · wave ${match.waveReached} / ${match.totalWaves} · ${match.outcome === "victory" ? "held the line" : "core breached"}`;
   }

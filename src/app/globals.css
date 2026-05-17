@@ -25,142 +25,148 @@
    bare [data-theme="..."] selectors below default to parchment so
    pre-migration users (no data-palette attribute) see the original
    look and don't get a sudden visual reskin on first load.
+
+   The four palettes are deliberately divergent energies, not hues
+   of one recipe: parchment = warm paper + vermilion; noir = stark
+   monochrome + electric cobalt; marine = deep teal + hot coral;
+   bloom = bright + vivid magenta. Accents are saturated on purpose
+   — that is where the "pop" lives.
    ============================================================ */
 
-/* ─── Parchment (default — warm cream + sepia, the original) ─── */
+/* ─── Parchment (warm paper + a vermilion punch) ─────────────── */
 [data-palette="parchment"]:not([data-theme="dark"]),
 :root:not([data-palette="noir"]):not([data-palette="marine"]):not([data-palette="bloom"]):not([data-theme="dark"]) {
-  --page: #f5f0e6;
-  --surface: #ffffff;
-  --cream: #ece4d1;
-  --ink: #1a1815;
-  --ink-soft: #5a5349;
-  --ink-faint: #8b8275;
-  --line: #ddd3c0;
-  --line-soft: #e8e0cf;
-  --accent: #8b7355;
-  --accent-soft: #c4a882;
-  --leaf: #4a5d3a;
-  --oxblood: #8b3a3a;
+  --page: #f4ede0;
+  --surface: #fffdf8;
+  --cream: #e9dec8;
+  --ink: #1c1a16;
+  --ink-soft: #544d3e;
+  --ink-faint: #968b76;
+  --line: #d6c9ad;
+  --line-soft: #e6dcc6;
+  --accent: #d6471f;
+  --accent-soft: #e8a07e;
+  --leaf: #3f6b3a;
+  --oxblood: #b3322f;
   color-scheme: light;
 }
 
 [data-palette="parchment"][data-theme="dark"],
 :root:not([data-palette="noir"]):not([data-palette="marine"]):not([data-palette="bloom"])[data-theme="dark"] {
-  --page: #15130f;
-  --surface: #1f1c17;
-  --cream: #25221c;
-  --ink: #f0e8d8;
-  --ink-soft: #b8ad96;
-  --ink-faint: #80776a;
-  --line: #3a342b;
-  --line-soft: #2c2820;
-  --accent: #c4a882;
-  --accent-soft: #d8bf94;
-  --leaf: #7e9d63;
-  --oxblood: #c8615b;
+  --page: #16140f;
+  --surface: #211e17;
+  --cream: #2a261d;
+  --ink: #f2e9d6;
+  --ink-soft: #bcae93;
+  --ink-faint: #7d735f;
+  --line: #3b3528;
+  --line-soft: #2b2720;
+  --accent: #f4633a;
+  --accent-soft: #f0a589;
+  --leaf: #84a86a;
+  --oxblood: #e5705f;
   color-scheme: dark;
 }
 
-/* ─── Noir (high-contrast monochrome with crimson) ───────────── */
+/* ─── Noir (stark monochrome + electric cobalt) ──────────────── */
 [data-palette="noir"][data-theme="light"],
 [data-palette="noir"]:not([data-theme="dark"]) {
   --page: #ffffff;
   --surface: #ffffff;
-  --cream: #f3f3f3;
-  --ink: #0a0a0a;
-  --ink-soft: #3a3a3a;
-  --ink-faint: #8a8a8a;
-  --line: #d0d0d0;
-  --line-soft: #e8e8e8;
-  --accent: #b40000;
-  --accent-soft: #d44a4a;
-  --leaf: #525252;
-  --oxblood: #b40000;
+  --cream: #f0f0f2;
+  --ink: #07070a;
+  --ink-soft: #34343a;
+  --ink-faint: #86868f;
+  --line: #c9c9d0;
+  --line-soft: #e6e6ea;
+  --accent: #2f5cff;
+  --accent-soft: #8aa0ff;
+  --leaf: #197a4a;
+  --oxblood: #d92d2d;
   color-scheme: light;
 }
 
 [data-palette="noir"][data-theme="dark"] {
-  --page: #0a0a0a;
-  --surface: #161616;
-  --cream: #1c1c1c;
-  --ink: #f0f0f0;
-  --ink-soft: #b0b0b0;
-  --ink-faint: #6c6c6c;
-  --line: #2e2e2e;
-  --line-soft: #1e1e1e;
-  --accent: #ff3a3a;
-  --accent-soft: #ff7a7a;
-  --leaf: #9a9a9a;
-  --oxblood: #ff3a3a;
+  --page: #08080b;
+  --surface: #131318;
+  --cream: #1b1b22;
+  --ink: #f4f4f6;
+  --ink-soft: #b0b0ba;
+  --ink-faint: #6a6a74;
+  --line: #2e2e38;
+  --line-soft: #1e1e26;
+  --accent: #5e82ff;
+  --accent-soft: #9fb2ff;
+  --leaf: #3fae6f;
+  --oxblood: #ff5a52;
   color-scheme: dark;
 }
 
-/* ─── Marine (cool seafoam + deep navy + brass accents) ──────── */
+/* ─── Marine (deep teal + a hot coral pop) ───────────────────── */
 [data-palette="marine"][data-theme="light"],
 [data-palette="marine"]:not([data-theme="dark"]) {
-  --page: #e8efef;
+  --page: #e2eded;
   --surface: #ffffff;
-  --cream: #d5e0e0;
-  --ink: #11253b;
-  --ink-soft: #4a5a6a;
-  --ink-faint: #7e8e9e;
-  --line: #b8c8d4;
-  --line-soft: #cad8e0;
-  --accent: #c89344;
-  --accent-soft: #e0b06a;
-  --leaf: #2d7575;
-  --oxblood: #d96666;
+  --cream: #cfe0e0;
+  --ink: #0c2230;
+  --ink-soft: #44585f;
+  --ink-faint: #7b909a;
+  --line: #b2c8cf;
+  --line-soft: #c8dadd;
+  --accent: #ff6b4a;
+  --accent-soft: #ffa78f;
+  --leaf: #1f8a7a;
+  --oxblood: #d84a4a;
   color-scheme: light;
 }
 
 [data-palette="marine"][data-theme="dark"] {
-  --page: #0d1825;
-  --surface: #14202e;
-  --cream: #1a2838;
-  --ink: #d8e5ee;
-  --ink-soft: #99adc0;
-  --ink-faint: #6a7d90;
-  --line: #2a3c50;
-  --line-soft: #1c2a3a;
-  --accent: #d8a868;
-  --accent-soft: #e8c89a;
-  --leaf: #5dbaba;
-  --oxblood: #ee8a8a;
+  --page: #07161f;
+  --surface: #0e2330;
+  --cream: #143040;
+  --ink: #d6e8ee;
+  --ink-soft: #93aab4;
+  --ink-faint: #5f7984;
+  --line: #244050;
+  --line-soft: #17303c;
+  --accent: #ff7d5e;
+  --accent-soft: #ffb19c;
+  --leaf: #3fc0ab;
+  --oxblood: #f06b6b;
   color-scheme: dark;
 }
 
-/* ─── Bloom (dusty rose + plum + terra cotta + sage) ─────────── */
+/* ─── Bloom (bright + vivid magenta) ─────────────────────────── */
 [data-palette="bloom"][data-theme="light"],
 [data-palette="bloom"]:not([data-theme="dark"]) {
-  --page: #f7e8e6;
-  --surface: #ffffff;
-  --cream: #efd5d0;
-  --ink: #3a1a2e;
-  --ink-soft: #6a4a5a;
-  --ink-faint: #998290;
-  --line: #e3c8c5;
-  --line-soft: #efd8d4;
-  --accent: #c25c44;
-  --accent-soft: #e08a6e;
-  --leaf: #6b8a52;
-  --oxblood: #c43a6c;
+  --page: #fbe9ef;
+  --surface: #fffdfd;
+  --cream: #f4d3de;
+  --ink: #2e1322;
+  --ink-soft: #6a4555;
+  --ink-faint: #a98a98;
+  --line: #ecc6d4;
+  --line-soft: #f5d9e2;
+  --accent: #e0207a;
+  --accent-soft: #f07db0;
+  --leaf: #5a9e3e;
+  --oxblood: #d83a5a;
   color-scheme: light;
 }
 
 [data-palette="bloom"][data-theme="dark"] {
-  --page: #2a1820;
-  --surface: #3a2530;
-  --cream: #3a2530;
-  --ink: #f0d8e0;
-  --ink-soft: #c098a8;
-  --ink-faint: #907080;
-  --line: #4a3540;
-  --line-soft: #382530;
-  --accent: #e08a6e;
-  --accent-soft: #f0aa90;
-  --leaf: #9eb888;
-  --oxblood: #e85e92;
+  --page: #1f0f18;
+  --surface: #2e1825;
+  --cream: #38202e;
+  --ink: #f6dde8;
+  --ink-soft: #c89aae;
+  --ink-faint: #93707f;
+  --line: #452c3a;
+  --line-soft: #341e2a;
+  --accent: #ff4f9d;
+  --accent-soft: #ff9ac4;
+  --leaf: #86c266;
+  --oxblood: #f0607e;
   color-scheme: dark;
 }
 
