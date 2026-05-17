@@ -444,3 +444,9 @@ do $$ begin
     alter publication supabase_realtime add table room_events;
   end if;
 end $$;
+
+-- ── Discord match-result webhooks ────────────────────────────────────
+-- A friend group can link a Discord channel by storing an incoming
+-- webhook URL here. When set, every finished match attributed to the
+-- group is posted to that channel. NULL = not linked (the default).
+alter table groups add column if not exists discord_webhook_url text;

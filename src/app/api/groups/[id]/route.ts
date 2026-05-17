@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { isDiscordWebhookUrl } from "@/lib/discord-webhook";
 
 // GET /api/groups/[id]?userId=X
 // Returns full group detail + member roster. Member-only.
@@ -35,7 +36,9 @@ export async function GET(
   ] = await Promise.all([
     supabaseAdmin
       .from("groups")
-      .select("id, name, invite_code, owner_user_id, created_at")
+      .select(
+        "id, name, invite_code, owner_user_id, created_at, discord_webhook_url"
+      )
       .eq("id", groupId)
       .maybeSingle(),
     supabaseAdmin
@@ -158,14 +161,19 @@ export async function GET(
     inviteCode: group.invite_code as string,
     ownerUserId: group.owner_user_id as string,
     createdAt: group.created_at as string,
+    // Whether a Discord channel is linked. The webhook URL itself is
+    // a posting credential, so it's never sent to the client — the
+    // settings UI only needs the boolean.
+    discordLinked: !!group.discord_webhook_url,
     members: decoratedMembers,
     activeRooms,
   });
 }
 
 // PATCH /api/groups/[id]
-// Body: { userId, name }
-// Owner-only rename. No rate limit.
+// Body: { userId, name?, discordWebhookUrl? }
+// Owner-only. `name` renames the group. `discordWebhookUrl` links a
+// Discord channel for match-result posts (empty string unlinks).
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -174,20 +182,44 @@ export async function PATCH(
   const body = (await request.json().catch(() => ({}))) as {
     userId?: string;
     name?: string;
+    discordWebhookUrl?: string;
   };
   const userId = body.userId?.trim();
-  const name = body.name?.trim();
-  if (!userId || !name) {
-    return NextResponse.json(
-      { error: "userId and name required" },
-      { status: 400 }
-    );
+  if (!userId) {
+    return NextResponse.json({ error: "userId required" }, { status: 400 });
   }
-  if (name.length > 60) {
-    return NextResponse.json(
-      { error: "name must be ≤60 chars" },
-      { status: 400 }
-    );
+
+  // Build the update from whichever fields the caller sent. `undefined`
+  // means "leave alone"; for the webhook, an empty string means "unlink".
+  const update: Record<string, unknown> = {};
+  if (body.name !== undefined) {
+    const name = body.name.trim();
+    if (!name) {
+      return NextResponse.json({ error: "name required" }, { status: 400 });
+    }
+    if (name.length > 60) {
+      return NextResponse.json(
+        { error: "name must be ≤60 chars" },
+        { status: 400 }
+      );
+    }
+    update.name = name;
+  }
+  if (body.discordWebhookUrl !== undefined) {
+    const raw = body.discordWebhookUrl.trim();
+    if (raw === "") {
+      update.discord_webhook_url = null;
+    } else if (!isDiscordWebhookUrl(raw)) {
+      return NextResponse.json(
+        { error: "that doesn't look like a Discord webhook URL" },
+        { status: 400 }
+      );
+    } else {
+      update.discord_webhook_url = raw;
+    }
+  }
+  if (Object.keys(update).length === 0) {
+    return NextResponse.json({ error: "nothing to update" }, { status: 400 });
   }
 
   const { data: group } = await supabaseAdmin
@@ -204,7 +236,7 @@ export async function PATCH(
 
   const { error: updErr } = await supabaseAdmin
     .from("groups")
-    .update({ name })
+    .update(update)
     .eq("id", groupId);
   if (updErr) {
     return NextResponse.json({ error: updErr.message }, { status: 500 });
