@@ -62,9 +62,9 @@ export function GroupLobbyPanel({
   const everyoneHere = missing.length === 0;
 
   return (
-    <section className="space-y-3 rounded-xl border-2 border-leaf/40 bg-leaf/5 p-4">
+    <section className="space-y-3 rounded-xl border border-leaf/40 bg-leaf/5 p-4">
       <div className="flex items-baseline justify-between gap-3">
-        <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-leaf">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.2em] text-leaf">
           {everyoneHere
             ? `All of ${group.name} is here`
             : `${here.length}/${total} of ${group.name} here`}
@@ -84,7 +84,7 @@ export function GroupLobbyPanel({
             {missing.map((m) => (
               <li
                 key={m.userId}
-                className="rounded-full border-2 border-line bg-surface/40 px-2.5 py-0.5 text-[12px] text-ink-soft"
+                className="rounded-full border border-line bg-surface/40 px-2.5 py-0.5 text-[12px] text-ink-soft"
               >
                 {m.nickname}
               </li>
@@ -98,7 +98,7 @@ export function GroupLobbyPanel({
           {everyoneHere ? "Room code" : "Send them the code"}
         </p>
         <div className="flex items-center gap-2">
-          <span className="rounded-xl border-2 border-line bg-surface/40 px-4 py-2 text-base font-bold tracking-[0.25em] text-ink">
+          <span className="rounded-xl border border-line bg-surface/40 px-4 py-2 text-base font-semibold tracking-[0.25em] text-ink">
             {view.code}
           </span>
           <button
@@ -108,7 +108,7 @@ export function GroupLobbyPanel({
               setCopied(true);
               setTimeout(() => setCopied(false), 1500);
             }}
-            className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent transition hover:text-ink"
+            className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent transition hover:text-ink"
           >
             {copied ? "Copied" : "Copy"}
           </button>

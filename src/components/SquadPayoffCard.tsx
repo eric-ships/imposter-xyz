@@ -27,7 +27,7 @@ export function SquadPayoffCard({
   return (
     <Link
       href={`/group/${groupId}`}
-      className="block rounded-xl border-2 border-accent/40 bg-accent/5 px-4 py-3 transition hover:border-accent hover:bg-accent/10"
+      className="block rounded-xl border border-accent/40 bg-accent/5 px-4 py-3 transition hover:border-accent hover:bg-accent/10"
     >
       <div className="flex items-center gap-2">
         <span
@@ -39,7 +39,7 @@ export function SquadPayoffCard({
         </span>
         <span className="text-ink-faint">·</span>
         <span className="text-sm text-ink-soft">{pointsLine}</span>
-        <span className="ml-auto rounded-lg border-2 border-accent/50 bg-accent/10 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.12em] text-accent">
+        <span className="ml-auto rounded-lg border border-accent/50 bg-accent/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-accent">
           #{rank} of {memberCount}
         </span>
       </div>

@@ -95,7 +95,7 @@ export function GameKindSwitcher({
         })}
       </div>
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
           {error}
         </p>
       )}

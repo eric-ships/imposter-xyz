@@ -30,19 +30,13 @@ const GAMES: { kind: GameKind; title: string; sub: string }[] = [
 const BRAND_CONIC =
   "conic-gradient(from 0deg, #d6471f 0deg, #f3ba26 110deg, #e0207a 220deg, #2f5cff 320deg, #d6471f 360deg)";
 
-// "Upper" wordmark with a vivid four-accent gradient fill — the home
-// page's loud anchor. `className` carries the per-use size + leading.
+// "Upper" wordmark — a solid accent serif. A gradient fill was tried
+// but the light band washed out against the page; one brand colour
+// reads cleanly on both themes. `className` carries size + leading.
 function Wordmark({ className = "" }: { className?: string }) {
   return (
     <h1
-      className={`font-serif italic leading-[0.95] tracking-tight ${className}`}
-      style={{
-        backgroundImage:
-          "linear-gradient(105deg, #d6471f 0%, #f3ba26 36%, #e0207a 66%, #2f5cff 100%)",
-        WebkitBackgroundClip: "text",
-        backgroundClip: "text",
-        color: "transparent",
-      }}
+      className={`font-serif italic leading-[0.95] tracking-tight text-accent ${className}`}
     >
       Upper
     </h1>
@@ -89,7 +83,7 @@ function ConicBackdrop() {
 // Section heading — bolder than the old hairline tracked label.
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+    <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
       {children}
     </h2>
   );
@@ -118,6 +112,10 @@ export default function HomePage() {
   const [localName, setLocalName] = useState<string | null>(null);
   const name = (localName ?? identity.defaultNickname ?? "").trim();
   const hasName = name.length > 0;
+  // Signed in = has a real account (email or Discord), as opposed to a
+  // device-only local identity. Drives whether the top-right shows the
+  // account menu or a plain "Sign in" entry.
+  const signedIn = !!(identity.email || identity.discordLinked);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -324,7 +322,7 @@ export default function HomePage() {
               onKeyDown={(e) => {
                 if (e.key === "Enter" && canJoin) joinRoom();
               }}
-              className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-center font-serif text-3xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+              className="w-full rounded-xl border border-line bg-surface/40 px-4 py-3.5 text-center font-serif text-3xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             />
           </label>
 
@@ -332,7 +330,7 @@ export default function HomePage() {
             whileTap={{ scale: 0.97 }}
             onClick={joinRoom}
             disabled={!canJoin}
-            className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
+            className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
           >
             {submitting ? "Joining…" : "Join room"}
           </motion.button>
@@ -342,13 +340,13 @@ export default function HomePage() {
               setMode("choose");
               setError(null);
             }}
-            className="block w-full text-center text-sm font-semibold text-ink-faint transition hover:text-ink"
+            className="block w-full text-center text-sm font-medium text-ink-faint transition hover:text-ink"
           >
             ← Back
           </button>
 
           {error && (
-            <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-medium text-oxblood">
+            <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-normal text-oxblood">
               {error}
             </p>
           )}
@@ -364,11 +362,12 @@ export default function HomePage() {
 
       {/* Persistent account control — pinned top-right, present on
           every home face once identity has resolved (FACE A and
-          FACE B both, and the create/join flow). Skipped only on the
-          splash (FACE 0), where identity hasn't settled yet. It shows
-          for every resolved visitor, named or not — a nameless user
-          still needs it to set a name or sign out. */}
-      {dataReady && (
+          FACE B both, and the create/join flow). Shown for anyone who
+          has an identity worth managing — a set name or a real
+          account. A brand-new visitor with neither gets the plain
+          "Sign in" entry on the landing instead, so the two never
+          collide in the same corner. */}
+      {dataReady && (hasName || signedIn) && (
         <div className="fixed right-4 top-4 z-50">
           <AccountMenu
             name={name}
@@ -399,15 +398,14 @@ export default function HomePage() {
           below lg it stacks into a single centered column. */}
       {dataReady && !isReturning && !inFlow && !needsRedirect && (
         <main className="flex min-h-screen w-full flex-col items-center justify-center px-6 py-16 sm:py-20 lg:py-12">
-          {/* Sign-in entry — for nameless visitors with an account on
-              another device. Players who already have a name on this
-              device reach their account through the persistent
-              top-right AccountMenu instead, so this is hidden for
-              them to avoid two controls colliding in the same spot. */}
-          {!hasName && (
+          {/* Sign-in entry — only for a brand-new visitor: no name,
+              no account. Anyone with either reaches their account
+              through the persistent top-right AccountMenu instead, so
+              the two never collide in the same corner. */}
+          {!hasName && !signedIn && (
             <Link
               href="/auth"
-              className="fixed right-5 top-5 z-50 rounded-full border border-line bg-surface/70 px-4 py-1.5 text-sm font-bold text-ink-soft backdrop-blur-sm transition hover:border-ink hover:text-ink"
+              className="fixed right-5 top-5 z-50 rounded-full border border-line bg-surface/70 px-4 py-1.5 text-sm font-semibold text-ink-soft backdrop-blur-sm transition hover:border-ink hover:text-ink"
             >
               Sign in
             </Link>
@@ -429,7 +427,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.08, ease: "easeOut" }}
-              className="mt-5 text-[2.75rem] font-extrabold leading-[0.95] tracking-tight text-ink sm:text-6xl"
+              className="mt-5 text-[2.75rem] font-bold leading-[0.95] tracking-tight text-ink sm:text-6xl"
             >
               round up
               <br />
@@ -442,13 +440,13 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.16, ease: "easeOut" }}
-              className="mt-5 text-lg font-semibold lowercase leading-snug text-ink-soft"
+              className="mt-5 text-lg font-medium lowercase leading-snug text-ink-soft"
             >
               five games, one room. pick a chaos.
             </motion.p>
             <Link
               href="/rules"
-              className="mt-4 text-sm font-bold lowercase text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
+              className="mt-4 text-sm font-semibold lowercase text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
             >
               how to play →
             </Link>
@@ -466,7 +464,7 @@ export default function HomePage() {
               whileHover={{ y: -2 }}
               onClick={startGame}
               disabled={submitting}
-              className="w-full rounded-2xl bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-sm transition-all duration-100 hover:shadow-md hover:brightness-110 disabled:opacity-60"
+              className="w-full rounded-2xl bg-accent px-6 py-5 text-xl font-bold lowercase tracking-tight text-white shadow-sm transition-all duration-100 hover:shadow-md hover:brightness-110 disabled:opacity-60"
             >
               {submitting ? "starting…" : "start a game →"}
             </motion.button>
@@ -476,7 +474,7 @@ export default function HomePage() {
                 setMode("join");
                 setError(null);
               }}
-              className="w-full rounded-2xl border-2 border-line px-6 py-3.5 text-sm font-bold lowercase tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
+              className="w-full rounded-2xl border border-line px-6 py-3.5 text-sm font-semibold lowercase tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
             >
               got a code? join →
             </motion.button>
@@ -492,7 +490,7 @@ export default function HomePage() {
             transition={{ duration: 0.4, delay: 0.24, ease: "easeOut" }}
             className="w-full lg:w-1/2"
           >
-            <h2 className="mb-4 text-sm font-extrabold lowercase tracking-tight text-ink-faint">
+            <h2 className="mb-4 text-sm font-bold lowercase tracking-tight text-ink-faint">
               the lineup ↓
             </h2>
             <div className="flex flex-col gap-3">
@@ -509,7 +507,7 @@ export default function HomePage() {
                       ease: "easeOut",
                     }}
                     whileHover={{ scale: 1.02 }}
-                    className="flex w-full items-center gap-4 rounded-2xl border-2 border-line bg-surface px-4 py-3.5 shadow-sm"
+                    className="flex w-full items-center gap-4 rounded-2xl border border-line bg-surface px-4 py-3.5 shadow-sm"
                   >
                     {/* Animated game vignette — the card's visual. */}
                     {Vignette && (
@@ -521,7 +519,7 @@ export default function HomePage() {
                       <span className="font-serif text-2xl text-ink">
                         {g.title}
                       </span>
-                      <span className="text-xs font-semibold lowercase text-ink-faint">
+                      <span className="text-xs font-medium lowercase text-ink-faint">
                         {g.sub}
                       </span>
                     </span>
@@ -580,7 +578,7 @@ export default function HomePage() {
                   whileTap={{ scale: 0.97 }}
                   onClick={startGame}
                   disabled={submitting}
-                  className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:opacity-60"
+                  className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:opacity-60"
                 >
                   {submitting
                     ? "Starting…"
@@ -593,7 +591,7 @@ export default function HomePage() {
                     setMode("join");
                     setError(null);
                   }}
-                  className="block w-full text-center text-sm font-semibold text-ink-faint transition hover:text-ink"
+                  className="block w-full text-center text-sm font-medium text-ink-faint transition hover:text-ink"
                 >
                   Join a room with a code
                 </button>
@@ -619,7 +617,7 @@ export default function HomePage() {
 
           <Link
             href="/rules"
-            className="text-sm font-semibold text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
+            className="text-sm font-medium text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
           >
             How to play →
           </Link>
@@ -733,7 +731,7 @@ function IdentityStep({
           onKeyDown={(e) => {
             if (e.key === "Enter") save();
           }}
-          className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+          className="w-full rounded-xl border border-line bg-surface/40 px-4 py-3.5 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
         />
         <p className="text-xs text-ink-faint">
           This is your name everywhere — in every room and squad. You
@@ -745,7 +743,7 @@ function IdentityStep({
         whileTap={{ scale: 0.97 }}
         onClick={save}
         disabled={value.trim().length === 0 || saving}
-        className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
+        className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
       >
         {saving ? "Saving…" : "Continue →"}
       </motion.button>
@@ -753,7 +751,7 @@ function IdentityStep({
       {/* Or sign in — the same step, finished a faster way. */}
       <div className="flex items-center gap-3" aria-hidden>
         <span className="h-px flex-1 bg-line" />
-        <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-faint">
           or
         </span>
         <span className="h-px flex-1 bg-line" />
@@ -762,7 +760,7 @@ function IdentityStep({
       <button
         type="button"
         onClick={continueWithDiscord}
-        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#5865F2] px-6 py-3.5 text-sm font-bold text-white transition hover:brightness-110 active:scale-[0.98]"
+        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#5865F2] px-6 py-3.5 text-sm font-semibold text-white transition hover:brightness-110 active:scale-[0.98]"
       >
         <svg
           width="20"
@@ -780,7 +778,7 @@ function IdentityStep({
         Have an account?{" "}
         <Link
           href="/auth"
-          className="font-semibold text-accent transition hover:text-ink"
+          className="font-medium text-accent transition hover:text-ink"
         >
           Sign in with email
         </Link>
@@ -788,13 +786,13 @@ function IdentityStep({
 
       <button
         onClick={onCancel}
-        className="block w-full text-center text-sm font-semibold text-ink-faint transition hover:text-ink"
+        className="block w-full text-center text-sm font-medium text-ink-faint transition hover:text-ink"
       >
         ← Back
       </button>
 
       {error && (
-        <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-medium text-oxblood">
+        <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-normal text-oxblood">
           {error}
         </p>
       )}
@@ -873,7 +871,7 @@ function AccountMenu({
         className="flex items-center justify-center rounded-full border border-line bg-surface p-0.5 shadow-sm transition hover:border-ink-faint hover:shadow"
       >
         <span
-          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${av.color} ${
+          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold ${av.color} ${
             av.isCustom ? "text-ink" : "text-white"
           }`}
         >
@@ -970,7 +968,7 @@ function AccountIdentity({
     <div className="space-y-2">
       <div className="flex items-center gap-2.5">
         <span
-          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base font-bold ${av.color} ${
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base font-semibold ${av.color} ${
             av.isCustom ? "text-ink" : "text-white"
           }`}
         >
@@ -999,9 +997,9 @@ function AccountIdentity({
                 italic "Set your name" stands in for the missing name
                 so the row never reads as blank. */}
             {name.trim() ? (
-              <p className="truncate text-sm font-bold text-ink">{name}</p>
+              <p className="truncate text-sm font-semibold text-ink">{name}</p>
             ) : (
-              <p className="truncate text-sm font-bold italic text-ink-faint">
+              <p className="truncate text-sm font-semibold italic text-ink-faint">
                 Set your name
               </p>
             )}
@@ -1018,7 +1016,7 @@ function AccountIdentity({
           <button
             onClick={save}
             disabled={saving}
-            className="shrink-0 text-[11px] font-bold uppercase tracking-[0.14em] text-accent disabled:opacity-40"
+            className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent disabled:opacity-40"
           >
             {saving ? "…" : "Save"}
           </button>
@@ -1028,7 +1026,7 @@ function AccountIdentity({
               setValue(name);
               setEditing(true);
             }}
-            className="shrink-0 text-[11px] font-bold uppercase tracking-[0.14em] text-accent transition hover:text-ink"
+            className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.14em] text-accent transition hover:text-ink"
           >
             {name.trim() ? "Edit" : "Add"}
           </button>
@@ -1060,7 +1058,7 @@ function AccountLinkedLogins({
 
   if (hasEmail && discordLinked) {
     return (
-      <p className="text-[11px] font-semibold lowercase tracking-tight text-ink-faint">
+      <p className="text-[11px] font-medium lowercase tracking-tight text-ink-faint">
         email + discord linked
       </p>
     );
@@ -1073,7 +1071,7 @@ function AccountLinkedLogins({
         onClick={() => {
           window.location.href = "/api/auth/discord/start";
         }}
-        className="w-full rounded-full border-2 border-line bg-surface/40 px-3 py-1.5 text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
+        className="w-full rounded-full border border-line bg-surface/40 px-3 py-1.5 text-[11px] font-semibold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
       >
         link discord
       </button>
@@ -1085,7 +1083,7 @@ function AccountLinkedLogins({
     return (
       <Link
         href="/auth"
-        className="block w-full rounded-full border-2 border-line bg-surface/40 px-3 py-1.5 text-center text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
+        className="block w-full rounded-full border border-line bg-surface/40 px-3 py-1.5 text-center text-[11px] font-semibold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
       >
         add email
       </Link>
@@ -1096,7 +1094,7 @@ function AccountLinkedLogins({
   return (
     <Link
       href="/auth"
-      className="block w-full rounded-full border-2 border-line bg-surface/40 px-3 py-1.5 text-center text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
+      className="block w-full rounded-full border border-line bg-surface/40 px-3 py-1.5 text-center text-[11px] font-semibold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
     >
       save your account
     </Link>
@@ -1132,7 +1130,7 @@ function AccountSignOut({
     <button
       onClick={handleSignOut}
       disabled={signingOut}
-      className="w-full rounded-xl border-2 border-line px-3 py-2 text-sm font-bold text-ink-faint transition hover:border-oxblood hover:text-oxblood disabled:opacity-50"
+      className="w-full rounded-xl border border-line px-3 py-2 text-sm font-semibold text-ink-faint transition hover:border-oxblood hover:text-oxblood disabled:opacity-50"
     >
       {signingOut ? "Signing out…" : "Sign out"}
     </button>
@@ -1223,14 +1221,14 @@ function LiveGroupActivityBanner({
         return (
           <div
             key={g.id}
-            className="flex items-center justify-between gap-3 rounded-2xl border-2 border-leaf bg-leaf/10 px-4 py-3.5"
+            className="flex items-center justify-between gap-3 rounded-2xl border border-leaf bg-leaf/10 px-4 py-3.5"
           >
             <span className="flex min-w-0 flex-col gap-0.5">
-              <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-leaf">
+              <span className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-leaf">
                 <span className="text-[10px]">🟢</span>
                 {inLobby ? "Game starting" : "Game in progress"}
               </span>
-              <span className="truncate text-base font-bold text-ink">
+              <span className="truncate text-base font-semibold text-ink">
                 {g.name} has a game going
               </span>
             </span>
@@ -1239,14 +1237,14 @@ function LiveGroupActivityBanner({
                 whileTap={{ scale: 0.96 }}
                 onClick={() => joinRoom(room.code)}
                 disabled={joining}
-                className="shrink-0 rounded-xl bg-leaf px-5 py-2.5 text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+                className="shrink-0 rounded-xl bg-leaf px-5 py-2.5 text-sm font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {joining ? "Joining…" : "Join"}
               </motion.button>
             ) : (
               <Link
                 href={`/spectate/${room.code}`}
-                className="shrink-0 rounded-xl border-2 border-leaf px-5 py-2.5 text-sm font-bold tracking-tight text-leaf transition-all duration-100 hover:bg-leaf hover:text-white"
+                className="shrink-0 rounded-xl border border-leaf px-5 py-2.5 text-sm font-semibold tracking-tight text-leaf transition-all duration-100 hover:bg-leaf hover:text-white"
               >
                 Watch
               </Link>
@@ -1255,7 +1253,7 @@ function LiveGroupActivityBanner({
         );
       })}
       {error && (
-        <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-3 py-2 text-sm font-medium text-oxblood">
+        <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-3 py-2 text-sm font-normal text-oxblood">
           {error}
         </p>
       )}
@@ -1291,7 +1289,7 @@ function AvatarCluster({
               key={m.userId}
               title={m.nickname}
               style={{ zIndex: SHOWN - i }}
-              className={`flex h-9 w-9 items-center justify-center rounded-full border-2 border-surface text-sm font-bold text-white ${
+              className={`flex h-9 w-9 items-center justify-center rounded-full border border-surface text-sm font-semibold text-white ${
                 i > 0 ? "-ml-2.5" : ""
               } ${av.color} ${av.isCustom ? "text-ink" : ""}`}
             >
@@ -1302,7 +1300,7 @@ function AvatarCluster({
       </div>
       {extra > 0 && (
         <span
-          className={`flex h-9 items-center justify-center rounded-full border-2 border-surface bg-ink px-2 text-xs font-bold text-surface ${
+          className={`flex h-9 items-center justify-center rounded-full border border-surface bg-ink px-2 text-xs font-semibold text-surface ${
             shown.length > 0 ? "-ml-2.5" : ""
           }`}
         >
@@ -1333,12 +1331,12 @@ function SquadCard({
 
   // Activity line: live → game kind; quiet → member count.
   const activity = live ? (
-    <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.12em] text-accent">
+    <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-accent">
       <span className="text-[9px] leading-none">●</span>
       live · {room!.kind}
     </span>
   ) : (
-    <span className="text-xs font-medium text-ink-faint">
+    <span className="text-xs font-normal text-ink-faint">
       {group.memberCount}{" "}
       {group.memberCount === 1 ? "member" : "members"}
     </span>
@@ -1351,7 +1349,7 @@ function SquadCard({
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={() => onJoinRoom(room!.code)}
-        className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
+        className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
       >
         Join the game →
       </motion.button>
@@ -1360,7 +1358,7 @@ function SquadCard({
     action = (
       <Link
         href={`/spectate/${room!.code}`}
-        className="block w-full rounded-xl bg-accent px-5 py-3 text-center text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
+        className="block w-full rounded-xl bg-accent px-5 py-3 text-center text-sm font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
       >
         Watch →
       </Link>
@@ -1371,7 +1369,7 @@ function SquadCard({
         whileTap={{ scale: 0.98 }}
         onClick={onStart}
         disabled={starting}
-        className="w-full rounded-xl bg-ink px-5 py-3 text-sm font-bold tracking-tight text-surface shadow-sm transition-all duration-100 hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-40"
+        className="w-full rounded-xl bg-ink px-5 py-3 text-sm font-semibold tracking-tight text-surface shadow-sm transition-all duration-100 hover:brightness-125 disabled:cursor-not-allowed disabled:opacity-40"
       >
         {starting ? "Starting…" : "Start a game →"}
       </motion.button>
@@ -1382,8 +1380,8 @@ function SquadCard({
     <li
       className={`rounded-2xl p-3.5 space-y-3 transition-colors ${
         live
-          ? "border-2 border-accent bg-accent/10"
-          : "border-2 border-line bg-surface/40"
+          ? "border border-accent bg-accent/10"
+          : "border border-line bg-surface/40"
       }`}
     >
       {/* Header — squad name in serif + activity line. Name links to
@@ -1397,7 +1395,7 @@ function SquadCard({
             {group.name}
           </span>
           {group.role === "owner" && (
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
+            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
               Owner
             </span>
           )}
@@ -1546,8 +1544,8 @@ function SquadsSection({
         // score is the payoff). A brand-new user with 0 matches still
         // gets the quiet empty state — no pressure on first visit.
         totalMatches !== null && totalMatches >= 2 ? (
-          <div className="rounded-2xl border-2 border-accent bg-accent/10 p-5 space-y-3">
-            <p className="text-base font-bold text-ink">
+          <div className="rounded-2xl border border-accent bg-accent/10 p-5 space-y-3">
+            <p className="text-base font-semibold text-ink">
               You&apos;ve played {totalMatches} games — make a squad to
               keep score with your crew.
             </p>
@@ -1558,14 +1556,14 @@ function SquadsSection({
                   setJoinOpen(false);
                   setError(null);
                 }}
-                className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
+                className="w-full rounded-xl bg-accent px-5 py-3 text-sm font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.98]"
               >
                 Create a squad
               </button>
             ) : (
               <Link
                 href="/auth"
-                className="block w-full rounded-xl bg-accent px-5 py-3 text-center text-sm font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110"
+                className="block w-full rounded-xl bg-accent px-5 py-3 text-center text-sm font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110"
               >
                 Sign in to create a squad →
               </Link>
@@ -1597,14 +1595,14 @@ function SquadsSection({
           intent stashed; verify-success returns home and the user
           re-clicks (the buttons are no longer gated). */}
       {!email ? (
-        <div className="rounded-xl border-2 border-accent/30 bg-accent/5 p-4 text-sm text-ink-soft">
+        <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 text-sm text-ink-soft">
           <p>
             Squads need an email so your stats follow you across
             devices.
           </p>
           <Link
             href="/auth"
-            className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:brightness-110"
+            className="mt-3 inline-block rounded-lg bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:brightness-110"
           >
             Sign in to create or join →
           </Link>
@@ -1617,7 +1615,7 @@ function SquadsSection({
               setJoinOpen(false);
               setError(null);
             }}
-            className="flex-1 rounded-xl border-2 border-line px-3 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-ink-soft transition hover:border-ink hover:text-ink"
+            className="flex-1 rounded-xl border border-line px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
             {createOpen ? "Cancel" : "Create squad"}
           </button>
@@ -1627,7 +1625,7 @@ function SquadsSection({
               setCreateOpen(false);
               setError(null);
             }}
-            className="flex-1 rounded-xl border-2 border-line px-3 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-ink-soft transition hover:border-ink hover:text-ink"
+            className="flex-1 rounded-xl border border-line px-3 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
             {joinOpen ? "Cancel" : "Join with code"}
           </button>
@@ -1651,7 +1649,7 @@ function SquadsSection({
             data-1p-ignore="true"
             data-lpignore="true"
             autoFocus
-            className="min-w-0 flex-1 rounded-xl border-2 border-line bg-surface/40 px-3 py-2.5 text-base text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            className="min-w-0 flex-1 rounded-xl border border-line bg-surface/40 px-3 py-2.5 text-base text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             onKeyDown={(e) => {
               if (e.key === "Enter" && createName.trim() && !pending) create();
             }}
@@ -1659,7 +1657,7 @@ function SquadsSection({
           <button
             onClick={create}
             disabled={pending || createName.trim().length === 0}
-            className="rounded-xl bg-accent px-5 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl bg-accent px-5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
           >
             {pending ? "…" : "Create"}
           </button>
@@ -1685,7 +1683,7 @@ function SquadsSection({
             maxLength={6}
             placeholder="ABCDEF"
             autoFocus
-            className="min-w-0 flex-1 rounded-xl border-2 border-line bg-surface/40 px-3 py-2.5 text-center font-serif text-xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            className="min-w-0 flex-1 rounded-xl border border-line bg-surface/40 px-3 py-2.5 text-center font-serif text-xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             onKeyDown={(e) => {
               if (e.key === "Enter" && joinCode.trim().length === 6 && !pending)
                 join();
@@ -1694,7 +1692,7 @@ function SquadsSection({
           <button
             onClick={join}
             disabled={pending || joinCode.trim().length !== 6}
-            className="rounded-xl bg-accent px-5 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+            className="rounded-xl bg-accent px-5 text-xs font-semibold uppercase tracking-[0.14em] text-white transition hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
           >
             {pending ? "…" : "Join"}
           </button>
@@ -1702,7 +1700,7 @@ function SquadsSection({
       )}
 
       {error && (
-        <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-3 py-2 text-sm font-medium text-oxblood">
+        <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-3 py-2 text-sm font-normal text-oxblood">
           {error}
         </p>
       )}
@@ -1808,16 +1806,16 @@ function PersonalStatsCard({
         <button
           type="button"
           onClick={() => setExpanded((e) => !e)}
-          className="flex w-full items-baseline justify-between gap-2 rounded-xl border-2 border-line-soft bg-surface/30 px-4 py-2.5 text-left transition-all duration-100 hover:border-line active:scale-[0.99]"
+          className="flex w-full items-baseline justify-between gap-2 rounded-xl border border-line-soft bg-surface/30 px-4 py-2.5 text-left transition-all duration-100 hover:border-line active:scale-[0.99]"
         >
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Your stats
           </span>
           <span className="flex items-baseline gap-1.5">
             <span className="font-serif text-lg text-ink-soft">
               {data.totalMatches}
             </span>
-            <span className="text-[11px] font-medium text-ink-faint">
+            <span className="text-[11px] font-normal text-ink-faint">
               {data.totalMatches === 1 ? "match" : "matches"} ·{" "}
               {expanded ? "hide" : "details"}
             </span>
@@ -1828,7 +1826,7 @@ function PersonalStatsCard({
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="mt-2 rounded-xl border-2 border-line-soft bg-surface/30 px-4 py-3"
+            className="mt-2 rounded-xl border border-line-soft bg-surface/30 px-4 py-3"
           >
             {detailRows}
           </motion.div>
@@ -1838,20 +1836,20 @@ function PersonalStatsCard({
   }
 
   return (
-    <section className="w-full space-y-3 rounded-2xl border-2 border-line bg-surface/50 p-5">
+    <section className="w-full space-y-3 rounded-2xl border border-line bg-surface/50 p-5">
       <div className="flex items-baseline justify-between gap-2">
         <SectionLabel>Your stats</SectionLabel>
-        <span className="text-[11px] font-medium text-ink-faint">
+        <span className="text-[11px] font-normal text-ink-faint">
           across all squads
         </span>
       </div>
       <div className="font-serif text-4xl text-ink">
         {data.totalMatches}{" "}
-        <span className="text-base font-sans font-medium text-ink-faint">
+        <span className="text-base font-sans font-normal text-ink-faint">
           {data.totalMatches === 1 ? "match" : "matches"} played
         </span>
       </div>
-      <div className="border-t-2 border-line-soft pt-3">{detailRows}</div>
+      <div className="border-t border-line-soft pt-3">{detailRows}</div>
 
       {/* CTA used to live here, but the email gate now sits at the
            group-create moment (see MyGroupsSection) — the natural
@@ -1872,7 +1870,7 @@ function PersonalRow({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3 text-sm">
-      <span className="font-semibold text-ink">{label}</span>
+      <span className="font-medium text-ink">{label}</span>
       <span className="text-ink-soft">{detail}</span>
     </div>
   );
