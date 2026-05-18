@@ -436,7 +436,7 @@ export default function HomePage() {
               whileHover={{ y: -2 }}
               onClick={startGame}
               disabled={submitting}
-              className="w-full rounded-2xl border-2 border-ink bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-[4px_4px_0_0_var(--color-ink)] transition-[filter] duration-100 hover:brightness-110 disabled:opacity-60"
+              className="w-full rounded-2xl bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-sm transition-all duration-100 hover:shadow-md hover:brightness-110 disabled:opacity-60"
             >
               {submitting ? "starting…" : "start a game →"}
             </motion.button>
@@ -482,7 +482,7 @@ export default function HomePage() {
                       ease: "easeOut",
                     }}
                     whileHover={{ rotate: 0, scale: 1.02 }}
-                    className={`flex w-[92%] items-center gap-4 rounded-2xl border-2 border-ink bg-surface px-4 py-3.5 shadow-[3px_3px_0_0_var(--color-ink)] ${lean} ${nudge}`}
+                    className={`flex w-[92%] items-center gap-4 rounded-2xl border-2 border-line bg-surface px-4 py-3.5 shadow-sm ${lean} ${nudge}`}
                   >
                     {/* Animated game vignette — the card's visual. */}
                     {Vignette && (

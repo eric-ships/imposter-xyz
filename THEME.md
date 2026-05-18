@@ -59,6 +59,19 @@ hard-code a UI colour — use a token, so light/dark both work.
   Italic for the "Upper" wordmark.
 - **Inter** (`font-sans`, the default) — all UI text.
 
+## Buttons
+
+One smooth, bold system — three tiers. No brutalist hard-offset
+shadows (`shadow-[Npx_Npx_0]`); depth is soft (`shadow-sm` →
+`hover:shadow-md`) and presses spring (`active:scale`).
+
+- **Primary** — the one main action per view. `bg-accent`, white
+  text, `rounded-2xl`, `shadow-sm hover:shadow-md hover:brightness-110`.
+- **Secondary** — `border-2 border-line`, `hover:border-ink`. An
+  outline, no fill.
+- **Ghost** — `border border-ink`, inverts to `bg-ink` on hover.
+  Tertiary / in-game controls.
+
 ## Rules of thumb
 
 - One primary action per view — `bg-accent`. Everything else is a
