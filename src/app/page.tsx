@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
@@ -520,17 +520,15 @@ export default function HomePage() {
           >
             <Wordmark className="text-6xl sm:text-7xl" />
             {identity.ready && hasName && (
-              <div className="mt-3 flex flex-col items-center gap-1.5">
-                <IdentityLine
+              <div className="mt-3 flex flex-col items-center">
+                <AccountMenu
                   name={name}
                   userId={identity.userId}
+                  avatar={identity.defaultAvatar}
                   email={identity.email}
                   discordUsername={identity.discordUsername}
-                  onRenamed={(next) => setLocalName(next)}
-                />
-                <LinkedLogins
-                  email={identity.email}
                   discordLinked={identity.discordLinked}
+                  onRenamed={(next) => setLocalName(next)}
                 />
               </div>
             )}
@@ -790,19 +788,134 @@ function IdentityStep({
   );
 }
 
-// Low-key "you're playing as <name>" line with an inline edit
-// affordance. Editing here updates the user's authored identity on
-// `users` (via the /api/users/me PATCH — the explicit profile-change
-// path), so it changes everywhere at once.
-function IdentityLine({
+// AccountMenu — the home page's single account affordance. The
+// trigger is the player's avatar + name; tapping it opens a chunky
+// dropdown panel that consolidates what used to be three scattered
+// pieces: the "playing as" rename line, the linked-logins entry
+// point, and (for signed-in players) Sign out.
+//
+// The panel closes on outside-click + Escape, matching the room's
+// AvatarPicker pattern. All the underlying logic — the /api/users/me
+// PATCH rename, the Discord/email link navigations, the signOut()
+// helper — is unchanged; this is purely a reorganization into a menu.
+function AccountMenu({
   name,
   userId,
+  avatar,
+  email,
+  discordUsername,
+  discordLinked,
+  onRenamed,
+}: {
+  name: string;
+  userId: string | null;
+  avatar: string | null;
+  email: string | null;
+  discordUsername: string | null;
+  discordLinked: boolean;
+  onRenamed: (name: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const popRef = useRef<HTMLDivElement | null>(null);
+  // Account is "signed in" once a real provider is attached. Drives
+  // the Sign out item — an anonymous device-only user has nothing to
+  // sign out of.
+  const signedIn = !!(email || discordLinked);
+
+  // Close on outside click + Escape — the AvatarPicker pattern.
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e: MouseEvent) => {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const av = avatarFor(userId ?? name, name, avatar);
+
+  return (
+    <div className="relative" ref={popRef}>
+      {/* Trigger — avatar + name, in the spot the identity line sat. */}
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-2 rounded-full border-2 border-line bg-surface/40 py-1 pl-1 pr-3 transition hover:border-ink"
+      >
+        <span
+          className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${av.color} ${
+            av.isCustom ? "text-ink" : "text-white"
+          }`}
+        >
+          {av.initial}
+        </span>
+        <span className="text-sm font-semibold text-ink-soft">{name}</span>
+        <span className="text-[10px] text-ink-faint">▾</span>
+      </button>
+
+      {open && (
+        <div
+          role="menu"
+          className="absolute left-1/2 top-11 z-50 w-72 -translate-x-1/2 space-y-3 rounded-2xl border-2 border-ink bg-page p-4 text-left shadow-[3px_3px_0_0_var(--color-ink)]"
+        >
+          {/* 1. Identity — avatar + name + rename. */}
+          <AccountIdentity
+            name={name}
+            userId={userId}
+            avatar={avatar}
+            email={email}
+            discordUsername={discordUsername}
+            onRenamed={onRenamed}
+          />
+
+          <div className="border-t border-line" />
+
+          {/* 2. Linked logins — attach a second provider. */}
+          <AccountLinkedLogins
+            email={email}
+            discordLinked={discordLinked}
+          />
+
+          {/* 3. Sign out — only for accounts with a real provider. */}
+          {signedIn && (
+            <>
+              <div className="border-t border-line" />
+              <AccountSignOut email={email} discordLinked={discordLinked} />
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Identity row inside the menu — shows who you are and lets you
+// rename. Editing writes the user's authored identity on `users`
+// (via the /api/users/me PATCH — the explicit profile-change path),
+// so it changes everywhere at once. Logic carried over verbatim from
+// the old IdentityLine.
+function AccountIdentity({
+  name,
+  userId,
+  avatar,
   email,
   discordUsername,
   onRenamed,
 }: {
   name: string;
   userId: string | null;
+  avatar: string | null;
   email: string | null;
   discordUsername: string | null;
   onRenamed: (name: string) => void;
@@ -810,16 +923,7 @@ function IdentityLine({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(name);
   const [saving, setSaving] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
-  const signedIn = !!(email || discordUsername);
-
-  // Sign out: unbind this device, then hard-reload to `/` so a fresh
-  // device-only identity bootstraps. The account itself is untouched.
-  async function handleSignOut() {
-    setSigningOut(true);
-    await signOut();
-    window.location.href = "/";
-  }
+  const av = avatarFor(userId ?? name, name, avatar);
 
   async function save() {
     const next = value.trim();
@@ -845,106 +949,80 @@ function IdentityLine({
     }
   }
 
-  if (editing) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-ink-soft">
-        <span>Playing as</span>
-        <input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          maxLength={20}
-          autoFocus
-          className="w-32 border-b border-line bg-transparent text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") save();
-            if (e.key === "Escape") {
-              setValue(name);
-              setEditing(false);
-            }
-          }}
-        />
-        <button
-          onClick={save}
-          disabled={saving}
-          className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent disabled:opacity-40"
-        >
-          {saving ? "…" : "Save"}
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <p className="text-sm text-ink-faint">
-        Playing as{" "}
-        <span className="font-semibold text-ink-soft">{name}</span>
-        {" · "}
-        <button
-          onClick={() => {
-            setValue(name);
-            setEditing(true);
-          }}
-          className="font-semibold text-accent transition hover:text-ink"
+    <div className="space-y-2">
+      <div className="flex items-center gap-2.5">
+        <span
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-base font-bold ${av.color} ${
+            av.isCustom ? "text-ink" : "text-white"
+          }`}
         >
-          edit
-        </button>
-      </p>
-      {/* Account line — what the identity is actually anchored to, so
-          "who am I signed in as" is answerable at a glance. */}
-      <p className="text-xs text-ink-faint">
-        {email ? (
-          <>
-            Signed in as{" "}
-            <span className="font-semibold text-ink-soft">{email}</span>
-          </>
-        ) : discordUsername ? (
-          <>
-            Signed in with{" "}
-            <span className="font-semibold text-ink-soft">Discord</span>
-            {" as "}
-            <span className="font-semibold text-ink-soft">
-              {discordUsername}
-            </span>
-          </>
+          {av.initial}
+        </span>
+        {editing ? (
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            maxLength={20}
+            autoFocus
+            className="min-w-0 flex-1 border-b border-line bg-transparent text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") save();
+              if (e.key === "Escape") {
+                e.stopPropagation();
+                setValue(name);
+                setEditing(false);
+              }
+            }}
+          />
         ) : (
-          <>
-            Not signed in{" · "}
-            <Link
-              href="/auth"
-              className="font-semibold text-accent transition hover:text-ink"
-            >
-              Save your account
-            </Link>
-          </>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-bold text-ink">{name}</p>
+            <p className="truncate text-[11px] text-ink-faint">
+              {email
+                ? email
+                : discordUsername
+                  ? `Discord · ${discordUsername}`
+                  : "Device-only account"}
+            </p>
+          </div>
         )}
-        {signedIn && (
-          <>
-            {" · "}
-            <button
-              onClick={handleSignOut}
-              disabled={signingOut}
-              className="font-semibold text-ink-faint transition hover:text-oxblood disabled:opacity-50"
-            >
-              {signingOut ? "Signing out…" : "Sign out"}
-            </button>
-          </>
+        {editing ? (
+          <button
+            onClick={save}
+            disabled={saving}
+            className="shrink-0 text-[11px] font-bold uppercase tracking-[0.14em] text-accent disabled:opacity-40"
+          >
+            {saving ? "…" : "Save"}
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              setValue(name);
+              setEditing(true);
+            }}
+            className="shrink-0 text-[11px] font-bold uppercase tracking-[0.14em] text-accent transition hover:text-ink"
+          >
+            Edit
+          </button>
         )}
-      </p>
+      </div>
     </div>
   );
 }
 
-// Small, tucked "linked logins" affordance — sits just under the
-// "playing as" line. Lets an already-signed-in player attach their
-// second provider so either login resolves to the same account. The
-// backend (Discord OAuth callback + magic-link verify) already does
-// the attach/merge; this is purely the entry point.
-//  - email only        → "Link Discord" (navigates to the OAuth start)
-//  - discord only      → "Add email" (navigates to the magic-link page)
-//  - both linked       → a quiet static "email + discord linked" line
-//  - neither (anon)    → nothing — linking is only for signed-in players
-function LinkedLogins({
+// Linked-logins row inside the menu. Lets an already-signed-in player
+// attach their second provider so either login resolves to the same
+// account; the backend (Discord OAuth callback + magic-link verify)
+// already does the attach/merge — this is purely the entry point.
+//  - email only      → "Link Discord" (navigates to the OAuth start)
+//  - discord only    → "Add email" (navigates to the magic-link page)
+//  - both linked     → a quiet static "email + discord linked" line
+//  - neither (anon)  → a "Save your account" CTA to claim the account
+// Logic carried over verbatim from the old LinkedLogins, with the
+// anonymous case now showing the claim CTA instead of nothing (the
+// menu always renders, so it shouldn't be an empty section).
+function AccountLinkedLogins({
   email,
   discordLinked,
 }: {
@@ -952,8 +1030,6 @@ function LinkedLogins({
   discordLinked: boolean;
 }) {
   const hasEmail = !!email;
-
-  if (!hasEmail && !discordLinked) return null;
 
   if (hasEmail && discordLinked) {
     return (
@@ -970,21 +1046,69 @@ function LinkedLogins({
         onClick={() => {
           window.location.href = "/api/auth/discord/start";
         }}
-        className="rounded-full border-2 border-line bg-surface/40 px-3 py-1 text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
+        className="w-full rounded-full border-2 border-line bg-surface/40 px-3 py-1.5 text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
       >
         link discord
       </button>
     );
   }
 
-  // discord only — offer email.
+  if (!hasEmail && discordLinked) {
+    // discord only — offer email.
+    return (
+      <Link
+        href="/auth"
+        className="block w-full rounded-full border-2 border-line bg-surface/40 px-3 py-1.5 text-center text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
+      >
+        add email
+      </Link>
+    );
+  }
+
+  // Anonymous device-only — point at claiming the account.
   return (
     <Link
       href="/auth"
-      className="rounded-full border-2 border-line bg-surface/40 px-3 py-1 text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
+      className="block w-full rounded-full border-2 border-line bg-surface/40 px-3 py-1.5 text-center text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
     >
-      add email
+      save your account
     </Link>
+  );
+}
+
+// Sign-out row inside the menu. Confirms first (the message reassures
+// that the account + stats survive), then unbinds this device via the
+// signOut() helper and hard-reloads to `/` so a fresh device-only
+// identity bootstraps. The account itself — and its email / Discord
+// link — is untouched and can be signed back into.
+function AccountSignOut({
+  email,
+  discordLinked,
+}: {
+  email: string | null;
+  discordLinked: boolean;
+}) {
+  const [signingOut, setSigningOut] = useState(false);
+  const provider = email ? "email" : discordLinked ? "Discord" : "your provider";
+
+  async function handleSignOut() {
+    const ok = window.confirm(
+      `Sign out? Your account and stats are safe — sign back in anytime with ${provider}.`
+    );
+    if (!ok) return;
+    setSigningOut(true);
+    await signOut();
+    window.location.href = "/";
+  }
+
+  return (
+    <button
+      onClick={handleSignOut}
+      disabled={signingOut}
+      className="w-full rounded-xl border-2 border-line px-3 py-2 text-sm font-bold text-ink-faint transition hover:border-oxblood hover:text-oxblood disabled:opacity-50"
+    >
+      {signingOut ? "Signing out…" : "Sign out"}
+    </button>
   );
 }
 
