@@ -122,6 +122,12 @@ const INITIAL: IdentityState = {
   ready: false,
 };
 
+// The last resolved identity, cached at module scope. A remount (e.g.
+// the / ↔ /home redirect) seeds from this so the hook starts `ready`
+// instead of flashing back through the loading state — it still
+// re-pings /api/users/me in the background to refresh.
+let cachedIdentity: IdentityState | null = null;
+
 // Hook: ensures a device token exists, pings /api/users/me on mount,
 // returns the resulting userId + profile. Optionally pass nickname /
 // avatar discovered from elsewhere (e.g. an existing per-room
@@ -133,7 +139,9 @@ export function useIdentity({
   seedNickname?: string | null;
   seedAvatar?: string | null;
 } = {}): IdentityState {
-  const [state, setState] = useState<IdentityState>(INITIAL);
+  const [state, setState] = useState<IdentityState>(
+    cachedIdentity ?? INITIAL
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -165,7 +173,7 @@ export function useIdentity({
           discordLinked?: boolean;
         };
         if (cancelled) return;
-        setState({
+        const next: IdentityState = {
           userId: data.userId ?? null,
           defaultNickname: data.defaultNickname ?? null,
           defaultAvatar: data.defaultAvatar ?? null,
@@ -173,7 +181,9 @@ export function useIdentity({
           discordUsername: data.discordUsername ?? null,
           discordLinked: data.discordLinked ?? false,
           ready: true,
-        });
+        };
+        cachedIdentity = next;
+        setState(next);
       })
       .catch(() => {
         // Network error — leave ready: false. Caller can retry next

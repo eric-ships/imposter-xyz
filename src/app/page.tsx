@@ -89,6 +89,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Module-scoped cache for the home data. The / ↔ /home redirect
+// remounts HomePage; seeding state from this lets the remount render
+// straight away rather than flashing the splash and refetching.
+let cachedGroups: GroupRow[] | null = null;
+let cachedTotalMatches: number | null = null;
+
 export default function HomePage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("choose");
@@ -112,16 +118,23 @@ export default function HomePage() {
   // Shared across the live banner + groups section: the user's groups
   // (with live-room info) and their total-matches count. Lifted here
   // so the top-of-page activity banner and MyGroupsSection read the
-  // same data without duplicate fetches.
-  const [groups, setGroups] = useState<GroupRow[] | null>(null);
-  const [totalMatches, setTotalMatches] = useState<number | null>(null);
+  // same data without duplicate fetches. Seeded from the module cache
+  // so the / ↔ /home redirect's remount renders instantly instead of
+  // flashing the splash a second time.
+  const [groups, setGroups] = useState<GroupRow[] | null>(cachedGroups);
+  const [totalMatches, setTotalMatches] = useState<number | null>(
+    cachedTotalMatches
+  );
 
   const refetchGroups = useCallback(async () => {
     if (!identity.userId) return;
     try {
       const res = await fetch(`/api/groups?userId=${identity.userId}`);
       const data = await res.json();
-      if (res.ok) setGroups(data.groups as GroupRow[]);
+      if (res.ok) {
+        cachedGroups = data.groups as GroupRow[];
+        setGroups(data.groups as GroupRow[]);
+      }
     } catch {
       /* leave previous value */
     }
@@ -138,7 +151,9 @@ export default function HomePage() {
       .then((res) => (res.ok ? res.json() : null))
       .then((d) => {
         if (cancelled || !d) return;
-        setTotalMatches((d as PersonalStats).totalMatches);
+        const matches = (d as PersonalStats).totalMatches;
+        cachedTotalMatches = matches;
+        setTotalMatches(matches);
       })
       .catch(() => {});
     return () => {
@@ -243,6 +258,15 @@ export default function HomePage() {
     }
   }, [dataReady, isReturning, inFlow, pathname, router]);
 
+  // True while we're on the wrong URL for who this player is and a
+  // redirect is about to fire. Keep the splash up through it — never
+  // flash the face we're seconds from navigating away from.
+  const needsRedirect =
+    dataReady &&
+    !inFlow &&
+    ((isReturning && pathname !== "/home") ||
+      (!isReturning && pathname === "/home"));
+
   // Onboarding flow body. Nameless players see the identity step
   // first; named players who chose "join" go straight to the code
   // input. (Named + "create" never reaches here — startGame fires
@@ -335,7 +359,7 @@ export default function HomePage() {
       {/* FACE 0 — splash. Identity / groups / stats still settling.
           A bare centered wordmark + loader filling the viewport so
           neither real face flashes. */}
-      {!dataReady && !inFlow && (
+      {(!dataReady || needsRedirect) && !inFlow && (
         <main className="flex min-h-screen w-full flex-col items-center justify-center gap-8 px-6">
           <Wordmark className="text-7xl sm:text-8xl" />
           <UpperLoader size={72} />
@@ -347,7 +371,7 @@ export default function HomePage() {
           CTAs into the shared create/join flow. Full-bleed: on lg+ a
           two-column split (pitch | showcase) using the whole width;
           below lg it stacks into a single centered column. */}
-      {dataReady && !isReturning && !inFlow && (
+      {dataReady && !isReturning && !inFlow && !needsRedirect && (
         <main className="flex min-h-screen w-full flex-col items-center justify-center px-6 py-16 sm:py-20 lg:py-12">
           {/* Sign-in entry — for visitors with an account on another
               device. The signed-in home (/home) carries its own
@@ -486,7 +510,7 @@ export default function HomePage() {
       {/* FACE B — returning-player home. Live banner on top, then
           one-tap group launchers, the new-game entry, and small
           de-emphasized stats. */}
-      {dataReady && isReturning && !inFlow && (
+      {dataReady && isReturning && !inFlow && !needsRedirect && (
         <main className="mx-auto flex w-full max-w-md flex-col items-center gap-7 px-6 pb-16 pt-12 sm:gap-8 sm:pt-16 lg:max-w-xl lg:pt-20">
           <motion.header
             initial={{ opacity: 0, y: 14 }}
