@@ -71,6 +71,11 @@ export type IdentityState = {
   // Null = device-only (the "Save your account" CTA shows when this
   // is null + ≥3 matches played).
   email: string | null;
+  // Set once the user has linked a Discord account. Discord's
+  // `identify` scope carries no email, so a Discord-only sign-in has
+  // email: null and discordUsername set — the account display checks
+  // both.
+  discordUsername: string | null;
   // True once we've heard back from /api/users/me at least once.
   // Lets consumers gate "now I know who I am" UI without flickering
   // through a null state.
@@ -82,6 +87,7 @@ const INITIAL: IdentityState = {
   defaultNickname: null,
   defaultAvatar: null,
   email: null,
+  discordUsername: null,
   ready: false,
 };
 
@@ -124,6 +130,7 @@ export function useIdentity({
           defaultNickname?: string | null;
           defaultAvatar?: string | null;
           email?: string | null;
+          discordUsername?: string | null;
         };
         if (cancelled) return;
         setState({
@@ -131,6 +138,7 @@ export function useIdentity({
           defaultNickname: data.defaultNickname ?? null,
           defaultAvatar: data.defaultAvatar ?? null,
           email: data.email ?? null,
+          discordUsername: data.discordUsername ?? null,
           ready: true,
         });
       })

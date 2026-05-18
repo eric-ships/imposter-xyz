@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "motion/react";
 import { useTheme } from "@/lib/theme";
@@ -195,6 +195,21 @@ export default function HomePage() {
   // The create/join flow is in progress whenever mode leaves "choose".
   const inFlow = mode !== "choose";
 
+  // Two faces, two routes: new / signed-out visitors live at `/`,
+  // returning players at `/home`. The page renders the right face off
+  // `isReturning` regardless of URL, so the user always sees the
+  // correct content immediately — this just nudges the address to
+  // match once the data has resolved.
+  const pathname = usePathname();
+  useEffect(() => {
+    if (!dataReady || inFlow) return;
+    if (isReturning && pathname !== "/home") {
+      router.replace("/home");
+    } else if (!isReturning && pathname === "/home") {
+      router.replace("/");
+    }
+  }, [dataReady, isReturning, inFlow, pathname, router]);
+
   // Shared flow block — NamePrompt (if nameless) then the game
   // picker / group selector / create-join buttons. Both faces drop
   // into this exact element; neither forks the logic.
@@ -382,7 +397,7 @@ export default function HomePage() {
           <h1 className="font-serif text-7xl italic leading-[0.95] tracking-tight text-ink sm:text-8xl">
             Upper
           </h1>
-          <UpperLoader size={48} />
+          <UpperLoader size={72} />
         </main>
       )}
 
@@ -541,6 +556,8 @@ export default function HomePage() {
                 <IdentityLine
                   name={name}
                   userId={identity.userId}
+                  email={identity.email}
+                  discordUsername={identity.discordUsername}
                   onRenamed={(next) => setLocalName(next)}
                 />
               </div>
@@ -762,10 +779,14 @@ function NamePrompt({
 function IdentityLine({
   name,
   userId,
+  email,
+  discordUsername,
   onRenamed,
 }: {
   name: string;
   userId: string | null;
+  email: string | null;
+  discordUsername: string | null;
   onRenamed: (name: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -826,20 +847,51 @@ function IdentityLine({
   }
 
   return (
-    <p className="text-sm text-ink-faint">
-      Playing as{" "}
-      <span className="font-semibold text-ink-soft">{name}</span>
-      {" · "}
-      <button
-        onClick={() => {
-          setValue(name);
-          setEditing(true);
-        }}
-        className="font-semibold text-accent transition hover:text-ink"
-      >
-        edit
-      </button>
-    </p>
+    <div className="flex flex-col items-center gap-0.5">
+      <p className="text-sm text-ink-faint">
+        Playing as{" "}
+        <span className="font-semibold text-ink-soft">{name}</span>
+        {" · "}
+        <button
+          onClick={() => {
+            setValue(name);
+            setEditing(true);
+          }}
+          className="font-semibold text-accent transition hover:text-ink"
+        >
+          edit
+        </button>
+      </p>
+      {/* Account line — what the identity is actually anchored to, so
+          "who am I signed in as" is answerable at a glance. */}
+      <p className="text-xs text-ink-faint">
+        {email ? (
+          <>
+            Signed in as{" "}
+            <span className="font-semibold text-ink-soft">{email}</span>
+          </>
+        ) : discordUsername ? (
+          <>
+            Signed in with{" "}
+            <span className="font-semibold text-ink-soft">Discord</span>
+            {" as "}
+            <span className="font-semibold text-ink-soft">
+              {discordUsername}
+            </span>
+          </>
+        ) : (
+          <>
+            Not signed in{" · "}
+            <Link
+              href="/auth"
+              className="font-semibold text-accent transition hover:text-ink"
+            >
+              Save your account
+            </Link>
+          </>
+        )}
+      </p>
+    </div>
   );
 }
 
