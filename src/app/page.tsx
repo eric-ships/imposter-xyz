@@ -58,24 +58,30 @@ function ConicBackdrop() {
       aria-hidden
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
-      <motion.div
-        className="absolute left-1/2 top-1/2"
-        style={{
-          width: "150vmax",
-          height: "150vmax",
-          marginLeft: "-75vmax",
-          marginTop: "-75vmax",
-          background: BRAND_CONIC,
-          filter: "blur(90px)",
-          opacity: 0.42,
-        }}
-        animate={reduced ? undefined : { rotate: 360 }}
-        transition={
-          reduced
-            ? undefined
-            : { duration: 44, ease: "linear", repeat: Infinity }
-        }
-      />
+      {/* A zero-size anchor at the top-right viewport corner. */}
+      <div className="absolute right-0 top-0 h-0 w-0">
+        {/* The conic sweep, centred on that corner — its muddy
+            convergence point tucks into the corner, so the page gets
+            a clean fan of distinct brand colour. Turns slowly. */}
+        <motion.div
+          className="conic-glow"
+          style={{
+            width: "190vmax",
+            height: "190vmax",
+            marginLeft: "-95vmax",
+            marginTop: "-95vmax",
+            background: BRAND_CONIC,
+            filter: "blur(64px)",
+            opacity: 0.4,
+          }}
+          animate={reduced ? undefined : { rotate: 360 }}
+          transition={
+            reduced
+              ? undefined
+              : { duration: 48, ease: "linear", repeat: Infinity }
+          }
+        />
+      </div>
     </div>
   );
 }
@@ -404,7 +410,7 @@ export default function HomePage() {
               round up
               <br />
               the{" "}
-              <span className="-rotate-2 inline-block rounded-xl bg-accent px-2 pb-1 text-white">
+              <span className="inline-block rounded-xl bg-accent px-2 pb-1 text-white">
                 squad.
               </span>
             </motion.p>
@@ -453,9 +459,9 @@ export default function HomePage() {
           </motion.div>
           </div>
 
-          {/* RIGHT — the five games, shown off: a showcase, not a
-              picker. Looser than a tidy grid: cards alternate their
-              lean so the stack reads kinetic, not corporate. */}
+          {/* RIGHT — the five games, shown off: a clean, aligned
+              stack. A showcase, not a picker — the game is chosen in
+              the lobby. */}
           <motion.section
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -468,9 +474,6 @@ export default function HomePage() {
             <div className="flex flex-col gap-3">
               {GAMES.map((g, i) => {
                 const Vignette = GAME_VIGNETTES[g.kind];
-                // Alternate lean + offset so the stack feels hand-set.
-                const lean = i % 2 === 0 ? "-rotate-1" : "rotate-1";
-                const nudge = i % 2 === 0 ? "self-start" : "self-end";
                 return (
                   <motion.div
                     key={g.kind}
@@ -481,8 +484,8 @@ export default function HomePage() {
                       delay: 0.3 + i * 0.06,
                       ease: "easeOut",
                     }}
-                    whileHover={{ rotate: 0, scale: 1.02 }}
-                    className={`flex w-[92%] items-center gap-4 rounded-2xl border-2 border-line bg-surface px-4 py-3.5 shadow-sm ${lean} ${nudge}`}
+                    whileHover={{ scale: 1.02 }}
+                    className="flex w-full items-center gap-4 rounded-2xl border-2 border-line bg-surface px-4 py-3.5 shadow-sm"
                   >
                     {/* Animated game vignette — the card's visual. */}
                     {Vignette && (

@@ -71,9 +71,15 @@
   color-scheme: dark;
 }
 
-html,
-body {
+/* The base background lives on <html> only. <body> is kept
+   transparent so a fixed, negative-z background layer (the home
+   page's conic glow) paints over the page colour instead of being
+   hidden behind an opaque body background. */
+html {
   background: var(--page);
+}
+
+body {
   color: var(--ink);
   font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -86,6 +92,13 @@ html {
   transition:
     background-color 200ms ease,
     color 200ms ease;
+}
+
+/* The home page's conic glow. On the near-black dark ground a plain
+   translucent layer just goes muddy, so a screen blend turns it into
+   an actual glow; on light it stays a normal translucent tint. */
+[data-theme="dark"] .conic-glow {
+  mix-blend-mode: screen;
 }
 
 .font-serif {

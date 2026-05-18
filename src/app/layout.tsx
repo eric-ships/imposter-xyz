@@ -50,7 +50,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: themeBootScript }}
         />
       </head>
-      <body className="min-h-screen bg-page text-ink antialiased">
+      <body className="min-h-screen text-ink antialiased">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
