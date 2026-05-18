@@ -122,7 +122,7 @@ export function GroupAttributionPill({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 min-w-[220px] rounded-sm border border-line bg-page p-1 shadow-md">
+        <div className="absolute left-0 top-full z-30 mt-1 min-w-[220px] rounded-xl border-2 border-line bg-surface p-1 shadow-md">
           <PickerRow
             label="Casual"
             sub="No stats"

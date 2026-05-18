@@ -40,14 +40,14 @@
 
 :root,
 :root[data-theme="light"] {
-  --page: #f4f4f6;
+  --page: #e7e7ec;
   --surface: #ffffff;
-  --cream: #ebebef;
+  --cream: #dcdce2;
   --ink: #16161c;
   --ink-soft: #4c4c56;
-  --ink-faint: #8c8c98;
-  --line: #e2e2e8;
-  --line-soft: #ededf1;
+  --ink-faint: #80808c;
+  --line: #cfcfd8;
+  --line-soft: #e0e0e6;
   --accent: #d6471f;
   --accent-soft: #ef9b7e;
   --leaf: #2f9e5e;
@@ -56,14 +56,14 @@
 }
 
 :root[data-theme="dark"] {
-  --page: #121214;
-  --surface: #1d1d20;
-  --cream: #26262b;
+  --page: #0e0e11;
+  --surface: #1f1f25;
+  --cream: #2a2a31;
   --ink: #f1f1f4;
   --ink-soft: #b2b2bc;
-  --ink-faint: #75757f;
-  --line: #33333a;
-  --line-soft: #26262b;
+  --ink-faint: #82828e;
+  --line: #3a3a43;
+  --line-soft: #2a2a31;
   --accent: #f4633a;
   --accent-soft: #f0a589;
   --leaf: #46b877;
