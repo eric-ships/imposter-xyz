@@ -2805,6 +2805,75 @@ function CandidatesModeToggle({
   );
 }
 
+// The invite hero — the top of the lobby. A host who just created a
+// room needs exactly one thing: get friends in. Big room code, native
+// share on mobile (the channel friends actually arrive through), with
+// a copy fallback on desktop.
+function LobbyInvite({
+  code,
+  view,
+}: {
+  code: string;
+  view: PublicRoomView;
+}) {
+  const [copied, setCopied] = useState(false);
+  const shareUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/room/${code}`
+      : "";
+  const need = Math.max(0, 3 - view.players.length);
+
+  async function share() {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: "Upper",
+          text: "Join my Upper room",
+          url: shareUrl,
+        });
+      } catch {
+        /* share sheet dismissed — nothing to do */
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    } catch {
+      /* clipboard blocked — the link stays visible to select */
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border-2 border-line bg-surface p-5">
+      <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-ink-faint">
+        Your room
+      </div>
+      <div className="mt-1 font-serif text-5xl tracking-[0.1em] text-ink">
+        {code}
+      </div>
+      <p className="mt-2 text-sm font-medium text-ink-soft">
+        {need > 0
+          ? `Send the link — ${need} more ${need === 1 ? "player" : "players"} to start.`
+          : "Add more anytime — up to 8 can play."}
+      </p>
+      <button
+        onClick={share}
+        className="mt-4 w-full rounded-xl bg-accent px-5 py-3.5 text-sm font-bold text-white transition hover:brightness-110 active:scale-[0.98]"
+      >
+        {copied ? "Link copied ✓" : "Share invite →"}
+      </button>
+      <input
+        readOnly
+        value={shareUrl}
+        onFocus={(e) => e.currentTarget.select()}
+        className="mt-2 w-full rounded-xl border border-line bg-cream/60 px-3 py-2 text-center text-xs text-ink-faint outline-none"
+      />
+    </section>
+  );
+}
+
 function LobbyPhase({
   view,
   playerId,
@@ -2820,7 +2889,6 @@ function LobbyPhase({
 }) {
   const [starting, setStarting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const isHost = playerId === view.hostId;
   const canStart = view.players.length >= 3;
   const anyScore = view.players.some((p) => p.score > 0);
@@ -2854,11 +2922,6 @@ function LobbyPhase({
     }
   }
 
-  const shareUrl =
-    typeof window !== "undefined"
-      ? `${window.location.origin}/room/${code}`
-      : "";
-
   const potEnabled = !!view.pot;
   const authorizedCount = view.players.filter(
     (p) => p.hasPermission || p.antePaid
@@ -2875,6 +2938,8 @@ function LobbyPhase({
 
   return (
     <>
+      <LobbyInvite code={code} view={view} />
+
       <GameKindSwitcher
         code={code}
         playerId={playerId}
@@ -2936,27 +3001,6 @@ function LobbyPhase({
       <StreamerModeToggle view={view} playerId={playerId} code={code} />
 
       {view.groupId && <GroupLobbyPanel view={view} userId={userId} />}
-
-      <section className="space-y-3">
-        <SectionLabel>Invite</SectionLabel>
-        <div className="flex gap-2">
-          <input
-            readOnly
-            value={shareUrl}
-            className="flex-1 rounded-xl border-2 border-line bg-surface/40 px-4 py-3 text-xs text-ink-soft outline-none"
-          />
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(shareUrl);
-              setCopied(true);
-              setTimeout(() => setCopied(false), 1500);
-            }}
-            className="text-[11px] uppercase tracking-[0.2em] text-accent transition hover:text-ink"
-          >
-            {copied ? "Copied" : "Copy"}
-          </button>
-        </div>
-      </section>
 
       {isHost ? (
         <button
