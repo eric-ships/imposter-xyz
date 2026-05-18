@@ -15,7 +15,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useIdentity } from "@/lib/identity";
 import { useTheme } from "@/lib/theme";
-import { PalettePicker } from "@/components/PalettePicker";
 import { avatarFor } from "@/lib/avatar";
 import type { MatchHistoryEntry } from "@/lib/match-history";
 
@@ -133,7 +132,6 @@ export default function GroupPage({
       {/* Theme toggle pinned to viewport top-right (was absolute
           inside main → wandered to mid-screen on widescreens). */}
       <div className="fixed right-4 top-4 z-50 flex items-center gap-1">
-        <PalettePicker />
         <PageThemeToggle />
       </div>
       <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-6 pb-12 pt-8 sm:pt-10 lg:max-w-3xl lg:gap-7 lg:pt-12">
