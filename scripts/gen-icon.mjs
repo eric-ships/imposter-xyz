@@ -1,7 +1,10 @@
 // Generates Upper's app icon set. Run: `node scripts/gen-icon.mjs`.
 //
-// A white up-arrow on a conic colour sweep through the four palette
-// accents (parchment red, noir coral, bloom magenta, marine blue).
+// A white up-arrow on a conic colour sweep through four accents:
+// parchment red, gold, bloom magenta, marine blue. The palette's own
+// noir accent is a coral that's nearly the same hue as parchment red,
+// so it's swapped for gold here — four genuinely distinct hues read as
+// four, where the literal accents smeared into one warm mass.
 // SVG has no native conic gradient, so the sweep is built from many
 // thin interpolated wedges — crisp at every size, favicon included.
 //
@@ -19,11 +22,12 @@ import { mkdtempSync, writeFileSync, copyFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-// The four palette hero accents, with the angle (degrees, clockwise
-// from the top) each sits at in colour space.
+// The four accent stops, with the angle (degrees, clockwise from the
+// top) each sits at in colour space. Gold stands in for noir's coral
+// so the four hues stay visibly distinct.
 const STOPS = [
   { deg: 0, rgb: [214, 71, 31] }, // parchment red  #d6471f
-  { deg: 110, rgb: [255, 107, 74] }, // noir coral     #ff6b4a
+  { deg: 110, rgb: [245, 166, 35] }, // gold           #f5a623
   { deg: 220, rgb: [224, 32, 122] }, // bloom magenta  #e0207a
   { deg: 320, rgb: [47, 92, 255] }, // marine blue    #2f5cff
   { deg: 360, rgb: [214, 71, 31] }, // back to red
