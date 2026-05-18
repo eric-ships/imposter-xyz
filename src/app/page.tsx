@@ -108,12 +108,6 @@ export default function HomePage() {
   const hasName = name.length > 0;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Game picker. Defaults to imposter so existing UX is unchanged for
-  // anyone who lands on the page and just hits "Create".
-  const [gameKind, setGameKind] = useState<GameKind>("imposter");
-  // Optional friend-group attribution, chosen at room-creation time
-  // (null = casual). Beats hunting for the lobby attribution pill.
-  const [createGroupId, setCreateGroupId] = useState<string | null>(null);
 
   // Shared across the live banner + groups section: the user's groups
   // (with live-room info) and their total-matches count. Lifted here
@@ -152,12 +146,16 @@ export default function HomePage() {
     };
   }, [identity.userId]);
 
-  function savePlayer(code: string, playerId: string) {
+  function savePlayer(code: string, playerId: string, nickname: string) {
     localStorage.setItem(`ci:${code}:playerId`, playerId);
-    localStorage.setItem(`ci:${code}:nickname`, name);
+    localStorage.setItem(`ci:${code}:nickname`, nickname);
   }
 
-  async function createRoom() {
+  // Instant create: a fresh Imposter room, no pre-flow. The host picks
+  // a different game and attributes a squad from the lobby. `uid` and
+  // `displayName` are passed when create fires straight after the
+  // identity step, before the identity hook has re-read the new row.
+  async function createRoom(uid?: string, displayName?: string) {
     setError(null);
     setSubmitting(true);
     try {
@@ -165,18 +163,29 @@ export default function HomePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          kind: gameKind,
-          userId: identity.userId ?? undefined,
-          groupId: createGroupId ?? undefined,
+          kind: "imposter",
+          userId: uid ?? identity.userId ?? undefined,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
-      savePlayer(data.code, data.playerId);
+      savePlayer(data.code, data.playerId, displayName ?? name);
       router.push(`/room/${data.code}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
       setSubmitting(false);
+    }
+  }
+
+  // "Start a game" — named players go straight into a fresh room;
+  // nameless players hit the identity step first, which then fires
+  // createRoom itself.
+  function startGame() {
+    setError(null);
+    if (hasName) {
+      void createRoom();
+    } else {
+      setMode("create");
     }
   }
 
@@ -194,7 +203,7 @@ export default function HomePage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
-      savePlayer(code, data.playerId);
+      savePlayer(code, data.playerId, name);
       router.push(`/room/${code}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
@@ -202,11 +211,8 @@ export default function HomePage() {
     }
   }
 
-  const canSubmit =
-    hasName &&
-    !submitting &&
-    (mode === "create" ||
-      (mode === "join" && joinCode.trim().length === 4));
+  const canJoin =
+    hasName && !submitting && joinCode.trim().length === 4;
 
   // Adaptive routing. `/` is one route with two faces. We can't pick
   // one until identity, groups, and the stats count have all
@@ -237,155 +243,68 @@ export default function HomePage() {
     }
   }, [dataReady, isReturning, inFlow, pathname, router]);
 
-  // Shared flow block — NamePrompt (if nameless) then the game
-  // picker / group selector / create-join buttons. Both faces drop
-  // into this exact element; neither forks the logic.
+  // Onboarding flow body. Nameless players see the identity step
+  // first; named players who chose "join" go straight to the code
+  // input. (Named + "create" never reaches here — startGame fires
+  // createRoom directly, so there's no pre-flow at all.)
   const flowBlock = (
     <div className="w-full">
       {identity.ready && !hasName ? (
-        <NamePrompt
+        <IdentityStep
           userId={identity.userId}
-          onSaved={(next) => setLocalName(next)}
+          onSaved={(savedName, uid) => {
+            setLocalName(savedName);
+            // Create: room is made immediately. Join: this re-render
+            // now drops through to the code input below.
+            if (mode === "create") {
+              void createRoom(uid ?? undefined, savedName);
+            }
+          }}
           onCancel={() => {
             setMode("choose");
             setError(null);
           }}
         />
-      ) : (
+      ) : mode === "join" ? (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
           className="space-y-6"
         >
-          {mode === "create" && (
-            <div className="space-y-2.5">
-              <SectionLabel>Pick a game</SectionLabel>
-              <div className="grid grid-cols-1 gap-2.5">
-                {GAMES.map((g) => {
-                  const selected = gameKind === g.kind;
-                  return (
-                    <button
-                      key={g.kind}
-                      type="button"
-                      onClick={() => setGameKind(g.kind)}
-                      className={`flex items-center justify-between gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-all duration-100 active:scale-[0.98] ${
-                        selected
-                          ? "border-accent bg-accent/10"
-                          : "border-line bg-surface/40 hover:border-ink"
-                      }`}
-                    >
-                      <span className="flex flex-col gap-0.5">
-                        <span className="font-serif text-xl text-ink">
-                          {g.title}
-                        </span>
-                        <span className="text-xs font-medium text-ink-faint">
-                          {g.sub}
-                        </span>
-                      </span>
-                      <span
-                        className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold ${
-                          selected
-                            ? "border-accent bg-accent text-white"
-                            : "border-line text-transparent"
-                        }`}
-                      >
-                        ✓
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          {mode === "create" && groups && groups.length > 0 && (
-            <div className="space-y-2.5">
-              <SectionLabel>For a squad?</SectionLabel>
-              <div className="grid grid-cols-1 gap-2.5">
-                {[
-                  {
-                    id: null as string | null,
-                    title: "Just casual",
-                    sub: "not tracked to a squad",
-                  },
-                  ...groups.map((g) => ({
-                    id: g.id as string | null,
-                    title: g.name,
-                    sub: "match counts toward this squad",
-                  })),
-                ].map((opt) => {
-                  const selected = createGroupId === opt.id;
-                  return (
-                    <button
-                      key={opt.id ?? "casual"}
-                      type="button"
-                      onClick={() => setCreateGroupId(opt.id)}
-                      className={`flex items-center justify-between gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-all duration-100 active:scale-[0.98] ${
-                        selected
-                          ? "border-accent bg-accent/10"
-                          : "border-line bg-surface/40 hover:border-ink"
-                      }`}
-                    >
-                      <span className="flex flex-col gap-0.5">
-                        <span className="font-serif text-xl text-ink">
-                          {opt.title}
-                        </span>
-                        <span className="text-xs font-medium text-ink-faint">
-                          {opt.sub}
-                        </span>
-                      </span>
-                      <span
-                        className={`flex h-6 w-6 items-center justify-center rounded-full border-2 text-xs font-bold ${
-                          selected
-                            ? "border-accent bg-accent text-white"
-                            : "border-line text-transparent"
-                        }`}
-                      >
-                        ✓
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-          {mode === "join" && (
-            <label className="block space-y-2">
-              <SectionLabel>Room code</SectionLabel>
-              <input
-                value={joinCode}
-                onChange={(e) =>
-                  setJoinCode(e.target.value.toUpperCase().slice(0, 4))
-                }
-                type="text"
-                name="room-code"
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="characters"
-                spellCheck={false}
-                data-form-type="other"
-                data-1p-ignore="true"
-                data-lpignore="true"
-                maxLength={4}
-                placeholder="ABCD"
-                className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-center font-serif text-3xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-              />
-            </label>
-          )}
+          <label className="block space-y-2">
+            <SectionLabel>Room code</SectionLabel>
+            <input
+              value={joinCode}
+              onChange={(e) =>
+                setJoinCode(e.target.value.toUpperCase().slice(0, 4))
+              }
+              type="text"
+              name="room-code"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              data-form-type="other"
+              data-1p-ignore="true"
+              data-lpignore="true"
+              maxLength={4}
+              placeholder="ABCD"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && canJoin) joinRoom();
+              }}
+              className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-center font-serif text-3xl tracking-[0.3em] text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            />
+          </label>
 
           <motion.button
             whileTap={{ scale: 0.97 }}
-            onClick={mode === "create" ? createRoom : joinRoom}
-            disabled={!canSubmit}
+            onClick={joinRoom}
+            disabled={!canJoin}
             className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
           >
-            {submitting
-              ? mode === "create"
-                ? "Creating…"
-                : "Joining…"
-              : mode === "create"
-                ? "Create room"
-                : "Join room"}
+            {submitting ? "Joining…" : "Join room"}
           </motion.button>
 
           <button
@@ -404,7 +323,7 @@ export default function HomePage() {
             </p>
           )}
         </motion.div>
-      )}
+      ) : null}
     </div>
   );
 
@@ -491,13 +410,11 @@ export default function HomePage() {
             <motion.button
               whileTap={{ scale: 0.97 }}
               whileHover={{ y: -2 }}
-              onClick={() => {
-                setMode("create");
-                setError(null);
-              }}
-              className="w-full rounded-2xl border-2 border-ink bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-[4px_4px_0_0_var(--color-ink)] transition-[filter] duration-100 hover:brightness-110"
+              onClick={startGame}
+              disabled={submitting}
+              className="w-full rounded-2xl border-2 border-ink bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-[4px_4px_0_0_var(--color-ink)] transition-[filter] duration-100 hover:brightness-110 disabled:opacity-60"
             >
-              start a game →
+              {submitting ? "starting…" : "start a game →"}
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.97 }}
@@ -621,13 +538,15 @@ export default function HomePage() {
               <div key="play" className="w-full space-y-2.5">
                 <motion.button
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => {
-                    setMode("create");
-                    setError(null);
-                  }}
-                  className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md"
+                  onClick={startGame}
+                  disabled={submitting}
+                  className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:opacity-60"
                 >
-                  {hasSquads ? "+ New game" : "Start a game"}
+                  {submitting
+                    ? "Starting…"
+                    : hasSquads
+                      ? "+ New game"
+                      : "Start a game"}
                 </motion.button>
                 <button
                   onClick={() => {
@@ -685,18 +604,18 @@ export default function HomePage() {
   );
 }
 
-// One-identity: the single "what should we call you?" prompt. Shown
-// once, the first time a nameless user tries to create or join. On
-// submit it POSTs the name to /api/users/me so it lands on the
-// `users` row — the one authored identity — then the caller proceeds
-// into the chosen create/join flow.
-function NamePrompt({
+// The single identity moment in onboarding. Name yourself — or sign
+// in, which fills the name for you and persists across devices. It's
+// the same step finished two ways. Shown once, only while the player
+// has no name; named players never see it again. The name lands on
+// the `users` row (the one authored identity).
+function IdentityStep({
   userId,
   onSaved,
   onCancel,
 }: {
   userId: string | null;
-  onSaved: (name: string) => void;
+  onSaved: (name: string, userId: string | null) => void;
   onCancel: () => void;
 }) {
   const [value, setValue] = useState("");
@@ -709,10 +628,9 @@ function NamePrompt({
     setError(null);
     setSaving(true);
     try {
-      // If we already have a userId, PATCH is the explicit-update path
-      // (POST only seeds default_nickname when it's currently null —
-      // a fresh user with a never-set name). Either lands the name on
-      // the `users` row, the one authored identity.
+      // PATCH when we already have a userId (explicit update); POST
+      // otherwise (seeds default_nickname on a fresh user). Either
+      // way the name lands on the `users` row.
       let res: Response;
       if (userId) {
         res = await fetch("/api/users/me", {
@@ -730,11 +648,22 @@ function NamePrompt({
       }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "failed");
-      onSaved((data.defaultNickname as string | null)?.trim() || next);
+      onSaved(
+        (data.defaultNickname as string | null)?.trim() || next,
+        (data.userId as string | null) ?? userId
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : "failed");
       setSaving(false);
     }
+  }
+
+  // Sign in with Discord — fills the name from the Discord account and
+  // persists the identity. Leaves the page for the OAuth round-trip.
+  function continueWithDiscord() {
+    const token = getOrMintDeviceToken();
+    const qs = token ? `?deviceToken=${encodeURIComponent(token)}` : "";
+    window.location.href = `/api/auth/discord/start${qs}`;
   }
 
   return (
@@ -778,8 +707,44 @@ function NamePrompt({
         disabled={value.trim().length === 0 || saving}
         className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
       >
-        {saving ? "Saving…" : "Continue"}
+        {saving ? "Saving…" : "Continue →"}
       </motion.button>
+
+      {/* Or sign in — the same step, finished a faster way. */}
+      <div className="flex items-center gap-3" aria-hidden>
+        <span className="h-px flex-1 bg-line" />
+        <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-faint">
+          or
+        </span>
+        <span className="h-px flex-1 bg-line" />
+      </div>
+
+      <button
+        type="button"
+        onClick={continueWithDiscord}
+        className="flex w-full items-center justify-center gap-2.5 rounded-2xl bg-[#5865F2] px-6 py-3.5 text-sm font-bold text-white transition hover:brightness-110 active:scale-[0.98]"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          aria-hidden
+        >
+          <path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3c-.21.375-.444.88-.608 1.27a18.27 18.27 0 0 0-5.487 0A12.6 12.6 0 0 0 9.847 3 19.74 19.74 0 0 0 6.084 4.37C2.61 9.56 1.67 14.62 2.14 19.61a19.94 19.94 0 0 0 6.05 3.04c.49-.67.927-1.38 1.3-2.13-.713-.27-1.396-.602-2.04-.99.171-.127.34-.26.5-.396 3.927 1.83 8.18 1.83 12.06 0 .163.137.332.27.5.396-.645.39-1.33.722-2.043.992.375.75.81 1.46 1.3 2.13a19.9 19.9 0 0 0 6.053-3.04c.553-5.78-.945-10.79-3.96-15.24ZM8.68 16.54c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.095 2.157 2.42 0 1.335-.955 2.42-2.157 2.42Zm6.64 0c-1.183 0-2.157-1.085-2.157-2.42 0-1.334.955-2.42 2.157-2.42 1.21 0 2.176 1.095 2.157 2.42 0 1.335-.946 2.42-2.157 2.42Z" />
+        </svg>
+        Continue with Discord
+      </button>
+
+      <p className="text-center text-xs text-ink-faint">
+        Have an account?{" "}
+        <Link
+          href="/auth"
+          className="font-semibold text-accent transition hover:text-ink"
+        >
+          Sign in with email
+        </Link>
+      </p>
 
       <button
         onClick={onCancel}
