@@ -27,7 +27,7 @@ import { join } from "node:path";
 // so the four hues stay visibly distinct.
 const STOPS = [
   { deg: 0, rgb: [214, 71, 31] }, // parchment red  #d6471f
-  { deg: 110, rgb: [245, 166, 35] }, // gold           #f5a623
+  { deg: 110, rgb: [243, 186, 38] }, // gold           #f3ba26
   { deg: 220, rgb: [224, 32, 122] }, // bloom magenta  #e0207a
   { deg: 320, rgb: [47, 92, 255] }, // marine blue    #2f5cff
   { deg: 360, rgb: [214, 71, 31] }, // back to red

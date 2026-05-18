@@ -6,21 +6,21 @@
     <rect width="64" height="64" rx="14"/>
   </clipPath>
   <g clip-path="url(#round)">
-    <path d="M32 32 L32.00 -16.00 L35.35 -15.88 Z" fill="rgb(235,103,76)" stroke="rgb(235,103,76)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L35.35 -15.88 L38.68 -15.53 Z" fill="rgb(234,98,79)" stroke="rgb(234,98,79)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L38.68 -15.53 L41.98 -14.95 Z" fill="rgb(234,93,82)" stroke="rgb(234,93,82)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L41.98 -14.95 L45.23 -14.14 Z" fill="rgb(233,88,86)" stroke="rgb(233,88,86)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L45.23 -14.14 L48.42 -13.11 Z" fill="rgb(232,83,89)" stroke="rgb(232,83,89)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L48.42 -13.11 L51.52 -11.85 Z" fill="rgb(231,78,92)" stroke="rgb(231,78,92)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L51.52 -11.85 L54.53 -10.38 Z" fill="rgb(230,73,95)" stroke="rgb(230,73,95)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L54.53 -10.38 L57.44 -8.71 Z" fill="rgb(230,69,98)" stroke="rgb(230,69,98)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L57.44 -8.71 L60.21 -6.83 Z" fill="rgb(229,64,101)" stroke="rgb(229,64,101)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L60.21 -6.83 L62.85 -4.77 Z" fill="rgb(228,59,105)" stroke="rgb(228,59,105)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L62.85 -4.77 L65.34 -2.53 Z" fill="rgb(227,54,108)" stroke="rgb(227,54,108)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L65.34 -2.53 L67.67 -0.12 Z" fill="rgb(227,49,111)" stroke="rgb(227,49,111)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L67.67 -0.12 L69.82 2.45 Z" fill="rgb(226,44,114)" stroke="rgb(226,44,114)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L69.82 2.45 L71.79 5.16 Z" fill="rgb(225,39,117)" stroke="rgb(225,39,117)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L71.79 5.16 L73.57 8.00 Z" fill="rgb(224,34,120)" stroke="rgb(224,34,120)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L32.00 -16.00 L35.35 -15.88 Z" fill="rgb(234,113,78)" stroke="rgb(234,113,78)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L35.35 -15.88 L38.68 -15.53 Z" fill="rgb(233,108,81)" stroke="rgb(233,108,81)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L38.68 -15.53 L41.98 -14.95 Z" fill="rgb(233,102,84)" stroke="rgb(233,102,84)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L41.98 -14.95 L45.23 -14.14 Z" fill="rgb(232,96,87)" stroke="rgb(232,96,87)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L45.23 -14.14 L48.42 -13.11 Z" fill="rgb(231,91,90)" stroke="rgb(231,91,90)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L48.42 -13.11 L51.52 -11.85 Z" fill="rgb(231,85,93)" stroke="rgb(231,85,93)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L51.52 -11.85 L54.53 -10.38 Z" fill="rgb(230,80,96)" stroke="rgb(230,80,96)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L54.53 -10.38 L57.44 -8.71 Z" fill="rgb(229,74,99)" stroke="rgb(229,74,99)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L57.44 -8.71 L60.21 -6.83 Z" fill="rgb(228,68,102)" stroke="rgb(228,68,102)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L60.21 -6.83 L62.85 -4.77 Z" fill="rgb(228,63,105)" stroke="rgb(228,63,105)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L62.85 -4.77 L65.34 -2.53 Z" fill="rgb(227,57,108)" stroke="rgb(227,57,108)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L65.34 -2.53 L67.67 -0.12 Z" fill="rgb(226,52,111)" stroke="rgb(226,52,111)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L67.67 -0.12 L69.82 2.45 Z" fill="rgb(226,46,114)" stroke="rgb(226,46,114)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L69.82 2.45 L71.79 5.16 Z" fill="rgb(225,40,117)" stroke="rgb(225,40,117)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L71.79 5.16 L73.57 8.00 Z" fill="rgb(224,35,120)" stroke="rgb(224,35,120)" stroke-width="1" stroke-linejoin="round"/>
     <path d="M32 32 L73.57 8.00 L75.14 10.96 Z" fill="rgb(220,33,125)" stroke="rgb(220,33,125)" stroke-width="1" stroke-linejoin="round"/>
     <path d="M32 32 L75.14 10.96 L76.50 14.02 Z" fill="rgb(213,36,130)" stroke="rgb(213,36,130)" stroke-width="1" stroke-linejoin="round"/>
     <path d="M32 32 L76.50 14.02 L77.65 17.17 Z" fill="rgb(206,38,135)" stroke="rgb(206,38,135)" stroke-width="1" stroke-linejoin="round"/>
@@ -57,45 +57,45 @@
     <path d="M32 32 L22.02 78.95 L18.77 78.14 Z" fill="rgb(189,74,65)" stroke="rgb(189,74,65)" stroke-width="1" stroke-linejoin="round"/>
     <path d="M32 32 L18.77 78.14 L15.58 77.11 Z" fill="rgb(206,72,42)" stroke="rgb(206,72,42)" stroke-width="1" stroke-linejoin="round"/>
     <path d="M32 32 L15.58 77.11 L12.48 75.85 Z" fill="rgb(215,73,31)" stroke="rgb(215,73,31)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L12.48 75.85 L9.47 74.38 Z" fill="rgb(216,76,31)" stroke="rgb(216,76,31)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L9.47 74.38 L6.56 72.71 Z" fill="rgb(217,80,31)" stroke="rgb(217,80,31)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L6.56 72.71 L3.79 70.83 Z" fill="rgb(218,83,32)" stroke="rgb(218,83,32)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L3.79 70.83 L1.15 68.77 Z" fill="rgb(219,87,32)" stroke="rgb(219,87,32)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L1.15 68.77 L-1.34 66.53 Z" fill="rgb(220,90,32)" stroke="rgb(220,90,32)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-1.34 66.53 L-3.67 64.12 Z" fill="rgb(221,93,32)" stroke="rgb(221,93,32)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-3.67 64.12 L-5.82 61.55 Z" fill="rgb(222,97,32)" stroke="rgb(222,97,32)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-5.82 61.55 L-7.79 58.84 Z" fill="rgb(224,100,32)" stroke="rgb(224,100,32)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-7.79 58.84 L-9.57 56.00 Z" fill="rgb(225,104,32)" stroke="rgb(225,104,32)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-9.57 56.00 L-11.14 53.04 Z" fill="rgb(226,107,33)" stroke="rgb(226,107,33)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-11.14 53.04 L-12.50 49.98 Z" fill="rgb(227,111,33)" stroke="rgb(227,111,33)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-12.50 49.98 L-13.65 46.83 Z" fill="rgb(228,114,33)" stroke="rgb(228,114,33)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-13.65 46.83 L-14.57 43.61 Z" fill="rgb(229,118,33)" stroke="rgb(229,118,33)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-14.57 43.61 L-15.27 40.34 Z" fill="rgb(230,121,33)" stroke="rgb(230,121,33)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-15.27 40.34 L-15.74 37.02 Z" fill="rgb(231,125,33)" stroke="rgb(231,125,33)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-15.74 37.02 L-15.97 33.68 Z" fill="rgb(233,128,33)" stroke="rgb(233,128,33)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-15.97 33.68 L-15.97 30.32 Z" fill="rgb(234,131,34)" stroke="rgb(234,131,34)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-15.97 30.32 L-15.74 26.98 Z" fill="rgb(235,135,34)" stroke="rgb(235,135,34)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-15.74 26.98 L-15.27 23.66 Z" fill="rgb(236,138,34)" stroke="rgb(236,138,34)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-15.27 23.66 L-14.57 20.39 Z" fill="rgb(237,142,34)" stroke="rgb(237,142,34)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-14.57 20.39 L-13.65 17.17 Z" fill="rgb(238,145,34)" stroke="rgb(238,145,34)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-13.65 17.17 L-12.50 14.02 Z" fill="rgb(239,149,34)" stroke="rgb(239,149,34)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-12.50 14.02 L-11.14 10.96 Z" fill="rgb(240,152,34)" stroke="rgb(240,152,34)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-11.14 10.96 L-9.57 8.00 Z" fill="rgb(242,156,35)" stroke="rgb(242,156,35)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-9.57 8.00 L-7.79 5.16 Z" fill="rgb(243,159,35)" stroke="rgb(243,159,35)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-7.79 5.16 L-5.82 2.45 Z" fill="rgb(244,163,35)" stroke="rgb(244,163,35)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-5.82 2.45 L-3.67 -0.12 Z" fill="rgb(245,166,35)" stroke="rgb(245,166,35)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-3.67 -0.12 L-1.34 -2.53 Z" fill="rgb(244,161,38)" stroke="rgb(244,161,38)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L-1.34 -2.53 L1.15 -4.77 Z" fill="rgb(243,156,41)" stroke="rgb(243,156,41)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L1.15 -4.77 L3.79 -6.83 Z" fill="rgb(243,151,44)" stroke="rgb(243,151,44)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L3.79 -6.83 L6.56 -8.71 Z" fill="rgb(242,147,48)" stroke="rgb(242,147,48)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L6.56 -8.71 L9.47 -10.38 Z" fill="rgb(241,142,51)" stroke="rgb(241,142,51)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L9.47 -10.38 L12.48 -11.85 Z" fill="rgb(240,137,54)" stroke="rgb(240,137,54)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L12.48 -11.85 L15.58 -13.11 Z" fill="rgb(240,132,57)" stroke="rgb(240,132,57)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L15.58 -13.11 L18.77 -14.14 Z" fill="rgb(239,127,60)" stroke="rgb(239,127,60)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L18.77 -14.14 L22.02 -14.95 Z" fill="rgb(238,122,63)" stroke="rgb(238,122,63)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L22.02 -14.95 L25.32 -15.53 Z" fill="rgb(237,117,67)" stroke="rgb(237,117,67)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L25.32 -15.53 L28.65 -15.88 Z" fill="rgb(237,112,70)" stroke="rgb(237,112,70)" stroke-width="1" stroke-linejoin="round"/>
-    <path d="M32 32 L28.65 -15.88 L32.00 -16.00 Z" fill="rgb(236,108,73)" stroke="rgb(236,108,73)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L12.48 75.85 L9.47 74.38 Z" fill="rgb(216,77,31)" stroke="rgb(216,77,31)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L9.47 74.38 L6.56 72.71 Z" fill="rgb(217,81,32)" stroke="rgb(217,81,32)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L6.56 72.71 L3.79 70.83 Z" fill="rgb(218,86,32)" stroke="rgb(218,86,32)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L3.79 70.83 L1.15 68.77 Z" fill="rgb(219,90,32)" stroke="rgb(219,90,32)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L1.15 68.77 L-1.34 66.53 Z" fill="rgb(220,94,32)" stroke="rgb(220,94,32)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-1.34 66.53 L-3.67 64.12 Z" fill="rgb(221,98,33)" stroke="rgb(221,98,33)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-3.67 64.12 L-5.82 61.55 Z" fill="rgb(222,102,33)" stroke="rgb(222,102,33)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-5.82 61.55 L-7.79 58.84 Z" fill="rgb(223,107,33)" stroke="rgb(223,107,33)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-7.79 58.84 L-9.57 56.00 Z" fill="rgb(224,111,33)" stroke="rgb(224,111,33)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-9.57 56.00 L-11.14 53.04 Z" fill="rgb(225,115,34)" stroke="rgb(225,115,34)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-11.14 53.04 L-12.50 49.98 Z" fill="rgb(226,119,34)" stroke="rgb(226,119,34)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-12.50 49.98 L-13.65 46.83 Z" fill="rgb(227,123,34)" stroke="rgb(227,123,34)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-13.65 46.83 L-14.57 43.61 Z" fill="rgb(228,127,34)" stroke="rgb(228,127,34)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-14.57 43.61 L-15.27 40.34 Z" fill="rgb(229,132,35)" stroke="rgb(229,132,35)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-15.27 40.34 L-15.74 37.02 Z" fill="rgb(230,136,35)" stroke="rgb(230,136,35)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-15.74 37.02 L-15.97 33.68 Z" fill="rgb(231,140,35)" stroke="rgb(231,140,35)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-15.97 33.68 L-15.97 30.32 Z" fill="rgb(232,144,35)" stroke="rgb(232,144,35)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-15.97 30.32 L-15.74 26.98 Z" fill="rgb(234,148,36)" stroke="rgb(234,148,36)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-15.74 26.98 L-15.27 23.66 Z" fill="rgb(235,153,36)" stroke="rgb(235,153,36)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-15.27 23.66 L-14.57 20.39 Z" fill="rgb(236,157,36)" stroke="rgb(236,157,36)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-14.57 20.39 L-13.65 17.17 Z" fill="rgb(237,161,36)" stroke="rgb(237,161,36)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-13.65 17.17 L-12.50 14.02 Z" fill="rgb(238,165,37)" stroke="rgb(238,165,37)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-12.50 14.02 L-11.14 10.96 Z" fill="rgb(239,169,37)" stroke="rgb(239,169,37)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-11.14 10.96 L-9.57 8.00 Z" fill="rgb(240,173,37)" stroke="rgb(240,173,37)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-9.57 8.00 L-7.79 5.16 Z" fill="rgb(241,178,37)" stroke="rgb(241,178,37)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-7.79 5.16 L-5.82 2.45 Z" fill="rgb(242,182,38)" stroke="rgb(242,182,38)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-5.82 2.45 L-3.67 -0.12 Z" fill="rgb(243,186,38)" stroke="rgb(243,186,38)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-3.67 -0.12 L-1.34 -2.53 Z" fill="rgb(242,180,41)" stroke="rgb(242,180,41)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L-1.34 -2.53 L1.15 -4.77 Z" fill="rgb(242,175,44)" stroke="rgb(242,175,44)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L1.15 -4.77 L3.79 -6.83 Z" fill="rgb(241,169,47)" stroke="rgb(241,169,47)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L3.79 -6.83 L6.56 -8.71 Z" fill="rgb(240,164,50)" stroke="rgb(240,164,50)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L6.56 -8.71 L9.47 -10.38 Z" fill="rgb(240,158,53)" stroke="rgb(240,158,53)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L9.47 -10.38 L12.48 -11.85 Z" fill="rgb(239,152,56)" stroke="rgb(239,152,56)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L12.48 -11.85 L15.58 -13.11 Z" fill="rgb(238,147,59)" stroke="rgb(238,147,59)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L15.58 -13.11 L18.77 -14.14 Z" fill="rgb(237,141,62)" stroke="rgb(237,141,62)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L18.77 -14.14 L22.02 -14.95 Z" fill="rgb(237,136,65)" stroke="rgb(237,136,65)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L22.02 -14.95 L25.32 -15.53 Z" fill="rgb(236,130,69)" stroke="rgb(236,130,69)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L25.32 -15.53 L28.65 -15.88 Z" fill="rgb(235,124,72)" stroke="rgb(235,124,72)" stroke-width="1" stroke-linejoin="round"/>
+    <path d="M32 32 L28.65 -15.88 L32.00 -16.00 Z" fill="rgb(235,119,75)" stroke="rgb(235,119,75)" stroke-width="1" stroke-linejoin="round"/>
   </g>
   <path d="M32 11 L55 34 L42 34 L42 55 L22 55 L22 34 L9 34 Z" fill="#FFFDF8"/>
 </svg>
