@@ -63,6 +63,32 @@ export function getOrMintDeviceToken(): string | null {
   return token;
 }
 
+// Sign out: unbind this device from its account on the server, then
+// drop the local device token so the next bootstrap mints a fresh
+// device-only identity. The account itself — and its email / Discord
+// link — is untouched and can be signed back into. Best-effort: the
+// local clear is what actually logs you out, so a failed request
+// doesn't strand the caller.
+export async function signOut(): Promise<void> {
+  const token = readDeviceToken();
+  if (token) {
+    try {
+      await fetch("/api/auth/signout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deviceToken: token }),
+      });
+    } catch {
+      /* network error — the local clear below still signs you out */
+    }
+  }
+  try {
+    window.localStorage.removeItem(DEVICE_TOKEN_KEY);
+  } catch {
+    /* private mode etc — silent no-op */
+  }
+}
+
 export type IdentityState = {
   userId: string | null;
   defaultNickname: string | null;

@@ -3,10 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "motion/react";
-import { useTheme } from "@/lib/theme";
-import { PalettePicker } from "@/components/PalettePicker";
-import { useIdentity, getOrMintDeviceToken } from "@/lib/identity";
+import { motion, useReducedMotion } from "motion/react";
+import { useIdentity, getOrMintDeviceToken, signOut } from "@/lib/identity";
 import { avatarFor } from "@/lib/avatar";
 import { UpperLoader } from "@/components/UpperLoader";
 import { GAME_VIGNETTES } from "@/components/GameVignettes";
@@ -27,29 +25,58 @@ const GAMES: { kind: GameKind; title: string; sub: string }[] = [
   { kind: "hold", title: "Hold", sub: "3–5 · co-op tower defense" },
 ];
 
-function HomeThemeToggle() {
-  const { theme, toggle } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const isDark = mounted ? theme === "dark" : false;
+// The brand conic sweep — the four-accent gradient of the app icon
+// (scripts/gen-icon.mjs) and the loader. The home page wears it too.
+const BRAND_CONIC =
+  "conic-gradient(from 0deg, #d6471f 0deg, #f3ba26 110deg, #e0207a 220deg, #2f5cff 320deg, #d6471f 360deg)";
+
+// "Upper" wordmark with a vivid four-accent gradient fill — the home
+// page's loud anchor. `className` carries the per-use size + leading.
+function Wordmark({ className = "" }: { className?: string }) {
   return (
-    <button
-      onClick={toggle}
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      title={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      className="flex h-9 w-9 items-center justify-center rounded-lg text-ink-faint transition-all duration-100 hover:bg-cream hover:text-ink active:scale-90"
+    <h1
+      className={`font-serif italic leading-[0.95] tracking-tight ${className}`}
+      style={{
+        backgroundImage:
+          "linear-gradient(105deg, #d6471f 0%, #f3ba26 36%, #e0207a 66%, #2f5cff 100%)",
+        WebkitBackgroundClip: "text",
+        backgroundClip: "text",
+        color: "transparent",
+      }}
     >
-      {isDark ? (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-        </svg>
-      ) : (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-        </svg>
-      )}
-    </button>
+      Upper
+    </h1>
+  );
+}
+
+// A slow, blurred conic glow behind the whole page — the app icon's
+// sweep turned into ambient energy. Honors prefers-reduced-motion.
+function ConicBackdrop() {
+  const reduced = useReducedMotion();
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+    >
+      <motion.div
+        className="absolute left-1/2 top-1/2"
+        style={{
+          width: "150vmax",
+          height: "150vmax",
+          marginLeft: "-75vmax",
+          marginTop: "-75vmax",
+          background: BRAND_CONIC,
+          filter: "blur(90px)",
+          opacity: 0.42,
+        }}
+        animate={reduced ? undefined : { rotate: 360 }}
+        transition={
+          reduced
+            ? undefined
+            : { duration: 44, ease: "linear", repeat: Infinity }
+        }
+      />
+    </div>
   );
 }
 
@@ -383,20 +410,15 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Theme / palette controls pinned to the viewport top-right. */}
-      <div className="fixed right-4 top-4 z-50 flex items-center gap-1">
-        <PalettePicker />
-        <HomeThemeToggle />
-      </div>
+      {/* Ambient conic glow — the brand sweep, behind everything. */}
+      <ConicBackdrop />
 
       {/* FACE 0 — splash. Identity / groups / stats still settling.
           A bare centered wordmark + loader filling the viewport so
           neither real face flashes. */}
       {!dataReady && !inFlow && (
         <main className="flex min-h-screen w-full flex-col items-center justify-center gap-8 px-6">
-          <h1 className="font-serif text-7xl italic leading-[0.95] tracking-tight text-ink sm:text-8xl">
-            Upper
-          </h1>
+          <Wordmark className="text-7xl sm:text-8xl" />
           <UpperLoader size={72} />
         </main>
       )}
@@ -408,6 +430,15 @@ export default function HomePage() {
           below lg it stacks into a single centered column. */}
       {dataReady && !isReturning && !inFlow && (
         <main className="flex min-h-screen w-full flex-col items-center justify-center px-6 py-16 sm:py-20 lg:py-12">
+          {/* Sign-in entry — for visitors with an account on another
+              device. The signed-in home (/home) carries its own
+              account controls instead. */}
+          <Link
+            href="/auth"
+            className="fixed right-5 top-5 z-50 rounded-full border border-line bg-surface/70 px-4 py-1.5 text-sm font-bold text-ink-soft backdrop-blur-sm transition hover:border-ink hover:text-ink"
+          >
+            Sign in
+          </Link>
           <div className="flex w-full max-w-md flex-col items-stretch gap-12 sm:gap-14 lg:max-w-6xl lg:flex-row lg:items-center lg:gap-20 xl:max-w-7xl xl:gap-28">
           {/* LEFT — the pitch: wordmark, hook, supporting line,
               CTAs, and the how-to-play link. */}
@@ -418,10 +449,8 @@ export default function HomePage() {
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex w-full flex-col items-start"
           >
-            {/* Classic serif anchor — the one quiet element. */}
-            <h1 className="font-serif text-7xl italic leading-[0.95] tracking-tight text-ink sm:text-8xl">
-              Upper
-            </h1>
+            {/* The loud anchor — the wordmark in full brand colour. */}
+            <Wordmark className="text-7xl sm:text-8xl" />
             {/* The hook — oversized, loud, lowercase. */}
             <motion.p
               initial={{ opacity: 0, y: 12 }}
@@ -548,9 +577,7 @@ export default function HomePage() {
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex flex-col items-center text-center"
           >
-            <h1 className="font-serif text-6xl italic leading-[0.95] tracking-tight text-ink sm:text-7xl">
-              Upper
-            </h1>
+            <Wordmark className="text-6xl sm:text-7xl" />
             {identity.ready && hasName && (
               <div className="mt-3">
                 <IdentityLine
@@ -649,9 +676,7 @@ export default function HomePage() {
             transition={{ duration: 0.4, ease: "easeOut" }}
             className="flex flex-col items-center text-center"
           >
-            <h1 className="font-serif text-6xl italic leading-[0.95] tracking-tight text-ink sm:text-7xl">
-              Upper
-            </h1>
+            <Wordmark className="text-6xl sm:text-7xl" />
           </motion.header>
           {flowBlock}
         </main>
@@ -792,6 +817,16 @@ function IdentityLine({
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(name);
   const [saving, setSaving] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
+  const signedIn = !!(email || discordUsername);
+
+  // Sign out: unbind this device, then hard-reload to `/` so a fresh
+  // device-only identity bootstraps. The account itself is untouched.
+  async function handleSignOut() {
+    setSigningOut(true);
+    await signOut();
+    window.location.href = "/";
+  }
 
   async function save() {
     const next = value.trim();
@@ -888,6 +923,18 @@ function IdentityLine({
             >
               Save your account
             </Link>
+          </>
+        )}
+        {signedIn && (
+          <>
+            {" · "}
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="font-semibold text-ink-faint transition hover:text-oxblood disabled:opacity-50"
+            >
+              {signingOut ? "Signing out…" : "Sign out"}
+            </button>
           </>
         )}
       </p>
