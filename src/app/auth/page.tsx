@@ -40,12 +40,18 @@ export default function AuthPage() {
   const [sent, setSent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Surface a failed Discord round-trip — the OAuth callback redirects
-  // back here with ?discord=error when something went wrong.
+  // Surface a Discord round-trip outcome — the OAuth callback redirects
+  // back here with ?discord=error when something went wrong, or
+  // ?discord=linkconflict when the account is already on another login.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("discord") === "error") {
+    const discord = params.get("discord");
+    if (discord === "error") {
       setError("Discord sign-in didn't go through. Please try again.");
+    } else if (discord === "linkconflict") {
+      setError(
+        "That Discord account is already linked to a different Upper account. Sign in with it directly, or link a different one.",
+      );
     }
   }, []);
 

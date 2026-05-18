@@ -102,6 +102,10 @@ export type IdentityState = {
   // email: null and discordUsername set — the account display checks
   // both.
   discordUsername: string | null;
+  // True when the account has a linked Discord identity (users.discord_id
+  // is non-null). Distinct from discordUsername: drives the
+  // "Link Discord" / "linked" entry-point affordance.
+  discordLinked: boolean;
   // True once we've heard back from /api/users/me at least once.
   // Lets consumers gate "now I know who I am" UI without flickering
   // through a null state.
@@ -114,6 +118,7 @@ const INITIAL: IdentityState = {
   defaultAvatar: null,
   email: null,
   discordUsername: null,
+  discordLinked: false,
   ready: false,
 };
 
@@ -157,6 +162,7 @@ export function useIdentity({
           defaultAvatar?: string | null;
           email?: string | null;
           discordUsername?: string | null;
+          discordLinked?: boolean;
         };
         if (cancelled) return;
         setState({
@@ -165,6 +171,7 @@ export function useIdentity({
           defaultAvatar: data.defaultAvatar ?? null,
           email: data.email ?? null,
           discordUsername: data.discordUsername ?? null,
+          discordLinked: data.discordLinked ?? false,
           ready: true,
         });
       })

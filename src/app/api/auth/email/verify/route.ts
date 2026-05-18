@@ -165,6 +165,24 @@ export async function POST(request: Request) {
     });
   }
 
+  // Different users. Inspect the device user's OWN identity columns.
+  // If it already holds an email or discord_id, it's a real account —
+  // claiming this email would collide two real accounts, so error
+  // instead of merging. Only an anonymous throwaway device identity
+  // (no email, no discord_id) gets folded in — a normal fresh-device
+  // sign-in.
+  const { data: deviceUser } = await supabaseAdmin
+    .from("users")
+    .select("email, discord_id")
+    .eq("id", deviceUserId)
+    .maybeSingle();
+  if (deviceUser?.email || deviceUser?.discord_id) {
+    return NextResponse.json(
+      { error: "that email is already on another account" },
+      { status: 409 }
+    );
+  }
+
   // Different users → MERGE device user → email user.
   // Order of moves matters for FK / unique-constraint reasons.
 

@@ -33,11 +33,11 @@ function siteOrigin(request: NextRequest): string {
 export async function GET(request: NextRequest) {
   const origin = siteOrigin(request);
 
-  const fail = (reason: string) => {
+  const fail = (reason: string, param = "error") => {
     console.warn(
       JSON.stringify({ event: "discord_oauth_failed", reason, ts: Date.now() })
     );
-    const res = NextResponse.redirect(`${origin}/auth?discord=error`);
+    const res = NextResponse.redirect(`${origin}/auth?discord=${param}`);
     res.cookies.delete("discord_oauth_state");
     res.cookies.delete("discord_oauth_device");
     return res;
@@ -125,8 +125,25 @@ export async function GET(request: NextRequest) {
       .from("users")
       .update(discordFields)
       .eq("id", resolvedUserId);
-    // Device pointed at a different user → fold that user in.
+    // Device pointed at a different user.
     if (deviceUserId && deviceUserId !== resolvedUserId) {
+      // Inspect the device user's OWN identity columns. If it already
+      // holds an email or discord_id, it's a real account — linking
+      // would collide two real accounts, so error instead of merging.
+      // Only an anonymous throwaway device identity (no email, no
+      // discord_id) gets folded in — that's a normal fresh-device
+      // sign-in.
+      const { data: deviceUser } = await supabaseAdmin
+        .from("users")
+        .select("email, discord_id")
+        .eq("id", deviceUserId)
+        .maybeSingle();
+      if (deviceUser?.email || deviceUser?.discord_id) {
+        return fail(
+          "device user already linked to a different account",
+          "linkconflict"
+        );
+      }
       await mergeUsers(supabaseAdmin, deviceUserId, resolvedUserId);
     }
   }
