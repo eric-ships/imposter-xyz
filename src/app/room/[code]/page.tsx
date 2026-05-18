@@ -257,7 +257,7 @@ export default function RoomPage({
         </p>
         <button
           onClick={() => router.push("/")}
-          className="rounded-xl border-2 border-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
+          className="rounded-xl border-2 border-line px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
         >
           Back home
         </button>
@@ -287,7 +287,7 @@ export default function RoomPage({
           </p>
           <button
             onClick={() => router.push("/")}
-            className="rounded-xl border-2 border-ink px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
+            className="rounded-xl border-2 border-line px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
           >
             Back home
           </button>
@@ -923,7 +923,7 @@ function AvatarPicker({
             <button
               onClick={() => custom.trim() && set(custom.trim())}
               disabled={pending || !custom.trim()}
-              className="flex-1 rounded-xl border-2 border-ink px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
+              className="flex-1 rounded-xl border-2 border-line px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
             >
               Use custom
             </button>
@@ -2350,7 +2350,7 @@ function PotPanel({
         <button
           onClick={() => toggle(true)}
           disabled={hostToggling}
-          className="w-full rounded-xl border-2 border-ink px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
+          className="w-full rounded-xl border-2 border-line px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
         >
           {hostToggling ? "Enabling..." : "Enable 1 USDC pot"}
         </button>
@@ -2509,7 +2509,7 @@ function PoliceModeToggle({
             className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.97] disabled:opacity-40 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
-                : "border-2 border-ink text-ink hover:bg-ink hover:text-page"
+                : "border-2 border-line text-ink hover:bg-ink hover:text-page"
             }`}
           >
             {pending ? "..." : enabled ? "On" : "Off"}
@@ -2597,7 +2597,7 @@ function JesusModeToggle({
             className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
-                : "border-2 border-ink text-ink hover:bg-ink hover:text-page"
+                : "border-2 border-line text-ink hover:bg-ink hover:text-page"
             }`}
           >
             {pending ? "..." : enabled ? "On" : "Off"}
@@ -2696,7 +2696,7 @@ function MoleModeToggle({
             className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
-                : "border-2 border-ink text-ink hover:bg-ink hover:text-page"
+                : "border-2 border-line text-ink hover:bg-ink hover:text-page"
             }`}
           >
             {pending ? "..." : enabled ? "On" : "Off"}
@@ -2778,7 +2778,7 @@ function CandidatesModeToggle({
             className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
               enabled
                 ? "bg-accent text-page hover:bg-ink"
-                : "border-2 border-ink text-ink hover:bg-ink hover:text-page"
+                : "border-2 border-line text-ink hover:bg-ink hover:text-page"
             }`}
           >
             {pending ? "..." : enabled ? "On" : "Off"}
@@ -3180,7 +3180,7 @@ function SkipWordControl({
           disabled={submitting}
           className={
             iVoted
-              ? "rounded-xl border-2 border-ink px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+              ? "rounded-xl border-2 border-line px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
               : "rounded-xl bg-ink px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
           }
         >
@@ -5225,7 +5225,7 @@ function RevealPhase({
             </motion.div>
             <div className="mt-4 text-sm text-ink-soft">{subtitle}</div>
             {pointsEarned > 0 && (
-              <div className="mt-5 inline-block border-2 border-ink px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink">
+              <div className="mt-5 inline-block border-2 border-line px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink">
                 +{pointsEarned} point{pointsEarned === 1 ? "" : "s"}
               </div>
             )}
@@ -5483,7 +5483,7 @@ function RevealPhase({
           </button>
           <button
             onClick={() => router.push("/")}
-            className="rounded-xl border-2 border-ink px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
+            className="rounded-xl border-2 border-line px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
           >
             Exit
           </button>
