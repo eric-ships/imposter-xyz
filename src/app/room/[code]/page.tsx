@@ -1385,7 +1385,7 @@ function CasualModeButton({
 // column. Both imposter and wavelength rooms render exactly one of
 // these so the toggles stay reachable on wide screens regardless of
 // the per-phase content width.
-// Palette / theme / mute controls. Lives inline in the room header
+// Theme / mute controls. Lives inline in the room header
 // (in flow) — previously a fixed top-right cluster, which overlapped
 // the header's own right-side content (Rules / avatar / name) at many
 // widths. In the header it sits in the flex row and can't collide.
