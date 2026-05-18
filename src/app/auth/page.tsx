@@ -93,7 +93,7 @@ export default function AuthPage() {
       <main className="mx-auto flex w-full max-w-md flex-col gap-7 px-6 pb-12 pt-10 sm:pt-16 lg:max-w-lg lg:pt-24">
         <Link
           href="/"
-          className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
+          className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint transition hover:text-ink"
         >
           ← Home
         </Link>
@@ -101,7 +101,7 @@ export default function AuthPage() {
         {sent ? (
           <section className="space-y-4">
             <header className="space-y-2">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+              <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
                 Almost there
               </div>
               <h1 className="font-serif text-3xl text-ink">
@@ -130,7 +130,7 @@ export default function AuthPage() {
         ) : (
           <section className="space-y-5">
             <header className="space-y-2">
-              <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+              <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
                 Sign in
               </div>
               <h1 className="font-serif text-3xl text-ink">
@@ -145,7 +145,7 @@ export default function AuthPage() {
             </header>
 
             <label className="block">
-              <span className="mb-2 block text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
                 Email
               </span>
               <input
@@ -163,21 +163,21 @@ export default function AuthPage() {
                 autoCorrect="off"
                 autoCapitalize="none"
                 spellCheck={false}
-                className="w-full border-b border-line bg-transparent px-1 pb-2 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+                className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
               />
             </label>
 
             <button
               onClick={send}
               disabled={pending || email.trim().length === 0}
-              className="w-full rounded-sm bg-ink px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+              className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
             >
               {pending ? "Sending…" : "Send sign-in link"}
             </button>
 
             <div className="flex items-center gap-3" aria-hidden>
               <span className="h-px flex-1 bg-line" />
-              <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+              <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
                 or
               </span>
               <span className="h-px flex-1 bg-line" />
@@ -185,7 +185,7 @@ export default function AuthPage() {
 
             <button
               onClick={signInWithDiscord}
-              className="flex w-full items-center justify-center gap-2.5 rounded-sm bg-[#5865F2] px-6 py-4 text-[11px] uppercase tracking-[0.2em] text-white transition-all duration-100 hover:bg-[#4752c4] active:scale-[0.97]"
+              className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] px-6 py-4 text-sm font-semibold text-white transition-all duration-100 hover:bg-[#4752c4] active:scale-[0.97]"
             >
               <svg
                 width="20"

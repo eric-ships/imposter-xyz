@@ -126,7 +126,7 @@ export default function DiscordActivityPage() {
           </p>
         </div>
       ) : (
-        <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
+        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
           {PHASE_LABEL[phase]}
         </div>

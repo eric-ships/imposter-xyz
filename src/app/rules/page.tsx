@@ -4,7 +4,7 @@ export default function RulesPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-xl flex-col gap-12 px-8 py-12">
       <header className="text-center">
-        <div className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">
+        <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
           Upper · rule book
         </div>
         <h1 className="mt-2 font-serif text-4xl italic text-ink">
@@ -17,19 +17,19 @@ export default function RulesPage() {
         <nav className="mt-6 flex flex-wrap justify-center gap-2">
           <a
             href="#imposter"
-            className="rounded-full border border-line px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+            className="rounded-full border-2 border-line px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
             Imposter
           </a>
           <a
             href="#wavelength"
-            className="rounded-full border border-line px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+            className="rounded-full border-2 border-line px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
             Wavelength
           </a>
           <a
             href="#just-one"
-            className="rounded-full border border-line px-4 py-1.5 text-[11px] uppercase tracking-[0.2em] text-ink-soft transition hover:border-ink hover:text-ink"
+            className="rounded-full border-2 border-line px-4 py-1.5 text-xs font-bold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
             Just One
           </a>
@@ -394,7 +394,7 @@ export default function RulesPage() {
       <div className="flex justify-center border-t border-line-soft pt-8">
         <Link
           href="/"
-          className="rounded-sm border border-ink px-6 py-3 text-[11px] uppercase tracking-[0.2em] text-ink transition hover:bg-ink hover:text-page"
+          className="rounded-2xl bg-accent px-6 py-3 text-base font-bold tracking-tight text-white shadow-sm transition hover:brightness-110"
         >
           Back to the table
         </Link>
@@ -412,7 +412,7 @@ function Section({
 }) {
   return (
     <section className="space-y-3">
-      <h3 className="text-[11px] uppercase tracking-[0.22em] text-ink-soft">
+      <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
         {label}
       </h3>
       <div className="space-y-3 text-base leading-relaxed text-ink-soft">
@@ -426,7 +426,7 @@ function Outcome({ label, detail }: { label: string; detail: string }) {
   return (
     <li className="flex items-baseline justify-between gap-4 border-b border-line-soft pb-2 last:border-none last:pb-0">
       <span className="text-base text-ink">{label}</span>
-      <span className="text-right text-[11px] uppercase tracking-[0.2em] text-ink-soft">
+      <span className="text-right text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
         {detail}
       </span>
     </li>

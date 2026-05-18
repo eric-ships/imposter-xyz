@@ -70,7 +70,7 @@ function VerifyInner() {
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-5 px-6 py-12 text-center">
       {result.kind === "loading" && (
         <>
-          <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
             Signing you in
           </div>
           <h1 className="font-serif text-3xl italic text-ink">…</h1>
@@ -78,7 +78,7 @@ function VerifyInner() {
       )}
       {result.kind === "ok" && (
         <>
-          <div className="text-[11px] uppercase tracking-[0.22em] text-leaf">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-leaf">
             {result.merged ? "Merged" : "Signed in"}
           </div>
           <h1 className="font-serif text-3xl text-ink">
@@ -99,7 +99,7 @@ function VerifyInner() {
       )}
       {result.kind === "err" && (
         <>
-          <div className="text-[11px] uppercase tracking-[0.22em] text-oxblood">
+          <div className="text-xs font-bold uppercase tracking-[0.14em] text-oxblood">
             Couldn&apos;t sign in
           </div>
           <h1 className="font-serif text-3xl text-ink">
@@ -108,7 +108,7 @@ function VerifyInner() {
           <p className="text-sm text-ink-soft">{result.error}</p>
           <Link
             href="/auth"
-            className="mt-2 rounded-sm border border-ink px-5 py-2 text-[11px] uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
+            className="mt-2 rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97]"
           >
             Request a new link
           </Link>
@@ -124,7 +124,7 @@ function VerifyInner() {
 function VerifyFallback() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-5 px-6 py-12 text-center">
-      <div className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
+      <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
         Signing you in
       </div>
       <h1 className="font-serif text-3xl italic text-ink">…</h1>
