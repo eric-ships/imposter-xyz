@@ -885,7 +885,7 @@ function AvatarPicker({
         {initial}
       </button>
       {open && (
-        <div className="absolute right-0 top-9 z-50 w-72 space-y-3 rounded-xl border-2 border-line bg-page p-4 shadow-lg">
+        <div className="absolute right-0 top-9 z-50 w-72 space-y-3 rounded-xl border-2 border-line bg-surface p-4 shadow-lg">
           <div className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             Pick an avatar
           </div>
@@ -1717,7 +1717,7 @@ function PoliceBadge({
         Investigate · 1 use left
       </button>
       {open && usable && (
-        <div className="w-full max-w-xs space-y-1 rounded-xl border-2 border-line bg-page p-2 text-left shadow-md">
+        <div className="w-full max-w-xs space-y-1 rounded-xl border-2 border-line bg-surface p-2 text-left shadow-md">
           <div className="px-1 pb-1 text-[10px] uppercase tracking-[0.22em] text-ink-faint">
             Pick a player to investigate
           </div>
@@ -3995,7 +3995,7 @@ function ClueReactions({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: 4 }}
               transition={{ duration: 0.12, ease: "easeOut" }}
-              className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border-2 border-line bg-page p-1 shadow-md"
+              className="absolute left-1/2 top-9 z-30 flex -translate-x-1/2 items-center gap-1 rounded-full border-2 border-line bg-surface p-1 shadow-md"
             >
               {REACTION_EMOJI.map((emoji) => {
                 const mine = effective(emoji).mine;

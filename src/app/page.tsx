@@ -907,7 +907,7 @@ function DisplayNamePrompt({
         initial={{ opacity: 0, y: 14, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.22, ease: "easeOut" }}
-        className="relative w-full max-w-sm space-y-5 rounded-2xl border-2 border-ink bg-page p-6 shadow-md"
+        className="relative w-full max-w-sm space-y-5 rounded-2xl border-2 border-ink bg-surface p-6 shadow-md"
       >
         {/* Dismiss × — top-right, small and quiet. */}
         <button
@@ -1045,7 +1045,7 @@ function AccountMenu({
         aria-expanded={open}
         aria-label="Account menu"
         title={name}
-        className="flex items-center justify-center rounded-full border border-line bg-page p-0.5 shadow-sm transition hover:border-ink-faint hover:shadow"
+        className="flex items-center justify-center rounded-full border border-line bg-surface p-0.5 shadow-sm transition hover:border-ink-faint hover:shadow"
       >
         <span
           className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${av.color} ${
@@ -1059,7 +1059,7 @@ function AccountMenu({
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-11 z-50 w-72 space-y-3 rounded-xl border border-line bg-page p-4 text-left shadow-lg"
+          className="absolute right-0 top-11 z-50 w-72 space-y-3 rounded-xl border border-line bg-surface p-4 text-left shadow-lg"
         >
           {/* 1. Identity — avatar + name + rename. */}
           <AccountIdentity
