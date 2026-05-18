@@ -72,7 +72,7 @@ function ConicBackdrop() {
             marginTop: "-95vmax",
             background: BRAND_CONIC,
             filter: "blur(64px)",
-            opacity: 0.4,
+            opacity: 0.22,
           }}
           animate={reduced ? undefined : { rotate: 360 }}
           transition={
@@ -120,9 +120,6 @@ export default function HomePage() {
   const hasName = name.length > 0;
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // The display-name prompt is dismissible for this page load — a
-  // nameless player can defer it, but it returns on a future visit.
-  const [namePromptDismissed, setNamePromptDismissed] = useState(false);
 
   // Shared across the live banner + groups section: the user's groups
   // (with live-room info) and their total-matches count. Lifted here
@@ -384,24 +381,6 @@ export default function HomePage() {
           />
         </div>
       )}
-
-      {/* Display-name prompt — a proactive modal for resolved players
-          who never set a name. A nameless player reads as "?" on
-          rosters and in games, so we nudge before that happens. Shown
-          only outside the create/join flow (IdentityStep covers naming
-          in-flow) and only once the player hasn't dismissed it this
-          load. */}
-      {dataReady && !needsRedirect && !inFlow && !hasName &&
-        !namePromptDismissed && (
-          <DisplayNamePrompt
-            userId={identity.userId}
-            onSaved={(savedName) => {
-              setLocalName(savedName);
-              setNamePromptDismissed(true);
-            }}
-            onDismiss={() => setNamePromptDismissed(true)}
-          />
-        )}
 
       {/* FACE 0 — splash. Identity / groups / stats still settling.
           A bare centered wordmark + loader filling the viewport so
@@ -820,160 +799,6 @@ function IdentityStep({
         </p>
       )}
     </motion.div>
-  );
-}
-
-// DisplayNamePrompt — a proactive naming modal for the home page.
-// A player who never set a `default_nickname` shows up as "?" on
-// squad rosters and in games; this catches them before that. It
-// reuses the same save path as IdentityStep / AccountIdentity — a
-// PATCH (or POST for a yet-unsaved user) to /api/users/me that lands
-// the name on the `users` row — so saving reflects everywhere via
-// the onSaved → setLocalName identity-mirror path.
-//
-// It's a real modal (overlay + centered card) but stays dismissible:
-// a "later" link and a × both close it for this load. It can return
-// on a future visit, which is fine — better than silently dropping
-// a nameless player into a game.
-function DisplayNamePrompt({
-  userId,
-  onSaved,
-  onDismiss,
-}: {
-  userId: string | null;
-  onSaved: (name: string) => void;
-  onDismiss: () => void;
-}) {
-  const [value, setValue] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  // Escape dismisses — same affordance as the × / "later".
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onDismiss();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onDismiss]);
-
-  async function save() {
-    const next = value.trim();
-    if (!next || saving) return;
-    setError(null);
-    setSaving(true);
-    try {
-      // PATCH when the user row already exists; POST otherwise — the
-      // same branch IdentityStep uses. Either way the name lands on
-      // `users.default_nickname`.
-      let res: Response;
-      if (userId) {
-        res = await fetch("/api/users/me", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, defaultNickname: next }),
-        });
-      } else {
-        const deviceToken = getOrMintDeviceToken();
-        res = await fetch("/api/users/me", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ deviceToken, defaultNickname: next }),
-        });
-      }
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "failed");
-      onSaved((data.defaultNickname as string | null)?.trim() || next);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "failed");
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-6">
-      {/* Scrim — tapping it defers the prompt. */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.18 }}
-        onClick={onDismiss}
-        className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-      />
-      <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Set your display name"
-        initial={{ opacity: 0, y: 14, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="relative w-full max-w-sm space-y-5 rounded-2xl border-2 border-ink bg-surface p-6 shadow-md"
-      >
-        {/* Dismiss × — top-right, small and quiet. */}
-        <button
-          type="button"
-          onClick={onDismiss}
-          aria-label="Dismiss"
-          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-lg font-bold text-ink-faint transition hover:bg-surface hover:text-ink"
-        >
-          ×
-        </button>
-
-        <div className="space-y-1.5">
-          <h2 className="text-2xl font-extrabold tracking-tight text-ink">
-            What should we call you?
-          </h2>
-          <p className="text-sm font-medium text-ink-soft">
-            Your squad sees this name in every room and game. Without
-            one you show up as a plain “?”.
-          </p>
-        </div>
-
-        <input
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          maxLength={20}
-          placeholder="Alice"
-          type="text"
-          name="player-nickname"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="words"
-          spellCheck={false}
-          data-form-type="other"
-          data-1p-ignore="true"
-          data-lpignore="true"
-          autoFocus
-          onKeyDown={(e) => {
-            if (e.key === "Enter") save();
-          }}
-          className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3.5 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
-        />
-
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={save}
-          disabled={value.trim().length === 0 || saving}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-lg font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
-        >
-          {saving ? "Saving…" : "Save"}
-        </motion.button>
-
-        <button
-          type="button"
-          onClick={onDismiss}
-          className="block w-full text-center text-sm font-semibold text-ink-faint transition hover:text-ink"
-        >
-          later
-        </button>
-
-        {error && (
-          <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-medium text-oxblood">
-            {error}
-          </p>
-        )}
-      </motion.div>
-    </div>
   );
 }
 
