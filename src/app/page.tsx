@@ -496,13 +496,17 @@ export default function HomePage() {
           >
             <Wordmark className="text-6xl sm:text-7xl" />
             {identity.ready && hasName && (
-              <div className="mt-3">
+              <div className="mt-3 flex flex-col items-center gap-1.5">
                 <IdentityLine
                   name={name}
                   userId={identity.userId}
                   email={identity.email}
                   discordUsername={identity.discordUsername}
                   onRenamed={(next) => setLocalName(next)}
+                />
+                <LinkedLogins
+                  email={identity.email}
+                  discordLinked={identity.discordLinked}
                 />
               </div>
             )}
@@ -904,6 +908,59 @@ function IdentityLine({
         )}
       </p>
     </div>
+  );
+}
+
+// Small, tucked "linked logins" affordance — sits just under the
+// "playing as" line. Lets an already-signed-in player attach their
+// second provider so either login resolves to the same account. The
+// backend (Discord OAuth callback + magic-link verify) already does
+// the attach/merge; this is purely the entry point.
+//  - email only        → "Link Discord" (navigates to the OAuth start)
+//  - discord only      → "Add email" (navigates to the magic-link page)
+//  - both linked       → a quiet static "email + discord linked" line
+//  - neither (anon)    → nothing — linking is only for signed-in players
+function LinkedLogins({
+  email,
+  discordLinked,
+}: {
+  email: string | null;
+  discordLinked: boolean;
+}) {
+  const hasEmail = !!email;
+
+  if (!hasEmail && !discordLinked) return null;
+
+  if (hasEmail && discordLinked) {
+    return (
+      <p className="text-[11px] font-semibold lowercase tracking-tight text-ink-faint">
+        email + discord linked
+      </p>
+    );
+  }
+
+  if (hasEmail && !discordLinked) {
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          window.location.href = "/api/auth/discord/start";
+        }}
+        className="rounded-full border-2 border-line bg-surface/40 px-3 py-1 text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
+      >
+        link discord
+      </button>
+    );
+  }
+
+  // discord only — offer email.
+  return (
+    <Link
+      href="/auth"
+      className="rounded-full border-2 border-line bg-surface/40 px-3 py-1 text-[11px] font-bold lowercase tracking-tight text-ink-soft transition hover:border-ink hover:text-ink"
+    >
+      add email
+    </Link>
   );
 }
 

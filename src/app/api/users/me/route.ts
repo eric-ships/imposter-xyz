@@ -16,7 +16,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 // On subsequent calls: updates default_nickname / avatar IFF the
 // body provides non-empty values; otherwise preserves what's stored.
 //
-// Returns { userId, defaultNickname, defaultAvatar, email }.
+// Returns { userId, defaultNickname, defaultAvatar, email,
+// discordUsername, discordLinked }.
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as {
     deviceToken?: string;
@@ -47,7 +48,9 @@ export async function POST(request: Request) {
     // Known device → load + maybe-update profile.
     const { data: existing, error: lookupErr } = await supabaseAdmin
       .from("users")
-      .select("id, default_nickname, default_avatar, email, discord_username")
+      .select(
+        "id, default_nickname, default_avatar, email, discord_id, discord_username"
+      )
       .eq("id", tokenRow.user_id)
       .maybeSingle();
     if (lookupErr) {
@@ -105,6 +108,7 @@ export async function POST(request: Request) {
           existing.default_avatar,
         email: existing.email ?? null,
         discordUsername: existing.discord_username ?? null,
+        discordLinked: existing.discord_id != null,
       });
     }
   }
@@ -122,7 +126,9 @@ export async function POST(request: Request) {
   const { data: created, error: insertErr } = await supabaseAdmin
     .from("users")
     .insert(insertUser)
-    .select("id, default_nickname, default_avatar, email, discord_username")
+    .select(
+      "id, default_nickname, default_avatar, email, discord_id, discord_username"
+    )
     .single();
   if (insertErr || !created) {
     return NextResponse.json(
@@ -148,6 +154,7 @@ export async function POST(request: Request) {
     defaultAvatar: created.default_avatar,
     email: created.email ?? null,
     discordUsername: created.discord_username ?? null,
+    discordLinked: created.discord_id != null,
   });
 }
 
@@ -184,7 +191,9 @@ export async function PATCH(request: Request) {
     .from("users")
     .update(update)
     .eq("id", body.userId)
-    .select("id, default_nickname, default_avatar, email, discord_username")
+    .select(
+      "id, default_nickname, default_avatar, email, discord_id, discord_username"
+    )
     .maybeSingle();
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -198,5 +207,6 @@ export async function PATCH(request: Request) {
     defaultAvatar: data.default_avatar,
     email: data.email ?? null,
     discordUsername: data.discord_username ?? null,
+    discordLinked: data.discord_id != null,
   });
 }
