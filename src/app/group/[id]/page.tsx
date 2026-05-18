@@ -110,7 +110,7 @@ export default function GroupPage({
           </p>
           <Link
             href="/"
-            className="inline-block rounded-xl border-2 border-ink px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink hover:text-page"
+            className="inline-block rounded-xl border-2 border-line px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink hover:text-page"
           >
             Back home
           </Link>
