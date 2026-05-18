@@ -110,7 +110,7 @@ export default function GroupPage({
           </p>
           <Link
             href="/"
-            className="inline-block rounded-xl border-2 border-line px-4 py-2 text-sm font-semibold text-ink transition hover:bg-ink hover:text-page"
+            className="inline-block rounded-xl border border-line px-4 py-2 text-sm font-medium text-ink transition hover:bg-ink hover:text-page"
           >
             Back home
           </Link>
@@ -137,13 +137,13 @@ export default function GroupPage({
       <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-6 pb-12 pt-8 sm:pt-10 lg:max-w-3xl lg:gap-7 lg:pt-12">
         <Link
           href="/"
-          className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint transition hover:text-ink"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint transition hover:text-ink"
         >
           ← Home
         </Link>
 
         <header className="space-y-2">
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Squad
           </div>
           {isOwner ? (
@@ -169,7 +169,7 @@ export default function GroupPage({
               key={t}
               type="button"
               onClick={() => setActiveTab(t)}
-              className={`-mb-px min-h-[44px] border-b-2 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.14em] transition ${
+              className={`-mb-px min-h-[44px] border-b px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition ${
                 activeTab === t
                   ? "border-ink text-ink"
                   : "border-transparent text-ink-faint hover:text-ink"
@@ -228,7 +228,7 @@ function RosterTab({
   return (
     <>
       <section className="space-y-3">
-        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Members · {group.members.length}
         </h2>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -248,8 +248,8 @@ function RosterTab({
                 <div
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${av.color} ${
                     av.isCustom
-                      ? "border-2 border-line text-base"
-                      : "text-sm font-semibold text-white"
+                      ? "border border-line text-base"
+                      : "text-sm font-medium text-white"
                   }`}
                 >
                   {av.initial}
@@ -267,12 +267,12 @@ function RosterTab({
                     <span className="text-sm text-ink">{m.nickname}</span>
                   )}
                   {m.role === "owner" && (
-                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
                       Owner
                     </span>
                   )}
                   {isMe && (
-                    <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+                    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
                       you
                     </span>
                   )}
@@ -304,7 +304,7 @@ function RosterTab({
       />
 
       <section className="space-y-3">
-        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           {isOwner ? "Owner controls" : "Squad actions"}
         </h2>
         {!isOwner && (
@@ -424,7 +424,7 @@ function EditableNickname({
             maxLength={20}
             placeholder={isIdentity ? "Your name" : "Name in this squad"}
             autoFocus
-            className="w-36 rounded-xl border-2 border-line bg-surface/40 px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            className="w-36 rounded-xl border border-line bg-surface/40 px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             onKeyDown={(e) => {
               if (e.key === "Enter")
                 isIdentity ? saveIdentity() : saveOverride();
@@ -436,13 +436,13 @@ function EditableNickname({
               isIdentity ? saveIdentity() : saveOverride()
             }
             disabled={saving}
-            className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent disabled:opacity-40"
+            className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent disabled:opacity-40"
           >
             {saving ? "…" : "Save"}
           </button>
           <button
             onClick={() => setEditMode(null)}
-            className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint"
+            className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint"
           >
             Cancel
           </button>
@@ -465,7 +465,7 @@ function EditableNickname({
               setValue("");
               setEditMode("identity");
             }}
-            className="text-sm font-semibold text-accent"
+            className="text-sm font-medium text-accent"
           >
             + Add your name
           </button>
@@ -489,7 +489,7 @@ function EditableNickname({
           </button>
         )}
         {hasOverride && (
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             squad name
           </span>
         )}
@@ -550,7 +550,7 @@ function RoomPresencePill({
   return (
     <Link
       href={`/spectate/${room.code}`}
-      className="flex items-center gap-1.5 rounded-full border-2 border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] text-leaf transition hover:bg-leaf/20"
+      className="flex items-center gap-1.5 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-leaf transition hover:bg-leaf/20"
       title={`Watch ${label} · room ${room.code}`}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-leaf" />
@@ -631,7 +631,7 @@ function GamesSection({
 
   return (
     <section className="space-y-3">
-      <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
         Games
       </h2>
 
@@ -643,11 +643,11 @@ function GamesSection({
             return (
               <li
                 key={r.code}
-                className="flex items-center justify-between gap-3 rounded-xl border-2 border-line-soft bg-surface/40 px-3 py-2.5"
+                className="flex items-center justify-between gap-3 rounded-xl border border-line-soft bg-surface/40 px-3 py-2.5"
               >
                 <span className="flex items-baseline gap-2">
                   <span className="text-sm text-ink">{label}</span>
-                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
                     {r.code} · {joinable ? "in lobby" : "in progress"}
                   </span>
                 </span>
@@ -655,14 +655,14 @@ function GamesSection({
                   <button
                     onClick={() => joinRoom(r.code)}
                     disabled={busy}
-                    className="rounded-xl bg-ink px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-page transition hover:bg-accent active:scale-[0.97] disabled:opacity-40"
+                    className="rounded-xl bg-ink px-4 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-page transition hover:bg-accent active:scale-[0.97] disabled:opacity-40"
                   >
                     Join
                   </button>
                 ) : (
                   <Link
                     href={`/spectate/${r.code}`}
-                    className="rounded-xl border-2 border-line px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
+                    className="rounded-xl border border-line px-4 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
                   >
                     Watch
                   </Link>
@@ -676,13 +676,13 @@ function GamesSection({
       <button
         onClick={startGame}
         disabled={busy}
-        className="w-full rounded-2xl bg-accent px-6 py-3 text-base font-bold tracking-tight text-white shadow-sm transition hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
+        className="w-full rounded-2xl bg-accent px-6 py-3 text-base font-semibold tracking-tight text-white shadow-sm transition hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
       >
         {busy ? "…" : "Start a game for this squad"}
       </button>
 
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-sm text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-3 py-1.5 text-sm text-oxblood">
           {error}
         </p>
       )}
@@ -757,21 +757,21 @@ function StatsTab({
 
   if (error) {
     return (
-      <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-2 text-sm text-oxblood">
+      <p className="border-l border-oxblood bg-oxblood/5 px-3 py-2 text-sm text-oxblood">
         {error}
       </p>
     );
   }
   if (!data) {
     return (
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
         Loading…
       </p>
     );
   }
   if (data.totalMatches === 0) {
     return (
-      <div className="rounded-xl border-2 border-line-soft bg-surface/40 p-4 text-sm text-ink-soft">
+      <div className="rounded-xl border border-line-soft bg-surface/40 p-4 text-sm text-ink-soft">
         No matches yet. Play a game with this squad attributed
         (lobby pill) and the stats will start showing up.
       </div>
@@ -799,7 +799,7 @@ function StatsTab({
       <section className="space-y-3">
         <div className="flex items-baseline justify-between">
           <h2 className="font-serif text-2xl text-ink">Standings</h2>
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             {data.totalMatches}{" "}
             {data.totalMatches === 1 ? "match" : "matches"}
           </span>
@@ -818,7 +818,7 @@ function StatsTab({
 
       {/* ── Per-game breakdown, below the scoreboard ── */}
       <section className="space-y-3">
-        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           By game
         </h2>
         <ul className="space-y-3">
@@ -836,14 +836,14 @@ function StatsTab({
             return (
               <li
                 key={m.userId}
-                className="rounded-xl border-2 border-line-soft bg-page/40 p-3"
+                className="rounded-xl border border-line-soft bg-page/40 p-3"
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${av.color} ${
                       av.isCustom
-                        ? "border-2 border-line text-base"
-                        : "text-sm font-semibold text-white"
+                        ? "border border-line text-base"
+                        : "text-sm font-medium text-white"
                     }`}
                   >
                     {av.initial}
@@ -851,12 +851,12 @@ function StatsTab({
                   <div className="flex flex-1 items-baseline gap-2">
                     <span className="text-sm text-ink">{m.nickname}</span>
                     {m.role === "owner" && (
-                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
+                      <span className="text-xs font-semibold uppercase tracking-[0.14em] text-accent">
                         Owner
                       </span>
                     )}
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
                     {totalPlayed} played
                   </span>
                 </div>
@@ -908,7 +908,7 @@ function StandingRowCard({
   const isTop = row.rank === 1;
   return (
     <li
-      className={`flex items-center gap-3 rounded-xl border-2 px-3 py-3 transition ${
+      className={`flex items-center gap-3 rounded-xl border px-3 py-3 transition ${
         isTop
           ? "border-accent bg-accent/10"
           : isMe
@@ -918,10 +918,10 @@ function StandingRowCard({
     >
       {/* Rank badge — #1 emphasized. */}
       <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold tabular-nums ${
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-semibold tabular-nums ${
           isTop
             ? "bg-accent text-white"
-            : "border-2 border-line text-ink-soft"
+            : "border border-line text-ink-soft"
         }`}
       >
         {row.rank}
@@ -931,8 +931,8 @@ function StandingRowCard({
       <div
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${av.color} ${
           av.isCustom
-            ? "border-2 border-line text-base"
-            : "text-sm font-semibold text-white"
+            ? "border border-line text-base"
+            : "text-sm font-medium text-white"
         }`}
       >
         {av.initial}
@@ -941,11 +941,11 @@ function StandingRowCard({
       {/* Name + matches played. */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-baseline gap-2">
-          <span className="truncate text-sm font-semibold text-ink">
+          <span className="truncate text-sm font-medium text-ink">
             {row.nickname}
           </span>
           {isMe && (
-            <span className="shrink-0 text-[10px] font-bold uppercase tracking-[0.14em] text-accent">
+            <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
               you
             </span>
           )}
@@ -1122,21 +1122,21 @@ function RecentTab({
 
   if (error) {
     return (
-      <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-2 text-sm text-oxblood">
+      <p className="border-l border-oxblood bg-oxblood/5 px-3 py-2 text-sm text-oxblood">
         {error}
       </p>
     );
   }
   if (!matches) {
     return (
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
         Loading…
       </p>
     );
   }
   if (matches.length === 0) {
     return (
-      <div className="rounded-xl border-2 border-line-soft bg-surface/40 p-4 text-sm text-ink-soft">
+      <div className="rounded-xl border border-line-soft bg-surface/40 p-4 text-sm text-ink-soft">
         No matches yet.
       </div>
     );
@@ -1176,17 +1176,17 @@ function RecentMatchCard({ match }: { match: RecentMatch }) {
       )
       .join(" & ");
     return (
-      <div className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5">
+      <div className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5">
         <div className="flex items-baseline justify-between gap-3">
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Wavelength · {endedTime}
           </div>
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-leaf">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-leaf">
             {w.winnerIds.length === 1 ? "Winner" : "Tied"}
           </div>
         </div>
         <div className="mt-1 text-sm text-ink">
-          <span className="font-semibold">{winnerNames}</span>{" "}
+          <span className="font-medium">{winnerNames}</span>{" "}
           <span className="text-ink-faint">· {w.topScore} pts</span>
         </div>
       </div>
@@ -1199,12 +1199,12 @@ function RecentMatchCard({ match }: { match: RecentMatch }) {
   ) {
     const j = match.snapshot;
     return (
-      <div className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5">
+      <div className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5">
         <div className="flex items-baseline justify-between gap-3">
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Just One · {endedTime}
           </div>
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-leaf">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-leaf">
             {j.score} / {j.totalCards}
           </div>
         </div>
@@ -1221,13 +1221,13 @@ function RecentMatchCard({ match }: { match: RecentMatch }) {
     const tasksDone = c.perPlayer.filter((p) => p.taskDone).length;
     const won = c.outcome === "won";
     return (
-      <div className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5">
+      <div className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5">
         <div className="flex items-baseline justify-between gap-3">
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Crew · {endedTime}
           </div>
           <div
-            className={`text-xs font-bold uppercase tracking-[0.14em] ${
+            className={`text-xs font-semibold uppercase tracking-[0.14em] ${
               won ? "text-leaf" : "text-oxblood"
             }`}
           >
@@ -1248,13 +1248,13 @@ function RecentMatchCard({ match }: { match: RecentMatch }) {
     const h = match.snapshot;
     const victory = h.outcome === "victory";
     return (
-      <div className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5">
+      <div className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5">
         <div className="flex items-baseline justify-between gap-3">
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Hold · {endedTime}
           </div>
           <div
-            className={`text-xs font-bold uppercase tracking-[0.14em] ${
+            className={`text-xs font-semibold uppercase tracking-[0.14em] ${
               victory ? "text-leaf" : "text-oxblood"
             }`}
           >
@@ -1262,7 +1262,7 @@ function RecentMatchCard({ match }: { match: RecentMatch }) {
           </div>
         </div>
         <div className="mt-1 text-sm text-ink">
-          <span className="font-semibold">
+          <span className="font-medium">
             Wave {h.waveReached} / {h.totalWaves}
           </span>
           <span className="ml-2 text-ink-faint">· core {h.coreHp} HP</span>
@@ -1286,13 +1286,13 @@ function RecentMatchCard({ match }: { match: RecentMatch }) {
         ? "text-leaf"
         : "text-accent";
   return (
-    <div className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5">
+    <div className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5">
       <div className="flex items-baseline justify-between gap-3">
-        <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Imposter · {endedTime}
         </div>
         <div
-          className={`text-xs font-bold uppercase tracking-[0.14em] ${winnerColor}`}
+          className={`text-xs font-semibold uppercase tracking-[0.14em] ${winnerColor}`}
         >
           {winnerLabel}
         </div>
@@ -1300,7 +1300,7 @@ function RecentMatchCard({ match }: { match: RecentMatch }) {
       <div className="mt-1 text-sm text-ink">
         <span className="text-ink-faint">{im.category}</span>{" "}
         <span className="text-ink-faint">·</span>{" "}
-        <span className="font-semibold">{im.secretWord}</span>
+        <span className="font-medium">{im.secretWord}</span>
       </div>
     </div>
   );
@@ -1355,7 +1355,7 @@ function InviteChip({ code }: { code: string }) {
           /* ignore */
         }
       }}
-      className="inline-flex items-baseline gap-2 rounded-full border-2 border-line bg-page px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint transition hover:border-ink hover:text-ink"
+      className="inline-flex items-baseline gap-2 rounded-full border border-line bg-page px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint transition hover:border-ink hover:text-ink"
     >
       <span>Invite code</span>
       <span className="font-serif text-base tracking-[0.3em] text-ink normal-case">
@@ -1387,7 +1387,7 @@ function PresencePill({ lastSeenAt }: { lastSeenAt: string | null }) {
   else if (ms < 7 * 24 * 60 * 60_000) label = `${Math.floor(ms / 86_400_000)}d ago`;
   else label = "recently";
   return (
-    <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+    <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
       · {label}
     </span>
   );
@@ -1422,7 +1422,7 @@ function RenameTitle({
             setName(initial);
             setEditing(true);
           }}
-          className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint transition hover:text-ink"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint transition hover:text-ink"
         >
           Rename
         </button>
@@ -1469,7 +1469,7 @@ function RenameTitle({
           data-form-type="other"
           data-1p-ignore="true"
           data-lpignore="true"
-          className="min-w-0 flex-1 rounded-xl border-2 border-line bg-surface/40 px-4 py-3 font-serif text-3xl text-ink outline-none transition focus:border-accent"
+          className="min-w-0 flex-1 rounded-xl border border-line bg-surface/40 px-4 py-3 font-serif text-3xl text-ink outline-none transition focus:border-accent"
           onKeyDown={(e) => {
             if (e.key === "Enter" && name.trim() && !pending) save();
             if (e.key === "Escape") setEditing(false);
@@ -1478,14 +1478,14 @@ function RenameTitle({
         <button
           onClick={save}
           disabled={pending || name.trim().length === 0}
-          className="rounded-xl bg-ink px-4 text-xs font-semibold uppercase tracking-[0.14em] text-page transition hover:bg-accent active:scale-[0.97] disabled:opacity-30"
+          className="rounded-xl bg-ink px-4 text-xs font-medium uppercase tracking-[0.14em] text-page transition hover:bg-accent active:scale-[0.97] disabled:opacity-30"
         >
           {pending ? "…" : "Save"}
         </button>
         <button
           onClick={() => setEditing(false)}
           disabled={pending}
-          className="rounded-xl border-2 border-line px-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink disabled:opacity-50"
+          className="rounded-xl border border-line px-3 text-xs font-medium uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink disabled:opacity-50"
         >
           Cancel
         </button>
@@ -1553,7 +1553,7 @@ function KickMemberButton({
           void commit();
         }}
         title={`Remove ${targetNickname} from squad`}
-        className={`rounded-xl border-2 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] transition active:scale-[0.97] disabled:opacity-50 ${
+        className={`rounded-xl border px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.14em] transition active:scale-[0.97] disabled:opacity-50 ${
           armed
             ? "border-oxblood bg-oxblood text-white hover:bg-oxblood/90"
             : "border-line text-ink-faint hover:border-oxblood hover:text-oxblood"
@@ -1621,7 +1621,7 @@ function LeaveButton({
           }
           void commit();
         }}
-        className={`w-full rounded-xl border-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition active:scale-[0.98] disabled:opacity-50 ${
+        className={`w-full rounded-xl border px-4 py-2.5 text-xs font-medium uppercase tracking-[0.14em] transition active:scale-[0.98] disabled:opacity-50 ${
           armed
             ? "border-oxblood bg-oxblood text-white hover:bg-oxblood/90"
             : "border-line text-ink-soft hover:border-oxblood hover:text-oxblood"
@@ -1630,7 +1630,7 @@ function LeaveButton({
         {pending ? "…" : armed ? "Confirm leave?" : "Leave squad"}
       </button>
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
           {error}
         </p>
       )}
@@ -1689,7 +1689,7 @@ function DeleteButton({
           }
           void commit();
         }}
-        className={`w-full rounded-xl border-2 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] transition active:scale-[0.98] disabled:opacity-50 ${
+        className={`w-full rounded-xl border px-4 py-2.5 text-xs font-medium uppercase tracking-[0.14em] transition active:scale-[0.98] disabled:opacity-50 ${
           armed
             ? "border-oxblood bg-oxblood text-white hover:bg-oxblood/90"
             : "border-line text-ink-soft hover:border-oxblood hover:text-oxblood"
@@ -1702,7 +1702,7 @@ function DeleteButton({
             : "Delete squad"}
       </button>
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
           {error}
         </p>
       )}
@@ -1751,10 +1751,10 @@ function DiscordWebhookSetting({
   }
 
   return (
-    <div className="space-y-2 rounded-xl border-2 border-line p-3">
+    <div className="space-y-2 rounded-xl border border-line p-3">
       <div className="flex items-center justify-between gap-3">
         <div className="space-y-0.5">
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-soft">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft">
             Discord
           </div>
           <div className="text-xs text-ink-faint">
@@ -1770,7 +1770,7 @@ function DiscordWebhookSetting({
               setEditing(true);
               setError(null);
             }}
-            className="shrink-0 rounded-xl border-2 border-line px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
+            className="shrink-0 rounded-xl border border-line px-3 py-1.5 text-xs font-medium uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
           >
             {linked ? "Change" : "Connect"}
           </button>
@@ -1787,7 +1787,7 @@ function DiscordWebhookSetting({
             spellCheck={false}
             autoCorrect="off"
             autoCapitalize="none"
-            className="w-full rounded-xl border-2 border-line bg-surface/40 px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+            className="w-full rounded-xl border border-line bg-surface/40 px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
           />
           <p className="text-xs leading-relaxed text-ink-faint">
             In Discord: Channel settings → Integrations → Webhooks →
@@ -1798,7 +1798,7 @@ function DiscordWebhookSetting({
               type="button"
               disabled={pending || url.trim().length === 0}
               onClick={() => void save(url.trim())}
-              className="rounded-xl bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-page transition hover:bg-accent active:scale-[0.98] disabled:opacity-30"
+              className="rounded-xl bg-ink px-4 py-2 text-xs font-medium uppercase tracking-[0.14em] text-page transition hover:bg-accent active:scale-[0.98] disabled:opacity-30"
             >
               {pending ? "Saving…" : "Save"}
             </button>
@@ -1810,7 +1810,7 @@ function DiscordWebhookSetting({
                 setUrl("");
                 setError(null);
               }}
-              className="rounded-xl border-2 border-line px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink disabled:opacity-50"
+              className="rounded-xl border border-line px-4 py-2 text-xs font-medium uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink disabled:opacity-50"
             >
               Cancel
             </button>
@@ -1823,14 +1823,14 @@ function DiscordWebhookSetting({
           type="button"
           disabled={pending}
           onClick={() => void save("")}
-          className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint transition hover:text-oxblood disabled:opacity-50"
+          className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint transition hover:text-oxblood disabled:opacity-50"
         >
           {pending ? "…" : "Disconnect"}
         </button>
       )}
 
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-3 py-1.5 text-xs text-oxblood">
           {error}
         </p>
       )}

@@ -61,16 +61,19 @@ hard-code a UI colour — use a token, so light/dark both work.
 
 ## Buttons
 
-One smooth, bold system — three tiers. No brutalist hard-offset
+One light, smooth system — three tiers. Keep it calm: **1px borders
+(`border`, never `border-2`)** and **restrained weight** — `font-medium`
+for buttons and body, `font-semibold` only for headings and small
+tracked labels, never `font-bold`/`extrabold`. No brutalist hard-offset
 shadows (`shadow-[Npx_Npx_0]`); depth is soft (`shadow-sm` →
 `hover:shadow-md`) and presses spring (`active:scale`).
 
 - **Primary** — the one main action per view. `bg-accent`, white
   text, `rounded-2xl`, `shadow-sm hover:shadow-md hover:brightness-110`.
-- **Secondary** — `border-2 border-line`, `hover:border-ink`. An
+- **Secondary** — `border border-line`, `hover:border-ink`. An
   outline, no fill.
-- **Ghost** — `border border-ink`, inverts to `bg-ink` on hover.
-  Tertiary / in-game controls.
+- **Ghost** — text only, or a faint `border border-line`. Tertiary /
+  in-game controls. Never a heavy ink slab.
 
 ## Rules of thumb
 

@@ -198,7 +198,7 @@ function WavelengthLobby({
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Players · {view.players.length} of 6
         </h2>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -209,8 +209,8 @@ function WavelengthLobby({
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${av.color} ${
                     av.isCustom
-                      ? "border-2 border-line text-base"
-                      : "text-sm font-semibold text-white"
+                      ? "border border-line text-base"
+                      : "text-sm font-medium text-white"
                   }`}
                 >
                   {av.initial}
@@ -218,7 +218,7 @@ function WavelengthLobby({
                 <span className="text-sm text-ink">
                   {p.nickname}
                   {p.id === view.hostId && (
-                    <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-accent">
+                    <span className="ml-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-accent">
                       Host
                     </span>
                   )}
@@ -229,8 +229,8 @@ function WavelengthLobby({
         </ul>
       </section>
 
-      <section className="space-y-3 rounded-xl border-2 border-line-soft bg-surface/40 p-4">
-        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      <section className="space-y-3 rounded-xl border border-line-soft bg-surface/40 p-4">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           How Wavelength works
         </h3>
         <p className="text-sm text-ink-soft">
@@ -246,7 +246,7 @@ function WavelengthLobby({
         <button
           onClick={start}
           disabled={!canStart || starting}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {starting
             ? "Starting…"
@@ -255,13 +255,13 @@ function WavelengthLobby({
               : "Begin the match"}
         </button>
       ) : (
-        <p className="text-center text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Awaiting the host
         </p>
       )}
 
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
           {error}
         </p>
       )}
@@ -283,7 +283,7 @@ function WavelengthHistoryPanel({
   if (history.length === 0) return null;
   return (
     <section className="space-y-3">
-      <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
         Past matches · {history.length}
       </h2>
       <div className="space-y-2">
@@ -301,14 +301,14 @@ function WavelengthHistoryPanel({
             return (
               <div
                 key={`j${m.matchNumber}`}
-                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
                     Match {m.matchNumber} · Just One
                     {endedTime && <> · {endedTime}</>}
                   </div>
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-leaf">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-leaf">
                     {m.score} / {m.totalCards}
                   </div>
                 </div>
@@ -328,19 +328,19 @@ function WavelengthHistoryPanel({
             return (
               <div
                 key={`w${m.matchNumber}`}
-                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
                     Match {m.matchNumber} · Wavelength
                     {endedTime && <> · {endedTime}</>}
                   </div>
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-leaf">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-leaf">
                     {m.winnerIds.length === 1 ? "Winner" : "Tied"}
                   </div>
                 </div>
                 <div className="mt-1 text-sm text-ink">
-                  <span className="font-semibold">{winnerNames}</span>
+                  <span className="font-medium">{winnerNames}</span>
                   <span className="ml-2 text-ink-faint">
                     · {m.topScore} points · {m.totalRounds} rounds
                   </span>
@@ -356,15 +356,15 @@ function WavelengthHistoryPanel({
             return (
               <div
                 key={`c${m.matchNumber}`}
-                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
                     Match {m.matchNumber} · Crew
                     {endedTime && <> · {endedTime}</>}
                   </div>
                   <div
-                    className={`text-[11px] font-bold uppercase tracking-[0.14em] ${
+                    className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${
                       won ? "text-leaf" : "text-oxblood"
                     }`}
                   >
@@ -372,7 +372,7 @@ function WavelengthHistoryPanel({
                   </div>
                 </div>
                 <div className="mt-1 text-sm text-ink">
-                  <span className="font-semibold">
+                  <span className="font-medium">
                     {tasksDone} / {m.taskCount}
                   </span>
                   <span className="ml-2 text-ink-faint">
@@ -387,15 +387,15 @@ function WavelengthHistoryPanel({
             return (
               <div
                 key={`h${m.matchNumber}`}
-                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
+                className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
                     Match {m.matchNumber} · Hold
                     {endedTime && <> · {endedTime}</>}
                   </div>
                   <div
-                    className={`text-[11px] font-bold uppercase tracking-[0.14em] ${
+                    className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${
                       victory ? "text-leaf" : "text-oxblood"
                     }`}
                   >
@@ -403,7 +403,7 @@ function WavelengthHistoryPanel({
                   </div>
                 </div>
                 <div className="mt-1 text-sm text-ink">
-                  <span className="font-semibold">
+                  <span className="font-medium">
                     Wave {m.waveReached} / {m.totalWaves}
                   </span>
                   <span className="ml-2 text-ink-faint">
@@ -429,15 +429,15 @@ function WavelengthHistoryPanel({
           return (
             <div
               key={`i${m.matchNumber}`}
-              className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
+              className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5"
             >
               <div className="flex items-baseline justify-between gap-3">
-                <div className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
                   Match {m.matchNumber} · Imposter
                   {endedTime && <> · {endedTime}</>}
                 </div>
                 <div
-                  className={`text-[11px] font-bold uppercase tracking-[0.14em] ${winnerColor}`}
+                  className={`text-[11px] font-semibold uppercase tracking-[0.14em] ${winnerColor}`}
                 >
                   {winnerLabel}
                 </div>
@@ -445,7 +445,7 @@ function WavelengthHistoryPanel({
               <div className="mt-1 text-sm text-ink">
                 <span className="text-ink-faint">{m.category}</span>
                 <span className="mx-1.5 text-ink-faint">·</span>
-                <span className="font-semibold">{m.secretWord}</span>
+                <span className="font-medium">{m.secretWord}</span>
               </div>
             </div>
           );
@@ -506,10 +506,10 @@ function WavelengthMatch({
           right; round and psychic stack as small chrome on the left. */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Round {state.round} of {state.totalRounds}
           </span>
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Psychic ·{" "}
             <span className="text-accent">
               {isPsychic ? "you" : psychicName}
@@ -595,10 +595,10 @@ function WavelengthMatch({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.96 }}
               transition={{ type: "spring", stiffness: 380, damping: 28 }}
-              className="rounded-full border-2 border-line bg-surface px-4 py-2 text-sm text-ink shadow-lg"
+              className="rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink shadow-lg"
             >
-              <span className="font-semibold text-ink">{t.nickname}</span>
-              <span className="ml-2 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-faint">
+              <span className="font-medium text-ink">{t.nickname}</span>
+              <span className="ml-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
                 locked in
               </span>
             </motion.div>
@@ -664,7 +664,7 @@ function useGuessLockToasts(
 
 function WaitingForClue({ psychicName }: { psychicName: string }) {
   return (
-    <div className="rounded-xl border-2 border-line-soft bg-surface/40 p-6 text-center">
+    <div className="rounded-xl border border-line-soft bg-surface/40 p-6 text-center">
       <p className="text-sm text-ink-soft">
         <span className="text-ink">{psychicName}</span> is reading the
         target…
@@ -732,7 +732,7 @@ function PsychicCluePhase({
           data-form-type="other"
           data-1p-ignore="true"
           data-lpignore="true"
-          className="min-w-0 flex-1 rounded-xl border-2 border-line bg-surface/40 px-4 py-3 font-serif text-2xl text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-accent"
+          className="min-w-0 flex-1 rounded-xl border border-line bg-surface/40 px-4 py-3 font-serif text-2xl text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-accent"
           onKeyDown={(e) => {
             if (e.key === "Enter" && word.trim() && !submitting) submit();
           }}
@@ -740,13 +740,13 @@ function PsychicCluePhase({
         <button
           onClick={submit}
           disabled={submitting || word.trim().length === 0}
-          className="rounded-xl bg-ink px-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="rounded-xl bg-ink px-5 text-[11px] font-medium uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {submitting ? "…" : "Submit"}
         </button>
       </div>
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
           {error}
         </p>
       )}
@@ -785,7 +785,7 @@ function PsychicWaitingForGuesses({
           return (
             <li
               key={id}
-              className={`rounded-full border-2 px-3 py-1 text-xs font-semibold ${
+              className={`rounded-full border px-3 py-1 text-xs font-medium ${
                 guessed
                   ? "border-leaf bg-leaf/10 text-leaf"
                   : "border-line text-ink-soft"
@@ -854,13 +854,13 @@ function GuesserPhase({
         <button
           onClick={submit}
           disabled={submitting}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {submitting ? "Locking in…" : "Lock in guess"}
         </button>
       )}
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
           {error}
         </p>
       )}
@@ -951,9 +951,9 @@ function RevealPhase({
           initial={{ opacity: 0, scale: 0.85, y: -6 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 360, damping: 22 }}
-          className="rounded-xl border-2 border-leaf bg-leaf/10 px-4 py-3 text-center"
+          className="rounded-xl border border-leaf bg-leaf/10 px-4 py-3 text-center"
         >
-          <div className="text-xs font-bold uppercase tracking-[0.14em] text-leaf">
+          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-leaf">
             Unanimous bullseye
           </div>
           <div className="mt-1 text-sm text-ink">
@@ -972,10 +972,10 @@ function RevealPhase({
               className="flex items-baseline justify-between py-2"
             >
               <span className="text-sm text-ink">{g.nickname}</span>
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
                 guessed {Math.round(g.position)}
                 <span
-                  className={`ml-3 inline-block min-w-[2.25rem] rounded-full px-2 py-0.5 text-center text-[10px] font-semibold tabular-nums ${
+                  className={`ml-3 inline-block min-w-[2.25rem] rounded-full px-2 py-0.5 text-center text-[10px] font-medium tabular-nums ${
                     g.score === 4
                       ? "bg-leaf text-white"
                       : g.score === 3
@@ -994,13 +994,13 @@ function RevealPhase({
           <li className="flex items-baseline justify-between py-2">
             <span className="text-sm text-ink">
               {nicknameById.get(state.psychicId) ?? "?"}
-              <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-accent">
+              <span className="ml-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-accent">
                 Psychic
               </span>
             </span>
-            <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-ink-faint">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">
               best of table
-              <span className="ml-3 inline-block min-w-[2.25rem] rounded-full bg-accent/20 px-2 py-0.5 text-center text-[10px] font-semibold tabular-nums text-accent">
+              <span className="ml-3 inline-block min-w-[2.25rem] rounded-full bg-accent/20 px-2 py-0.5 text-center text-[10px] font-medium tabular-nums text-accent">
                 +{state.roundScores[state.psychicId] ?? 0}
               </span>
             </span>
@@ -1012,7 +1012,7 @@ function RevealPhase({
         <button
           onClick={next}
           disabled={advancing}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {advancing
             ? "…"
@@ -1021,7 +1021,7 @@ function RevealPhase({
               : "Next round"}
         </button>
       ) : (
-        <p className="text-center text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           {isLastRound
             ? "Awaiting the host for the final scores"
             : "Awaiting the host for the next round"}
@@ -1029,7 +1029,7 @@ function RevealPhase({
       )}
 
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
           {error}
         </p>
       )}
@@ -1091,11 +1091,11 @@ function WavelengthFinal({
   return (
     <div className="space-y-7">
       <section
-        className={`rounded-xl border-2 p-8 text-center ${
+        className={`rounded-xl border p-8 text-center ${
           youWon ? "border-leaf bg-leaf/5" : "border-line bg-surface/40"
         }`}
       >
-        <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           {winners.length === 1 ? "Winner" : "Tied"}
         </div>
         <div
@@ -1111,7 +1111,7 @@ function WavelengthFinal({
       </section>
 
       <section>
-        <h2 className="mb-3 text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Final scoreboard
         </h2>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -1135,15 +1135,15 @@ function WavelengthFinal({
                   <div
                     className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${av.color} ${
                       av.isCustom
-                        ? "border-2 border-line text-sm"
-                        : "text-xs font-semibold text-white"
+                        ? "border border-line text-sm"
+                        : "text-xs font-medium text-white"
                     }`}
                   >
                     {av.initial}
                   </div>
                   <span className="text-sm text-ink">{p.nickname}</span>
                   {p.id === playerId && (
-                    <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-faint">
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
                       you
                     </span>
                   )}
@@ -1165,12 +1165,12 @@ function WavelengthFinal({
         <button
           onClick={replay}
           disabled={restarting}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {restarting ? "…" : "Back to lobby"}
         </button>
       ) : (
-        <p className="text-center text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Awaiting the host
         </p>
       )}
@@ -1178,7 +1178,7 @@ function WavelengthFinal({
       <ShareMatchButton code={code} kind="wavelength" />
 
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
           {error}
         </p>
       )}
@@ -1247,7 +1247,7 @@ function CountdownPill({ deadline }: { deadline: string | null }) {
           ? { duration: 1, repeat: Infinity, ease: "easeInOut" }
           : { duration: 0 }
       }
-      className={`text-4xl font-semibold leading-none tabular-nums ${
+      className={`text-4xl font-medium leading-none tabular-nums ${
         urgent ? "text-oxblood" : "text-ink"
       }`}
     >
@@ -1259,7 +1259,7 @@ function CountdownPill({ deadline }: { deadline: string | null }) {
 function ClueDisplay({ clue }: { clue: string }) {
   return (
     <div className="text-center">
-      <div className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
         Clue
       </div>
       <div className="mt-1 font-serif text-3xl italic text-ink">{clue}</div>
@@ -1290,8 +1290,8 @@ function ScoreBoard({
     .sort((a, b) => b.total - a.total);
   if (entries.length === 0) return null;
   return (
-    <section className="space-y-2 rounded-xl border-2 border-line-soft bg-surface/40 p-3">
-      <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+    <section className="space-y-2 rounded-xl border border-line-soft bg-surface/40 p-3">
+      <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
         Scoreboard
       </h3>
       <ul className="divide-y divide-line-soft">
@@ -1306,8 +1306,8 @@ function ScoreBoard({
                 <div
                   className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${av.color} ${
                     av.isCustom
-                      ? "border-2 border-line text-xs"
-                      : "text-[10px] font-semibold text-white"
+                      ? "border border-line text-xs"
+                      : "text-[10px] font-medium text-white"
                   }`}
                 >
                   {av.initial}
@@ -1315,7 +1315,7 @@ function ScoreBoard({
                 <span className="text-sm text-ink">
                   {e.nickname}
                   {e.isPsychic && (
-                    <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-accent">
+                    <span className="ml-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-accent">
                       psychic
                     </span>
                   )}
@@ -1323,7 +1323,7 @@ function ScoreBoard({
               </span>
               <span className="flex items-baseline gap-2">
                 {roundScores && e.delta > 0 && (
-                  <span className="rounded-full bg-leaf/10 px-1.5 text-[10px] font-semibold tabular-nums text-leaf">
+                  <span className="rounded-full bg-leaf/10 px-1.5 text-[10px] font-medium tabular-nums text-leaf">
                     +{e.delta}
                   </span>
                 )}
@@ -1409,7 +1409,7 @@ function SpectrumDial({
           setDragging(true);
           updateFromPointer(e);
         }}
-        className={`relative h-16 rounded-xl border-2 border-line bg-surface ${
+        className={`relative h-16 rounded-xl border border-line bg-surface ${
           interactive ? "cursor-pointer touch-none" : ""
         }`}
       >
@@ -1473,10 +1473,10 @@ function SpectrumDial({
             >
               <div className="h-16 w-px bg-ink-soft" />
               <div
-                className={`absolute -top-7 left-1/2 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full border-2 border-page ${g.avatar.color} ${
+                className={`absolute -top-7 left-1/2 -translate-x-1/2 flex h-6 w-6 items-center justify-center rounded-full border border-page ${g.avatar.color} ${
                   g.avatar.isCustom
                     ? "text-xs"
-                    : "text-[10px] font-semibold text-white"
+                    : "text-[10px] font-medium text-white"
                 }`}
               >
                 {g.avatar.initial}
@@ -1498,7 +1498,7 @@ function SpectrumDial({
                   mode === "guess-locked" ? "bg-leaf" : "bg-accent"
                 }`}
               />
-              <div className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full border-2 border-line bg-page px-2 py-0.5 text-[10px] tabular-nums text-ink-soft">
+              <div className="absolute -top-6 left-1/2 -translate-x-1/2 rounded-full border border-line bg-page px-2 py-0.5 text-[10px] tabular-nums text-ink-soft">
                 {value}
               </div>
             </motion.div>
@@ -1507,7 +1507,7 @@ function SpectrumDial({
 
       {/* Concept labels under the track */}
       {concept && (
-        <div className="flex justify-between text-[11px] font-bold uppercase tracking-[0.14em] text-ink-soft">
+        <div className="flex justify-between text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
           <span>{concept.left}</span>
           <span>{concept.right}</span>
         </div>

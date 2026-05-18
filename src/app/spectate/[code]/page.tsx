@@ -85,7 +85,7 @@ export default function SpectatePage({
       <Shell>
         <div className="text-center text-sm text-ink-soft">
           No room with code{" "}
-          <span className="font-semibold tracking-[0.15em] text-ink">
+          <span className="font-medium tracking-[0.15em] text-ink">
             {code}
           </span>
           .
@@ -440,7 +440,7 @@ function JustOneView({ view }: { view: PublicRoomView }) {
         )}
       {state.phase === "reveal" && (
         <div
-          className={`inline-block border-2 px-4 py-2 text-[11px] uppercase tracking-[0.22em] ${
+          className={`inline-block border px-4 py-2 text-[11px] uppercase tracking-[0.22em] ${
             state.outcome === "correct"
               ? "border-leaf text-leaf"
               : state.outcome === "skipped"
@@ -532,7 +532,7 @@ function Scoreboard({ view }: { view: PublicRoomView }) {
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${av.color} ${
                   av.isCustom
                     ? "border border-line text-xs"
-                    : "text-[10px] font-semibold text-white"
+                    : "text-[10px] font-medium text-white"
                 }`}
               >
                 {av.initial}

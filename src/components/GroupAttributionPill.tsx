@@ -89,7 +89,7 @@ export function GroupAttributionPill({
     return (
       <div className="inline-flex items-baseline gap-2 rounded-full border border-leaf/40 bg-leaf/5 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-leaf">
         <span>Playing as</span>
-        <span className="font-semibold text-ink">
+        <span className="font-medium text-ink">
           {currentGroupName ?? "?"}
         </span>
       </div>
@@ -112,7 +112,7 @@ export function GroupAttributionPill({
       >
         <span>{currentGroupId ? "Playing as" : "Stats"}</span>
         <span
-          className={`font-semibold normal-case tracking-normal ${
+          className={`font-medium normal-case tracking-normal ${
             currentGroupId ? "text-ink" : ""
           }`}
         >
@@ -122,7 +122,7 @@ export function GroupAttributionPill({
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-30 mt-1 min-w-[220px] rounded-xl border-2 border-line bg-surface p-1 shadow-md">
+        <div className="absolute left-0 top-full z-30 mt-1 min-w-[220px] rounded-xl border border-line bg-surface p-1 shadow-md">
           <PickerRow
             label="Casual"
             sub="No stats"

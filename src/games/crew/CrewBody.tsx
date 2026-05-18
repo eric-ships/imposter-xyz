@@ -71,7 +71,7 @@ function CardChip({
     <Tag
       onClick={onClick}
       disabled={onClick ? dimmed : undefined}
-      className={`relative flex flex-col items-center justify-center rounded-md font-semibold tabular-nums ring-1 ${s.bg} ${s.text} ${s.ring} ${dims} ${
+      className={`relative flex flex-col items-center justify-center rounded-md font-medium tabular-nums ring-1 ${s.bg} ${s.text} ${s.ring} ${dims} ${
         dimmed ? "opacity-30" : ""
       } ${selected ? "-translate-y-2 ring-2 ring-offset-2 ring-offset-page" : ""} ${
         onClick && !dimmed
@@ -219,7 +219,7 @@ function CrewLobby({
       </div>
 
       <section className="space-y-4">
-        <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Crew · {count} aboard {count > 5 && "(needs 3-5)"}
         </h2>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
@@ -230,8 +230,8 @@ function CrewLobby({
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${av.color} ${
                     av.isCustom
-                      ? "border-2 border-line text-base"
-                      : "text-sm font-semibold text-white"
+                      ? "border border-line text-base"
+                      : "text-sm font-medium text-white"
                   }`}
                 >
                   {av.initial}
@@ -239,7 +239,7 @@ function CrewLobby({
                 <span className="text-sm text-ink">
                   {p.nickname}
                   {p.id === view.hostId && (
-                    <span className="ml-2 text-[10px] font-bold uppercase tracking-[0.12em] text-accent">
+                    <span className="ml-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-accent">
                       Host
                     </span>
                   )}
@@ -250,8 +250,8 @@ function CrewLobby({
         </ul>
       </section>
 
-      <section className="space-y-3 rounded-xl border-2 border-line-soft bg-surface/40 p-4">
-        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      <section className="space-y-3 rounded-xl border border-line-soft bg-surface/40 p-4">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           How Crew works
         </h3>
         <p className="text-sm text-ink-soft">
@@ -271,7 +271,7 @@ function CrewLobby({
         <button
           onClick={start}
           disabled={!canStart || starting}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {starting
             ? "Launching…"
@@ -288,7 +288,7 @@ function CrewLobby({
       )}
 
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
           {error}
         </p>
       )}
@@ -401,10 +401,10 @@ function CrewPlay({
       {/* Trick header + countdown */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Trick {state.trickNumber + 1} of {state.totalTricks}
           </span>
-          <span className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Turn ·{" "}
             <span className={yourTurn ? "text-accent" : "text-ink"}>
               {yourTurn ? "you" : (nameById.get(state.turnId) ?? "?")}
@@ -416,7 +416,7 @@ function CrewPlay({
 
       {/* Tasks */}
       <section className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Tasks · {state.tasks.filter((t) => t.done).length} of{" "}
           {state.tasks.length} done
         </h3>
@@ -435,7 +435,7 @@ function CrewPlay({
 
       {/* Current trick */}
       <section className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           On the table
           {ledSuit && (
             <>
@@ -445,7 +445,7 @@ function CrewPlay({
             </>
           )}
         </h3>
-        <div className="flex min-h-[5.5rem] flex-wrap items-end gap-3 rounded-xl border-2 border-line-soft bg-surface/30 p-3">
+        <div className="flex min-h-[5.5rem] flex-wrap items-end gap-3 rounded-xl border border-line-soft bg-surface/30 p-3">
           {state.currentTrick.length === 0 && (
             <span className="text-sm text-ink-faint">
               {nameById.get(state.leaderId) ?? "?"} leads the trick…
@@ -457,7 +457,7 @@ function CrewPlay({
               className="flex flex-col items-center gap-1"
             >
               <CardChip card={play.card} />
-              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-faint">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
                 {play.playerId === playerId
                   ? "you"
                   : (nameById.get(play.playerId) ?? "?")}
@@ -466,7 +466,7 @@ function CrewPlay({
           ))}
         </div>
         {state.lastTrick && state.currentTrick.length === 0 && (
-          <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-faint">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
             Last trick won by{" "}
             <span className="text-ink">
               {state.lastTrick.winnerId === playerId
@@ -487,13 +487,13 @@ function CrewPlay({
       {/* Your hand */}
       <section className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             Your hand
           </h3>
           {!myComm && (
             <button
               onClick={() => setSignalMode((v) => !v)}
-              className="text-[11px] font-bold uppercase tracking-[0.12em] text-accent transition hover:text-ink"
+              className="text-[11px] font-semibold uppercase tracking-[0.12em] text-accent transition hover:text-ink"
             >
               {signalMode ? "Cancel" : "Signal a card"}
             </button>
@@ -539,7 +539,7 @@ function CrewPlay({
       </section>
 
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
           {error}
         </p>
       )}
@@ -573,7 +573,7 @@ function TaskPill({
         : "border-line-soft bg-surface/30";
   return (
     <div
-      className={`flex items-center gap-2 rounded-xl border-2 p-2 ${status}`}
+      className={`flex items-center gap-2 rounded-xl border p-2 ${status}`}
     >
       <CardChip card={task.card} size="sm" />
       <div className="flex min-w-0 flex-col">
@@ -581,7 +581,7 @@ function TaskPill({
           {isYou ? "You" : (nameById.get(task.ownerId) ?? "?")}
         </span>
         <span
-          className={`text-[10px] font-bold uppercase tracking-[0.12em] ${
+          className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${
             task.failed
               ? "text-oxblood"
               : task.done
@@ -614,21 +614,21 @@ function CommunicationStrip({
   if (signals.length === 0) return null;
   return (
     <section className="space-y-2">
-      <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
         Signals
       </h3>
       <div className="flex flex-wrap gap-3">
         {signals.map(({ pid, comm }) => (
           <div
             key={pid}
-            className="flex items-center gap-2 rounded-xl border-2 border-line-soft bg-surface/30 px-2 py-1.5"
+            className="flex items-center gap-2 rounded-xl border border-line-soft bg-surface/30 px-2 py-1.5"
           >
             <CardChip card={comm!.card} size="sm" />
             <div className="flex flex-col">
               <span className="text-xs text-ink">
                 {pid === playerId ? "You" : (nameById.get(pid) ?? "?")}
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-faint">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
                 {comm!.kind} of {SUIT_STYLE[comm!.card.suit].label}
               </span>
             </div>
@@ -649,15 +649,15 @@ function CommunicationPicker({
   const choices = hand.filter((c) => communicationKind(hand, c) !== null);
   if (choices.length === 0) {
     return (
-      <p className="rounded-xl border-2 border-line-soft bg-surface/30 px-3 py-2 text-sm text-ink-faint">
+      <p className="rounded-xl border border-line-soft bg-surface/30 px-3 py-2 text-sm text-ink-faint">
         No card you hold is signalable — you can only reveal the
         highest, lowest, or only card of a colour.
       </p>
     );
   }
   return (
-    <div className="space-y-2 rounded-xl border-2 border-accent/30 bg-accent/5 p-3">
-      <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-faint">
+    <div className="space-y-2 rounded-xl border border-accent/30 bg-accent/5 p-3">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
         Reveal your highest / lowest / only of a colour
       </p>
       <div className="flex flex-wrap gap-2">
@@ -669,7 +669,7 @@ function CommunicationPicker({
               className="flex flex-col items-center gap-1"
             >
               <CardChip card={card} onClick={() => onPick(card)} />
-              <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-ink-faint">
+              <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
                 {kind}
               </span>
             </div>
@@ -723,14 +723,14 @@ function CrewReveal({
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`rounded-xl border-2 p-6 text-center ${
+        className={`rounded-xl border p-6 text-center ${
           won
             ? "border-leaf/50 bg-leaf/5"
             : "border-oxblood/50 bg-oxblood/5"
         }`}
       >
         <div
-          className={`text-xs font-bold uppercase tracking-[0.14em] ${
+          className={`text-xs font-semibold uppercase tracking-[0.14em] ${
             won ? "text-leaf" : "text-oxblood"
           }`}
         >
@@ -747,7 +747,7 @@ function CrewReveal({
       </motion.div>
 
       <section className="space-y-2">
-        <h3 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Task results
         </h3>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -771,7 +771,7 @@ function CrewReveal({
         <button
           onClick={nextMission}
           disabled={busy}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
+          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
         >
           {busy ? "Dealing…" : "New mission"}
         </button>
@@ -782,7 +782,7 @@ function CrewReveal({
       )}
 
       {error && (
-        <p className="border-l-2 border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
+        <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
           {error}
         </p>
       )}
@@ -798,7 +798,7 @@ function CrewHistoryPanel({ history }: { history: MatchHistoryEntry[] }) {
   if (history.length === 0) return null;
   return (
     <section className="space-y-3">
-      <h2 className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint">
+      <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
         Past matches · {history.length}
       </h2>
       <div className="space-y-2">
@@ -816,7 +816,7 @@ function CrewHistoryPanel({ history }: { history: MatchHistoryEntry[] }) {
             return (
               <div
                 key={`x${m.matchNumber}`}
-                className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-faint"
+                className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-faint"
               >
                 Match {m.matchNumber} · {"kind" in m ? m.kind : "imposter"}
                 {endedTime && <> · {endedTime}</>}
@@ -828,15 +828,15 @@ function CrewHistoryPanel({ history }: { history: MatchHistoryEntry[] }) {
           return (
             <div
               key={`c${m.matchNumber}`}
-              className="rounded-xl border-2 border-line-soft bg-page/40 px-3 py-2.5"
+              className="rounded-xl border border-line-soft bg-page/40 px-3 py-2.5"
             >
               <div className="flex items-baseline justify-between gap-3">
-                <div className="text-[11px] font-bold uppercase tracking-[0.12em] text-ink-faint">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-ink-faint">
                   Match {m.matchNumber} · Crew
                   {endedTime && <> · {endedTime}</>}
                 </div>
                 <div
-                  className={`text-[11px] font-bold uppercase tracking-[0.12em] ${
+                  className={`text-[11px] font-semibold uppercase tracking-[0.12em] ${
                     won ? "text-leaf" : "text-oxblood"
                   }`}
                 >
@@ -900,7 +900,7 @@ function CountdownPill({ deadline }: { deadline: string | null }) {
           ? { duration: 1, repeat: Infinity, ease: "easeInOut" }
           : { duration: 0 }
       }
-      className={`text-4xl font-semibold leading-none tabular-nums ${
+      className={`text-4xl font-medium leading-none tabular-nums ${
         urgent ? "text-oxblood" : "text-ink"
       }`}
     >
