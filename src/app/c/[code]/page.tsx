@@ -101,14 +101,14 @@ export default async function ShareLandingPage({ params }: Props) {
     <main className="mx-auto flex min-h-screen w-full max-w-xl flex-col items-center justify-center gap-8 px-6 py-12">
       <Link
         href="/"
-        className="text-[11px] uppercase tracking-[0.22em] text-ink-faint transition hover:text-ink"
+        className="text-xs font-bold uppercase tracking-[0.14em] text-ink-faint transition hover:text-ink"
       >
         ← Upper
       </Link>
 
       {/* Card image. The aspect ratio is fixed so the layout doesn't
           jump when the image loads. */}
-      <div className="w-full overflow-hidden rounded-sm border border-line-soft">
+      <div className="w-full overflow-hidden rounded-xl border-2 border-line-soft">
         <img
           src={cardUrl}
           alt="Match recap"
@@ -125,7 +125,7 @@ export default async function ShareLandingPage({ params }: Props) {
         </p>
         <Link
           href="/"
-          className="rounded-sm bg-ink px-6 py-3 text-[11px] uppercase tracking-[0.22em] text-page transition hover:bg-accent active:scale-[0.97]"
+          className="rounded-2xl bg-accent px-6 py-3 text-base font-bold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97]"
         >
           Play on Upper
         </Link>
