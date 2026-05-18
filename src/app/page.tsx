@@ -497,7 +497,7 @@ export default function HomePage() {
               }}
               className="w-full rounded-2xl border-2 border-ink bg-accent px-6 py-5 text-xl font-extrabold lowercase tracking-tight text-white shadow-[4px_4px_0_0_var(--color-ink)] transition-[filter] duration-100 hover:brightness-110"
             >
-              let&apos;s go →
+              start a game →
             </motion.button>
             <motion.button
               whileTap={{ scale: 0.97 }}
@@ -507,7 +507,7 @@ export default function HomePage() {
               }}
               className="w-full rounded-2xl border-2 border-line px-6 py-3.5 text-sm font-bold lowercase tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
             >
-              got a code? hop in
+              got a code? join →
             </motion.button>
           </motion.div>
           </div>
