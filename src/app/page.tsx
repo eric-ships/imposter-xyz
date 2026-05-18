@@ -356,6 +356,26 @@ export default function HomePage() {
       {/* Ambient conic glow — the brand sweep, behind everything. */}
       <ConicBackdrop />
 
+      {/* Persistent account control — pinned top-right, present on
+          every home face once identity has resolved (FACE A and
+          FACE B both, and the create/join flow). Skipped only on the
+          splash (FACE 0), where identity hasn't settled yet. It shows
+          for every resolved visitor, named or not — a nameless user
+          still needs it to set a name or sign out. */}
+      {dataReady && (
+        <div className="fixed right-4 top-4 z-50">
+          <AccountMenu
+            name={name}
+            userId={identity.userId}
+            avatar={identity.defaultAvatar}
+            email={identity.email}
+            discordUsername={identity.discordUsername}
+            discordLinked={identity.discordLinked}
+            onRenamed={(next) => setLocalName(next)}
+          />
+        </div>
+      )}
+
       {/* FACE 0 — splash. Identity / groups / stats still settling.
           A bare centered wordmark + loader filling the viewport so
           neither real face flashes. */}
@@ -373,15 +393,19 @@ export default function HomePage() {
           below lg it stacks into a single centered column. */}
       {dataReady && !isReturning && !inFlow && !needsRedirect && (
         <main className="flex min-h-screen w-full flex-col items-center justify-center px-6 py-16 sm:py-20 lg:py-12">
-          {/* Sign-in entry — for visitors with an account on another
-              device. The signed-in home (/home) carries its own
-              account controls instead. */}
-          <Link
-            href="/auth"
-            className="fixed right-5 top-5 z-50 rounded-full border border-line bg-surface/70 px-4 py-1.5 text-sm font-bold text-ink-soft backdrop-blur-sm transition hover:border-ink hover:text-ink"
-          >
-            Sign in
-          </Link>
+          {/* Sign-in entry — for nameless visitors with an account on
+              another device. Players who already have a name on this
+              device reach their account through the persistent
+              top-right AccountMenu instead, so this is hidden for
+              them to avoid two controls colliding in the same spot. */}
+          {!hasName && (
+            <Link
+              href="/auth"
+              className="fixed right-5 top-5 z-50 rounded-full border border-line bg-surface/70 px-4 py-1.5 text-sm font-bold text-ink-soft backdrop-blur-sm transition hover:border-ink hover:text-ink"
+            >
+              Sign in
+            </Link>
+          )}
           <div className="flex w-full max-w-md flex-col items-stretch gap-12 sm:gap-14 lg:max-w-6xl lg:flex-row lg:items-center lg:gap-20 xl:max-w-7xl xl:gap-28">
           {/* LEFT — the pitch: wordmark, hook, supporting line,
               CTAs, and the how-to-play link. */}
@@ -519,19 +543,6 @@ export default function HomePage() {
             className="flex flex-col items-center text-center"
           >
             <Wordmark className="text-6xl sm:text-7xl" />
-            {identity.ready && hasName && (
-              <div className="mt-3 flex flex-col items-center">
-                <AccountMenu
-                  name={name}
-                  userId={identity.userId}
-                  avatar={identity.defaultAvatar}
-                  email={identity.email}
-                  discordUsername={identity.discordUsername}
-                  discordLinked={identity.discordLinked}
-                  onRenamed={(next) => setLocalName(next)}
-                />
-              </div>
-            )}
           </motion.header>
 
           {/* Live group-activity banner — highest priority. Only
@@ -845,29 +856,31 @@ function AccountMenu({
 
   return (
     <div className="relative" ref={popRef}>
-      {/* Trigger — avatar + name, in the spot the identity line sat. */}
+      {/* Trigger — a compact avatar chip. Pinned next to the theme
+          controls, so it stays just the avatar (no full name + caret
+          bar) to keep the cluster tight. */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 rounded-full border-2 border-line bg-surface/40 py-1 pl-1 pr-3 transition hover:border-ink"
+        aria-label="Account menu"
+        title={name}
+        className="flex items-center justify-center rounded-full border-2 border-line bg-surface/40 p-0.5 transition hover:border-ink"
       >
         <span
-          className={`flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${av.color} ${
+          className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${av.color} ${
             av.isCustom ? "text-ink" : "text-white"
           }`}
         >
           {av.initial}
         </span>
-        <span className="text-sm font-semibold text-ink-soft">{name}</span>
-        <span className="text-[10px] text-ink-faint">▾</span>
       </button>
 
       {open && (
         <div
           role="menu"
-          className="absolute left-1/2 top-11 z-50 w-72 -translate-x-1/2 space-y-3 rounded-2xl border-2 border-ink bg-page p-4 text-left shadow-[3px_3px_0_0_var(--color-ink)]"
+          className="absolute right-0 top-11 z-50 w-72 space-y-3 rounded-2xl border-2 border-ink bg-page p-4 text-left shadow-[3px_3px_0_0_var(--color-ink)]"
         >
           {/* 1. Identity — avatar + name + rename. */}
           <AccountIdentity
@@ -965,6 +978,7 @@ function AccountIdentity({
             onChange={(e) => setValue(e.target.value)}
             maxLength={20}
             autoFocus
+            placeholder="Add your name"
             className="min-w-0 flex-1 border-b border-line bg-transparent text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
             onKeyDown={(e) => {
               if (e.key === "Enter") save();
@@ -977,7 +991,16 @@ function AccountIdentity({
           />
         ) : (
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-ink">{name}</p>
+            {/* A nameless user still gets a legible identity row — an
+                italic "Set your name" stands in for the missing name
+                so the row never reads as blank. */}
+            {name.trim() ? (
+              <p className="truncate text-sm font-bold text-ink">{name}</p>
+            ) : (
+              <p className="truncate text-sm font-bold italic text-ink-faint">
+                Set your name
+              </p>
+            )}
             <p className="truncate text-[11px] text-ink-faint">
               {email
                 ? email
@@ -1003,7 +1026,7 @@ function AccountIdentity({
             }}
             className="shrink-0 text-[11px] font-bold uppercase tracking-[0.14em] text-accent transition hover:text-ink"
           >
-            Edit
+            {name.trim() ? "Edit" : "Add"}
           </button>
         )}
       </div>
