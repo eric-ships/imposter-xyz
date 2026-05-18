@@ -18,155 +18,56 @@
 }
 
 /* ============================================================
-   Two independent dimensions:
-     data-palette = parchment | noir | marine | bloom
-     data-theme   = light | dark
-   Each palette ships both a light + a dark block. The :root and
-   bare [data-theme="..."] selectors below default to parchment so
-   pre-migration users (no data-palette attribute) see the original
-   look and don't get a sudden visual reskin on first load.
+   The Upper theme — one cohesive look, light + dark.
+   See THEME.md for the full guideline.
 
-   The four palettes are deliberately divergent energies, not hues
-   of one recipe: parchment = warm paper + vermilion; noir = stark
-   monochrome + electric cobalt; marine = deep teal + hot coral;
-   bloom = bright + vivid magenta. Accents are saturated on purpose
-   — that is where the "pop" lives.
+   The brand is the conic sweep: red #d6471f, gold #f3ba26,
+   magenta #e0207a, blue #2f5cff. The UI ground is kept clean and
+   neutral so that colour — the icon, the loader, the home glow,
+   the accent — does the popping. (This replaces the older
+   four-palette system; data-palette is now ignored.)
+
+   Token roles:
+     page        app background
+     surface     cards / raised panels
+     cream       subtle hover / inset fills
+     ink         primary text         ink-soft  secondary
+     ink-faint   de-emphasized text
+     line        borders              line-soft hairlines
+     accent      primary action + brand red   accent-soft tints
+     leaf        success              oxblood   error / destructive
    ============================================================ */
 
-/* ─── Parchment (warm paper + a vermilion punch) ─────────────── */
-[data-palette="parchment"]:not([data-theme="dark"]),
-:root:not([data-palette="noir"]):not([data-palette="marine"]):not([data-palette="bloom"]):not([data-theme="dark"]) {
-  --page: #f4ede0;
-  --surface: #fffdf8;
-  --cream: #e9dec8;
-  --ink: #1c1a16;
-  --ink-soft: #544d3e;
-  --ink-faint: #968b76;
-  --line: #d6c9ad;
-  --line-soft: #e6dcc6;
+:root,
+:root[data-theme="light"] {
+  --page: #f4f4f6;
+  --surface: #ffffff;
+  --cream: #ebebef;
+  --ink: #16161c;
+  --ink-soft: #4c4c56;
+  --ink-faint: #8c8c98;
+  --line: #e2e2e8;
+  --line-soft: #ededf1;
   --accent: #d6471f;
-  --accent-soft: #e8a07e;
-  --leaf: #3f6b3a;
-  --oxblood: #b3322f;
+  --accent-soft: #ef9b7e;
+  --leaf: #2f9e5e;
+  --oxblood: #cc2f2f;
   color-scheme: light;
 }
 
-[data-palette="parchment"][data-theme="dark"],
-:root:not([data-palette="noir"]):not([data-palette="marine"]):not([data-palette="bloom"])[data-theme="dark"] {
-  --page: #16140f;
-  --surface: #211e17;
-  --cream: #2a261d;
-  --ink: #f2e9d6;
-  --ink-soft: #bcae93;
-  --ink-faint: #7d735f;
-  --line: #3b3528;
-  --line-soft: #2b2720;
+:root[data-theme="dark"] {
+  --page: #121214;
+  --surface: #1d1d20;
+  --cream: #26262b;
+  --ink: #f1f1f4;
+  --ink-soft: #b2b2bc;
+  --ink-faint: #75757f;
+  --line: #33333a;
+  --line-soft: #26262b;
   --accent: #f4633a;
   --accent-soft: #f0a589;
-  --leaf: #84a86a;
+  --leaf: #46b877;
   --oxblood: #e5705f;
-  color-scheme: dark;
-}
-
-/* ─── Noir (stark monochrome + electric cobalt) ──────────────── */
-[data-palette="noir"][data-theme="light"],
-[data-palette="noir"]:not([data-theme="dark"]) {
-  --page: #ffffff;
-  --surface: #ffffff;
-  --cream: #f0f0f2;
-  --ink: #07070a;
-  --ink-soft: #34343a;
-  --ink-faint: #86868f;
-  --line: #c9c9d0;
-  --line-soft: #e6e6ea;
-  --accent: #2f5cff;
-  --accent-soft: #8aa0ff;
-  --leaf: #197a4a;
-  --oxblood: #d92d2d;
-  color-scheme: light;
-}
-
-[data-palette="noir"][data-theme="dark"] {
-  --page: #08080b;
-  --surface: #131318;
-  --cream: #1b1b22;
-  --ink: #f4f4f6;
-  --ink-soft: #b0b0ba;
-  --ink-faint: #6a6a74;
-  --line: #2e2e38;
-  --line-soft: #1e1e26;
-  --accent: #5e82ff;
-  --accent-soft: #9fb2ff;
-  --leaf: #3fae6f;
-  --oxblood: #ff5a52;
-  color-scheme: dark;
-}
-
-/* ─── Marine (deep teal + a hot coral pop) ───────────────────── */
-[data-palette="marine"][data-theme="light"],
-[data-palette="marine"]:not([data-theme="dark"]) {
-  --page: #e2eded;
-  --surface: #ffffff;
-  --cream: #cfe0e0;
-  --ink: #0c2230;
-  --ink-soft: #44585f;
-  --ink-faint: #7b909a;
-  --line: #b2c8cf;
-  --line-soft: #c8dadd;
-  --accent: #ff6b4a;
-  --accent-soft: #ffa78f;
-  --leaf: #1f8a7a;
-  --oxblood: #d84a4a;
-  color-scheme: light;
-}
-
-[data-palette="marine"][data-theme="dark"] {
-  --page: #07161f;
-  --surface: #0e2330;
-  --cream: #143040;
-  --ink: #d6e8ee;
-  --ink-soft: #93aab4;
-  --ink-faint: #5f7984;
-  --line: #244050;
-  --line-soft: #17303c;
-  --accent: #ff7d5e;
-  --accent-soft: #ffb19c;
-  --leaf: #3fc0ab;
-  --oxblood: #f06b6b;
-  color-scheme: dark;
-}
-
-/* ─── Bloom (bright + vivid magenta) ─────────────────────────── */
-[data-palette="bloom"][data-theme="light"],
-[data-palette="bloom"]:not([data-theme="dark"]) {
-  --page: #fbe9ef;
-  --surface: #fffdfd;
-  --cream: #f4d3de;
-  --ink: #2e1322;
-  --ink-soft: #6a4555;
-  --ink-faint: #a98a98;
-  --line: #ecc6d4;
-  --line-soft: #f5d9e2;
-  --accent: #e0207a;
-  --accent-soft: #f07db0;
-  --leaf: #5a9e3e;
-  --oxblood: #d83a5a;
-  color-scheme: light;
-}
-
-[data-palette="bloom"][data-theme="dark"] {
-  --page: #1f0f18;
-  --surface: #2e1825;
-  --cream: #38202e;
-  --ink: #f6dde8;
-  --ink-soft: #c89aae;
-  --ink-faint: #93707f;
-  --line: #452c3a;
-  --line-soft: #341e2a;
-  --accent: #ff4f9d;
-  --accent-soft: #ff9ac4;
-  --leaf: #86c266;
-  --oxblood: #f0607e;
   color-scheme: dark;
 }
 

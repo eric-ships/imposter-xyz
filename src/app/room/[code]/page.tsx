@@ -32,7 +32,6 @@ import {
 } from "@/lib/audio";
 import { TIMER_GRACE_MS, timerDurationsFor } from "@/lib/timer";
 import { useTheme } from "@/lib/theme";
-import { PalettePicker } from "@/components/PalettePicker";
 import { WavelengthBody } from "@/games/wavelength/WavelengthBody";
 import { JustOneBody } from "@/games/just-one/JustOneBody";
 import { CrewBody } from "@/games/crew/CrewBody";
@@ -1393,7 +1392,6 @@ function CasualModeButton({
 function RoomChromeControls() {
   return (
     <span className="flex items-center gap-0.5">
-      <PalettePicker />
       <ThemeToggle />
       <MuteToggle />
     </span>
