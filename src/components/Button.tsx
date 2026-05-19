@@ -8,10 +8,10 @@
 // cover: a Next <Link> that should look like a button.
 
 type Variant = "primary" | "secondary" | "ghost";
-type Size = "sm" | "md" | "lg";
+type Size = "sm" | "md" | "lg" | "xl";
 
 const BASE =
-  "inline-flex select-none items-center justify-center gap-2 rounded-xl " +
+  "inline-flex select-none items-center justify-center gap-2 rounded-full " +
   "font-semibold tracking-tight transition-all duration-100 outline-none " +
   "focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 " +
   "focus-visible:ring-offset-page active:scale-[0.98] " +
@@ -31,6 +31,7 @@ const SIZES: Record<Size, string> = {
   sm: "h-9 px-3.5 text-sm",
   md: "h-11 px-5 text-sm",
   lg: "h-14 px-6 text-base",
+  xl: "h-16 px-8 text-lg",
 };
 
 export function buttonClasses(opts?: {
