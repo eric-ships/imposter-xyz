@@ -15,7 +15,7 @@ accent are where energy lives. Everything else is quiet.
 
 | Colour  | Hex       | Role |
 | ------- | --------- | ---- |
-| Red     | `#d6471f` | first stop; also the UI accent |
+| Red     | `#d6471f` | first stop of the sweep |
 | Gold    | `#f3ba26` | |
 | Magenta | `#e0207a` | |
 | Blue    | `#2f5cff` | |
@@ -40,18 +40,25 @@ hard-code a UI colour — use a token, so light/dark both work.
 
 | Token         | Light     | Dark      | Use |
 | ------------- | --------- | --------- | --- |
-| `page`        | `#f4f4f6` | `#121214` | app background |
-| `surface`     | `#ffffff` | `#1d1d20` | cards, raised panels |
-| `cream`       | `#ebebef` | `#26262b` | subtle hover / inset fills |
+| `page`        | `#e7e7ec` | `#0e0e11` | app background |
+| `surface`     | `#ffffff` | `#1f1f25` | cards, raised panels |
+| `cream`       | `#dcdce2` | `#2a2a31` | subtle hover / inset fills |
 | `ink`         | `#16161c` | `#f1f1f4` | primary text |
 | `ink-soft`    | `#4c4c56` | `#b2b2bc` | secondary text |
-| `ink-faint`   | `#8c8c98` | `#75757f` | de-emphasized text, labels |
-| `line`        | `#e2e2e8` | `#33333a` | borders |
-| `line-soft`   | `#ededf1` | `#26262b` | hairline dividers |
-| `accent`      | `#d6471f` | `#f4633a` | primary action, brand red |
-| `accent-soft` | `#ef9b7e` | `#f0a589` | accent tints / fills |
+| `ink-faint`   | `#80808c` | `#82828e` | de-emphasized text, labels |
+| `line`        | `#cfcfd8` | `#3a3a43` | borders |
+| `line-soft`   | `#e0e0e6` | `#2a2a31` | hairline dividers |
+| `accent`      | `#e8481c` | `#fc6438` | primary action - a vivid red-orange |
+| `accent-soft` | `#f4a78f` | `#f9ac93` | accent tints / fills |
 | `leaf`        | `#2f9e5e` | `#46b877` | success |
 | `oxblood`     | `#cc2f2f` | `#e5705f` | error, destructive actions |
+
+The UI ground is a deliberately cool, neutral grey ramp — warm brand
+colour pops hardest against a cool ground, so `page` / `surface` /
+`line` stay quiet and uncoloured. The `accent` is the one place warm
+brand colour enters ordinary UI: a vivid red-orange, a punchier
+sibling of the conic's red, retuned away from the muddy burnt tone it
+carried over from the retired parchment palette.
 
 ## Type
 
