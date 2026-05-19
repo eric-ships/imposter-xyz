@@ -8,7 +8,7 @@ import { useIdentity, getOrMintDeviceToken, signOut } from "@/lib/identity";
 import { avatarFor } from "@/lib/avatar";
 import { UpperLoader } from "@/components/UpperLoader";
 import { GAME_VIGNETTES } from "@/components/GameVignettes";
-import { Button } from "@/components/Button";
+import { Button, buttonClasses } from "@/components/Button";
 import { Modal } from "@/components/Modal";
 
 type Mode = "choose" | "create" | "join";
@@ -27,15 +27,23 @@ const GAMES: { kind: GameKind; title: string; sub: string }[] = [
   { kind: "hold", title: "Hold", sub: "3–5 · co-op tower defense" },
 ];
 
-// One bold brand colour per game card — the lineup reads as a row of
-// colour, not five white slabs. All five are dark enough for white
-// text; the vignette art sits in a white badge on top.
+// One bold brand colour per game card — each one is a sample from
+// the brand conic so the lineup reads as a slice of the same sweep,
+// not five arbitrary hues.
+//
+// The conic stops are red (0°), gold (110°), magenta (220°), blue
+// (320°). Cards take the three exact stops + two interpolations
+// (purple at 270° between magenta and blue, deep amber at 55° between
+// red and gold). Gold's native #f3ba26 is too light for white text —
+// the amber slot uses a darkened conic gold (#c47416) that passes
+// WCAG AA on white. All five are still dark enough for white text
+// and the vignette art's white badge.
 const CARD_COLORS = [
-  "#d6471f", // red — imposter
-  "#2f5cff", // blue — wavelength
-  "#e0207a", // magenta — just one
-  "#6d3bd4", // violet — crew
-  "#1c8049", // green — hold
+  "#d6471f", // red — imposter      · conic 0°
+  "#2f5cff", // blue — wavelength   · conic 320°
+  "#e0207a", // magenta — just one  · conic 220°
+  "#873ebc", // purple — crew       · conic 270° (magenta↔blue midpoint)
+  "#c47416", // amber — hold        · conic gold darkened for contrast
 ];
 
 // Card backgrounds use a subtle within-hue gradient — same brand
@@ -371,15 +379,17 @@ export default function HomePage() {
             {submitting ? "Joining…" : "Join room"}
           </Button>
 
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => {
               setMode("choose");
               setError(null);
             }}
-            className="block w-full text-center text-sm font-medium text-ink-faint transition hover:text-ink"
+            className="w-full"
           >
             ← Back
-          </button>
+          </Button>
 
           {error && (
             <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-normal text-oxblood">
@@ -460,7 +470,11 @@ export default function HomePage() {
           {!hasName && !signedIn && (
             <Link
               href="/auth"
-              className="fixed right-5 top-5 z-50 rounded-full border border-line bg-surface/70 px-4 py-1.5 text-sm font-semibold text-ink-soft backdrop-blur-sm transition hover:border-ink hover:text-ink"
+              className={buttonClasses({
+                variant: "secondary",
+                size: "sm",
+                className: "fixed right-5 top-5 z-50 backdrop-blur-sm",
+              })}
             >
               Sign in
             </Link>
@@ -495,13 +509,13 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.16, ease: "easeOut" }}
-              className="mt-5 text-lg font-medium lowercase leading-snug text-ink-soft"
+              className="mt-5 text-xl font-medium lowercase leading-snug text-ink-soft sm:text-2xl"
             >
               five games, one room. pick a chaos.
             </motion.p>
             <Link
               href="/rules"
-              className="mt-4 text-sm font-semibold lowercase text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
+              className="mt-4 text-sm font-semibold lowercase text-accent transition hover:text-ink"
             >
               how to play →
             </Link>
@@ -524,7 +538,7 @@ export default function HomePage() {
             </Button>
             <Button
               variant="secondary"
-              size="md"
+              size="lg"
               onClick={() => {
                 setMode("join");
                 setError(null);
