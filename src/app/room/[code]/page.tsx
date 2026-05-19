@@ -5246,32 +5246,53 @@ export function RevealPhase({
           <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             {multiImposter ? "The imposters were" : "The imposter was"}
           </div>
-          <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-baseline justify-center gap-x-4 gap-y-2 font-serif text-3xl  text-oxblood">
+          <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-center justify-center gap-x-4 gap-y-2 font-serif text-3xl text-oxblood">
             {stage >= imposterStage ? (
-              reveal.imposterIds.map((id, i) => (
-                <motion.span
-                  key={id}
-                  initial={{ opacity: 0, y: -8, scale: 0.85, rotateX: -60 }}
-                  animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 360,
-                    damping: 24,
-                    delay: i * 0.18,
-                  }}
-                  className="inline-flex items-baseline gap-3"
-                >
-                  {i > 0 && (
-                    <span className="text-lg text-ink-faint">&</span>
-                  )}
-                  <span>{nicknameById.get(id) ?? "?"}</span>
-                  {reveal.caughtImposterId === id && multiImposter && (
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
-                      caught
+              reveal.imposterIds.map((id, i) => {
+                const p = view.players.find((pl) => pl.id === id);
+                const av = avatarFor(
+                  id,
+                  p?.nickname ?? "?",
+                  p?.avatar,
+                  view.players
+                );
+                return (
+                  <motion.span
+                    key={id}
+                    initial={{ opacity: 0, y: -8, scale: 0.85, rotateX: -60 }}
+                    animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 360,
+                      damping: 24,
+                      delay: i * 0.18,
+                    }}
+                    className="inline-flex items-center gap-3"
+                  >
+                    {i > 0 && (
+                      <span className="text-lg text-ink-faint">&</span>
+                    )}
+                    {/* Avatar matched to the player's roster colour so
+                        the reveal carries the player identity, not
+                        just a nickname string. */}
+                    <span
+                      className={`flex h-10 w-10 items-center justify-center rounded-full ${av.color} ${
+                        av.isCustom
+                          ? "border border-line text-lg"
+                          : "font-sans text-base font-medium text-white"
+                      }`}
+                    >
+                      {av.initial}
                     </span>
-                  )}
-                </motion.span>
-              ))
+                    <span>{nicknameById.get(id) ?? "?"}</span>
+                    {reveal.caughtImposterId === id && multiImposter && (
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
+                        caught
+                      </span>
+                    )}
+                  </motion.span>
+                );
+              })
             ) : (
               <RevealEllipsis />
             )}
@@ -5394,19 +5415,62 @@ export function RevealPhase({
       <section className="space-y-4">
         <SectionLabel>Votes</SectionLabel>
         <ul className="divide-y divide-line-soft border-y border-line-soft">
-          {view.votes.map((v, i) => (
-            <li
-              key={i}
-              className="flex items-baseline justify-between py-2 text-sm"
-            >
-              <span className="text-ink-soft">
-                {nicknameById.get(v.voter_id)}
-              </span>
-              <span className="font-medium text-ink">
-                → {nicknameById.get(v.target_id)}
-              </span>
-            </li>
-          ))}
+          {view.votes.map((v, i) => {
+            const voter = view.players.find((p) => p.id === v.voter_id);
+            const target = view.players.find((p) => p.id === v.target_id);
+            const voterAv = avatarFor(
+              v.voter_id,
+              voter?.nickname ?? "?",
+              voter?.avatar,
+              view.players
+            );
+            const targetAv = avatarFor(
+              v.target_id,
+              target?.nickname ?? "?",
+              target?.avatar,
+              view.players
+            );
+            return (
+              <li
+                key={i}
+                className="flex items-center justify-between gap-3 py-2.5 text-sm"
+              >
+                {/* Voter — soft, the one who acted. */}
+                <span className="flex min-w-0 items-center gap-2 text-ink-soft">
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${voterAv.color} ${
+                      voterAv.isCustom
+                        ? "border border-line text-sm"
+                        : "text-[11px] font-medium text-white"
+                    }`}
+                  >
+                    {voterAv.initial}
+                  </span>
+                  <span className="truncate">
+                    {nicknameById.get(v.voter_id)}
+                  </span>
+                </span>
+                <span aria-hidden className="text-ink-faint">
+                  →
+                </span>
+                {/* Target — the accused. Heavier ink so the eye lands here. */}
+                <span className="flex min-w-0 items-center gap-2 font-medium text-ink">
+                  <span
+                    className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${targetAv.color} ${
+                      targetAv.isCustom
+                        ? "border border-line text-sm"
+                        : "text-[11px] font-medium text-white"
+                    }`}
+                  >
+                    {targetAv.initial}
+                  </span>
+                  <span className="truncate">
+                    {nicknameById.get(v.target_id)}
+                  </span>
+                </span>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
