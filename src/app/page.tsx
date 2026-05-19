@@ -30,13 +30,22 @@ const GAMES: { kind: GameKind; title: string; sub: string }[] = [
 const BRAND_CONIC =
   "conic-gradient(from 0deg, #d6471f 0deg, #f3ba26 110deg, #e0207a 220deg, #2f5cff 320deg, #d6471f 360deg)";
 
-// "Upper" wordmark — a solid accent serif. A gradient fill was tried
-// but the light band washed out against the page; one brand colour
-// reads cleanly on both themes. `className` carries size + leading.
+// "Upper" wordmark — a vivid gradient serif, the home page's loud
+// anchor. The earlier four-accent fill washed out where its light
+// gold band fell, so this drops the light stop: red → magenta → blue
+// stays poppy and reads cleanly on both themes. `className` carries
+// size + leading.
 function Wordmark({ className = "" }: { className?: string }) {
   return (
     <h1
-      className={`font-serif italic leading-[0.95] tracking-tight text-accent ${className}`}
+      className={`font-serif italic leading-[0.95] tracking-tight ${className}`}
+      style={{
+        backgroundImage:
+          "linear-gradient(105deg, #d6471f 0%, #e0207a 52%, #2f5cff 100%)",
+        WebkitBackgroundClip: "text",
+        backgroundClip: "text",
+        color: "transparent",
+      }}
     >
       Upper
     </h1>
