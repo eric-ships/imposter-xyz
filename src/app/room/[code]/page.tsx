@@ -3200,7 +3200,9 @@ function SkipWordControl({
   );
 }
 
-function PlayingPhase({
+// Exported so the static /preview pages can render the real imposter
+// in-game UI with hardcoded mock state (no live room required).
+export function PlayingPhase({
   view,
   playerId,
   code,
@@ -4218,7 +4220,8 @@ function ClueRoundBlock({
   );
 }
 
-function VotingPhase({
+// Exported for the /preview pages — see PlayingPhase above.
+export function VotingPhase({
   view,
   playerId,
   code,
@@ -4517,7 +4520,8 @@ function VotingPhase({
   );
 }
 
-function GuessPhase({
+// Exported for the /preview pages — see PlayingPhase above.
+export function GuessPhase({
   view,
   playerId,
   code,
@@ -5028,7 +5032,8 @@ function RevealEllipsis() {
   );
 }
 
-function RevealPhase({
+// Exported for the /preview pages — see PlayingPhase above.
+export function RevealPhase({
   view,
   playerId,
   code,
