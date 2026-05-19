@@ -45,6 +45,7 @@ import { StreamerCastBanner } from "@/components/StreamerCastBanner";
 import { StreamerModeToggle } from "@/components/StreamerModeToggle";
 import { GroupLobbyPanel } from "@/components/GroupLobbyPanel";
 import { useIdentity } from "@/lib/identity";
+import { Button } from "@/components/Button";
 
 export default function RoomPage({
   params,
@@ -2858,12 +2859,14 @@ function LobbyInvite({
           ? `Send the link — ${need} more ${need === 1 ? "player" : "players"} to start.`
           : "Add more anytime — up to 8 can play."}
       </p>
-      <button
+      <Button
+        variant="primary"
+        size="md"
         onClick={share}
-        className="mt-4 w-full rounded-xl bg-accent px-5 py-3.5 text-sm font-semibold text-white transition hover:brightness-110 active:scale-[0.98]"
+        className="mt-4 w-full"
       >
         {copied ? "Link copied ✓" : "Share invite →"}
-      </button>
+      </Button>
       <input
         readOnly
         value={shareUrl}
@@ -3003,13 +3006,14 @@ function LobbyPhase({
       {view.groupId && <GroupLobbyPanel view={view} userId={userId} />}
 
       {isHost ? (
-        <button
+        <Button
+          variant="primary"
+          size="lg"
           onClick={start}
           disabled={!startReady || starting}
-          className="rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
         >
           {startLabel}
-        </button>
+        </Button>
       ) : (
         <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           Awaiting the host
