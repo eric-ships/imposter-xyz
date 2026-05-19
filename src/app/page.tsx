@@ -38,6 +38,15 @@ const CARD_COLORS = [
   "#1c8049", // green — hold
 ];
 
+// Card backgrounds use a subtle within-hue gradient — same brand
+// colour at the top-left, mixed toward black at the bottom-right.
+// Reads as a soft "lit from above" depth without changing identity
+// or contrast with the white text. color-mix(in srgb …) is widely
+// supported in Baseline 2024+.
+function cardGradient(color: string): string {
+  return `linear-gradient(135deg, ${color} 0%, color-mix(in srgb, ${color} 72%, black) 100%)`;
+}
+
 // The brand conic sweep — the four-accent gradient of the app icon
 // (scripts/gen-icon.mjs) and the loader. The home page wears it too.
 const BRAND_CONIC =
@@ -553,7 +562,9 @@ export default function HomePage() {
                     whileHover={{ y: -5, scale: 1.035 }}
                     className="flex w-full items-center gap-4 rounded-3xl px-5 py-4 shadow-lg"
                     style={{
-                      backgroundColor: CARD_COLORS[i % CARD_COLORS.length],
+                      background: cardGradient(
+                        CARD_COLORS[i % CARD_COLORS.length]
+                      ),
                     }}
                   >
                     {/* The game's animated vignette in a white badge,
