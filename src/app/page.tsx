@@ -27,20 +27,31 @@ const GAMES: { kind: GameKind; title: string; sub: string }[] = [
   { kind: "hold", title: "Hold", sub: "3–5 · co-op tower defense" },
 ];
 
+// One bold brand colour per game card — the lineup reads as a row of
+// colour, not five white slabs. All five are dark enough for white
+// text; the vignette art sits in a white badge on top.
+const CARD_COLORS = [
+  "#d6471f", // red — imposter
+  "#2f5cff", // blue — wavelength
+  "#e0207a", // magenta — just one
+  "#6d3bd4", // violet — crew
+  "#1c8049", // green — hold
+];
+
 // The brand conic sweep — the four-accent gradient of the app icon
 // (scripts/gen-icon.mjs) and the loader. The home page wears it too.
 const BRAND_CONIC =
   "conic-gradient(from 0deg, #d6471f 0deg, #f3ba26 110deg, #e0207a 220deg, #2f5cff 320deg, #d6471f 360deg)";
 
-// "Upper" wordmark — a vivid gradient serif, the home page's loud
-// anchor. The earlier four-accent fill washed out where its light
-// gold band fell, so this drops the light stop: red → magenta → blue
-// stays poppy and reads cleanly on both themes. `className` carries
-// size + leading.
+// "Upper" wordmark — a vivid red→magenta→blue gradient serif, the
+// home page's loud anchor. With background-clip:text, any glyph ink
+// outside the element box renders transparent — so the leading is
+// loosened and a little bottom padding added, or the italic
+// descenders (the p's) and tails clip. `className` carries size.
 function Wordmark({ className = "" }: { className?: string }) {
   return (
     <h1
-      className={`font-serif italic leading-[0.95] tracking-tight ${className}`}
+      className={`font-serif italic leading-[1.05] tracking-tight pb-[0.16em] ${className}`}
       style={{
         backgroundImage:
           "linear-gradient(105deg, #d6471f 0%, #e0207a 52%, #2f5cff 100%)",
@@ -492,7 +503,7 @@ export default function HomePage() {
             className="w-full space-y-3"
           >
             <Button
-              size="lg"
+              size="xl"
               onClick={startGame}
               disabled={submitting}
               className="w-full lowercase"
@@ -531,27 +542,32 @@ export default function HomePage() {
                 return (
                   <motion.div
                     key={g.kind}
-                    initial={{ opacity: 0, y: 10, scale: 0.96 }}
+                    initial={{ opacity: 0, y: 16, scale: 0.92 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{
-                      duration: 0.32,
-                      delay: 0.3 + i * 0.06,
-                      ease: "easeOut",
+                      type: "spring",
+                      stiffness: 280,
+                      damping: 20,
+                      delay: 0.28 + i * 0.07,
                     }}
-                    whileHover={{ scale: 1.02 }}
-                    className="flex w-full items-center gap-4 rounded-2xl border border-line bg-surface px-4 py-3.5 shadow-sm"
+                    whileHover={{ y: -5, scale: 1.035 }}
+                    className="flex w-full items-center gap-4 rounded-3xl px-5 py-4 shadow-lg"
+                    style={{
+                      backgroundColor: CARD_COLORS[i % CARD_COLORS.length],
+                    }}
                   >
-                    {/* Animated game vignette — the card's visual. */}
+                    {/* The game's animated vignette in a white badge,
+                        on the card's bold brand colour. */}
                     {Vignette && (
-                      <span className="flex h-14 w-14 shrink-0 items-center justify-center">
+                      <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white">
                         <Vignette />
                       </span>
                     )}
                     <span className="flex flex-col gap-0.5">
-                      <span className="font-serif text-2xl text-ink">
+                      <span className="font-serif text-2xl text-white">
                         {g.title}
                       </span>
-                      <span className="text-xs font-medium lowercase text-ink-faint">
+                      <span className="text-xs font-semibold lowercase text-white/80">
                         {g.sub}
                       </span>
                     </span>
