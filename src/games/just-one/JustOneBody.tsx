@@ -29,6 +29,7 @@ import {
 } from "@/lib/audio";
 import type { MatchHistoryEntry } from "@/lib/match-history";
 import { avatarFor } from "@/lib/avatar";
+import { Button } from "@/components/Button";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
 import { ShareMatchButton } from "@/components/ShareMatchButton";
@@ -243,17 +244,18 @@ function JustOneLobby({
       </section>
 
       {isHost ? (
-        <button
+        <Button
           onClick={start}
           disabled={!canStart || starting}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          size="lg"
+          className="w-full"
         >
           {starting
             ? "Starting…"
             : !canStart
               ? `Awaiting ${3 - view.players.length} more`
               : "Begin the match"}
-        </button>
+        </Button>
       ) : (
         <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Awaiting the host
@@ -898,17 +900,18 @@ function RevealPhase({
       )}
 
       {isHost ? (
-        <button
+        <Button
           onClick={next}
           disabled={advancing}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          size="lg"
+          className="w-full"
         >
           {advancing
             ? "…"
             : isLastCard
               ? "Show final score"
               : "Next card"}
-        </button>
+        </Button>
       ) : (
         <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           {isLastCard
@@ -1041,13 +1044,14 @@ function JustOneFinal({
       )}
 
       {isHost ? (
-        <button
+        <Button
           onClick={replay}
           disabled={restarting}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          size="lg"
+          className="w-full"
         >
           {restarting ? "…" : "Back to lobby"}
-        </button>
+        </Button>
       ) : (
         <p className="text-center text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
           Awaiting the host

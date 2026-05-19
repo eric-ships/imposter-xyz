@@ -35,6 +35,7 @@ import {
 import { playRevealStageChime, playTurnChime } from "@/lib/audio";
 import type { MatchHistoryEntry } from "@/lib/match-history";
 import { avatarFor } from "@/lib/avatar";
+import { Button } from "@/components/Button";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
 import { SquadPayoffCard } from "@/components/SquadPayoffCard";
@@ -231,10 +232,11 @@ function HoldLobby({
       </section>
 
       {isHost ? (
-        <button
+        <Button
           onClick={start}
           disabled={!canStart || starting}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          size="lg"
+          className="w-full"
         >
           {starting
             ? "Deploying…"
@@ -243,7 +245,7 @@ function HoldLobby({
               : count > 5
                 ? "Too many — Hold is 3-5"
                 : "Hold the line"}
-        </button>
+        </Button>
       ) : (
         <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           Awaiting the host
@@ -856,13 +858,14 @@ function HoldReveal({
 
       {done &&
         (isHost ? (
-          <button
+          <Button
             onClick={nextWave}
             disabled={busy}
-            className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
+            size="lg"
+            className="w-full"
           >
             {busy ? "…" : "Continue"}
-          </button>
+          </Button>
         ) : (
           <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
             Awaiting the host
@@ -978,13 +981,14 @@ function HoldEnd({
       )}
 
       {isHost ? (
-        <button
+        <Button
           onClick={playAgain}
           disabled={busy}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
+          size="lg"
+          className="w-full"
         >
           {busy ? "Redeploying…" : "New defense"}
-        </button>
+        </Button>
       ) : (
         <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           Awaiting the host
