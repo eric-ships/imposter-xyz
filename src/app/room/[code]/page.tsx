@@ -46,6 +46,7 @@ import { StreamerModeToggle } from "@/components/StreamerModeToggle";
 import { GroupLobbyPanel } from "@/components/GroupLobbyPanel";
 import { useIdentity } from "@/lib/identity";
 import { Button } from "@/components/Button";
+import { PlayerCard } from "@/components/PlayerCard";
 
 export default function RoomPage({
   params,
@@ -4368,18 +4369,19 @@ export function VotingPhase({
               const hasCastVote = mergedVotes.some(
                 (v) => v.voter_id === p.id
               );
-              const { color, initial, isCustom } = avatarFor(
-                p.id,
-                p.nickname,
-                p.avatar,
-                view.players
-              );
               const disabled = alreadyVoted || isYou;
+              const cardState = disabled
+                ? "disabled"
+                : selected
+                  ? "selected"
+                  : "idle";
               return (
-                <button
+                <PlayerCard
                   key={p.id}
-                  onClick={() => !disabled && setTarget(p.id)}
-                  disabled={disabled}
+                  player={p}
+                  roster={view.players}
+                  state={cardState}
+                  onClick={() => setTarget(p.id)}
                   title={
                     isYou
                       ? "You can't vote for yourself"
@@ -4387,68 +4389,48 @@ export function VotingPhase({
                         ? "Vote locked"
                         : `Vote for ${p.nickname}`
                   }
-                  className={`group/voterow relative flex w-full items-center gap-4 rounded-xl border px-4 py-4 text-left transition active:scale-[0.99] ${
-                    selected
-                      ? "border-accent bg-accent/10 shadow-[0_0_0_4px_rgba(168,134,77,0.08)]"
-                      : disabled
-                        ? "cursor-not-allowed border-line-soft bg-line-soft/20 opacity-60"
-                        : "border-line bg-page hover:border-ink hover:bg-surface/60 hover:shadow-sm"
-                  }`}
-                >
-                  <div className="relative">
-                    <div
-                      className={`flex h-11 w-11 items-center justify-center rounded-full ${color} ${
-                        isCustom
-                          ? "border border-line text-2xl"
-                          : "text-base font-medium text-white"
-                      }`}
-                    >
-                      {initial}
-                    </div>
-                    {hasCastVote && (
+                  avatarBadge={
+                    hasCastVote ? (
                       <span
                         title="cast their vote"
                         className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-leaf text-[9px] font-semibold text-white ring-2 ring-page"
                       >
                         ✓
                       </span>
-                    )}
-                  </div>
-                  <div className="flex flex-1 items-baseline gap-2 text-xl font-medium text-ink">
-                    <span>{p.nickname}</span>
-                    {isYou && (
+                    ) : null
+                  }
+                  inlineLabel={
+                    isYou ? (
                       <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-ink-faint">
                         (you)
                       </span>
-                    )}
-                    {hasCastVote && !isYou && (
+                    ) : hasCastVote ? (
                       <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-leaf">
                         voted
                       </span>
-                    )}
-                    {!hasCastVote && (
+                    ) : (
                       <span className="font-sans text-[10px] tracking-normal text-ink-faint">
                         deciding
                         <ThinkingDots />
                       </span>
-                    )}
-                  </div>
-                  {alreadyVoted && myVote.target_id === p.id && (
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
-                      Your vote
-                    </span>
-                  )}
-                  {selected && !alreadyVoted && (
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
-                      Selected
-                    </span>
-                  )}
-                  {!selected && !disabled && (
-                    <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint opacity-0 transition group-hover/voterow:opacity-100">
-                      Tap to vote
-                    </span>
-                  )}
-                </button>
+                    )
+                  }
+                  trailing={
+                    alreadyVoted && myVote.target_id === p.id ? (
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
+                        Your vote
+                      </span>
+                    ) : selected && !alreadyVoted ? (
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-accent">
+                        Selected
+                      </span>
+                    ) : !selected && !disabled ? (
+                      <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint opacity-0 transition group-hover/playercard:opacity-100">
+                        Tap to vote
+                      </span>
+                    ) : null
+                  }
+                />
               );
             })}
           </div>
