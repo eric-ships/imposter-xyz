@@ -27,15 +27,23 @@ const GAMES: { kind: GameKind; title: string; sub: string }[] = [
   { kind: "hold", title: "Hold", sub: "3–5 · co-op tower defense" },
 ];
 
-// One bold brand colour per game card — the lineup reads as a row of
-// colour, not five white slabs. All five are dark enough for white
-// text; the vignette art sits in a white badge on top.
+// One bold brand colour per game card — each one is a sample from
+// the brand conic so the lineup reads as a slice of the same sweep,
+// not five arbitrary hues.
+//
+// The conic stops are red (0°), gold (110°), magenta (220°), blue
+// (320°). Cards take the three exact stops + two interpolations
+// (purple at 270° between magenta and blue, deep amber at 55° between
+// red and gold). Gold's native #f3ba26 is too light for white text —
+// the amber slot uses a darkened conic gold (#c47416) that passes
+// WCAG AA on white. All five are still dark enough for white text
+// and the vignette art's white badge.
 const CARD_COLORS = [
-  "#d6471f", // red — imposter
-  "#2f5cff", // blue — wavelength
-  "#e0207a", // magenta — just one
-  "#6d3bd4", // violet — crew
-  "#1c8049", // green — hold
+  "#d6471f", // red — imposter      · conic 0°
+  "#2f5cff", // blue — wavelength   · conic 320°
+  "#e0207a", // magenta — just one  · conic 220°
+  "#873ebc", // purple — crew       · conic 270° (magenta↔blue midpoint)
+  "#c47416", // amber — hold        · conic gold darkened for contrast
 ];
 
 // Card backgrounds use a subtle within-hue gradient — same brand
