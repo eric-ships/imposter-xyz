@@ -8,7 +8,7 @@ import { useIdentity, getOrMintDeviceToken, signOut } from "@/lib/identity";
 import { avatarFor } from "@/lib/avatar";
 import { UpperLoader } from "@/components/UpperLoader";
 import { GAME_VIGNETTES } from "@/components/GameVignettes";
-import { Button } from "@/components/Button";
+import { Button, buttonClasses } from "@/components/Button";
 import { Modal } from "@/components/Modal";
 
 type Mode = "choose" | "create" | "join";
@@ -371,15 +371,17 @@ export default function HomePage() {
             {submitting ? "Joining…" : "Join room"}
           </Button>
 
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => {
               setMode("choose");
               setError(null);
             }}
-            className="block w-full text-center text-sm font-medium text-ink-faint transition hover:text-ink"
+            className="w-full"
           >
             ← Back
-          </button>
+          </Button>
 
           {error && (
             <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-normal text-oxblood">
@@ -460,7 +462,11 @@ export default function HomePage() {
           {!hasName && !signedIn && (
             <Link
               href="/auth"
-              className="fixed right-5 top-5 z-50 rounded-full border border-line bg-surface/70 px-4 py-1.5 text-sm font-semibold text-ink-soft backdrop-blur-sm transition hover:border-ink hover:text-ink"
+              className={buttonClasses({
+                variant: "secondary",
+                size: "sm",
+                className: "fixed right-5 top-5 z-50 backdrop-blur-sm",
+              })}
             >
               Sign in
             </Link>
@@ -495,13 +501,13 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.16, ease: "easeOut" }}
-              className="mt-5 text-lg font-medium lowercase leading-snug text-ink-soft"
+              className="mt-5 text-xl font-medium lowercase leading-snug text-ink-soft sm:text-2xl"
             >
               five games, one room. pick a chaos.
             </motion.p>
             <Link
               href="/rules"
-              className="mt-4 text-sm font-semibold lowercase text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
+              className="mt-4 text-sm font-semibold lowercase text-accent transition hover:text-ink"
             >
               how to play →
             </Link>
@@ -524,7 +530,7 @@ export default function HomePage() {
             </Button>
             <Button
               variant="secondary"
-              size="md"
+              size="lg"
               onClick={() => {
                 setMode("join");
                 setError(null);
