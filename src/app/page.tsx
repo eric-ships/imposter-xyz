@@ -46,12 +46,13 @@ const BRAND_CONIC =
 // "Upper" wordmark — a vivid red→magenta→blue gradient serif, the
 // home page's loud anchor. With background-clip:text, any glyph ink
 // outside the element box renders transparent — so the leading is
-// loosened and a little bottom padding added, or the italic
-// descenders (the p's) and tails clip. `className` carries size.
+// loosened, a little bottom padding added for the p descenders, and
+// right padding added so the italic R's terminal doesn't clip past
+// the box. `className` carries size.
 function Wordmark({ className = "" }: { className?: string }) {
   return (
     <h1
-      className={`font-serif italic leading-[1.05] tracking-tight pb-[0.16em] ${className}`}
+      className={`font-serif italic leading-[1.05] tracking-tight pb-[0.16em] pr-[0.08em] ${className}`}
       style={{
         backgroundImage:
           "linear-gradient(105deg, #d6471f 0%, #e0207a 52%, #2f5cff 100%)",
