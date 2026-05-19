@@ -5483,19 +5483,21 @@ export function RevealPhase({
 
       {isHost ? (
         <div className="flex gap-3">
-          <button
+          <Button
             onClick={playAgain}
             disabled={restarting}
-            className="flex-1 rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+            size="lg"
+            className="flex-1"
           >
             {restarting ? "..." : "Play again"}
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={() => router.push("/")}
-            className="rounded-xl border border-line px-6 py-4 text-[11px] font-medium uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97]"
+            variant="secondary"
+            size="lg"
           >
             Exit
-          </button>
+          </Button>
         </div>
       ) : (
         <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">

@@ -27,6 +27,7 @@ import { communicationKind, legalCards } from "./state";
 import { playRevealStageChime, playTurnChime } from "@/lib/audio";
 import type { MatchHistoryEntry } from "@/lib/match-history";
 import { avatarFor } from "@/lib/avatar";
+import { Button } from "@/components/Button";
 import { GameKindSwitcher } from "@/components/GameKindSwitcher";
 import { GroupAttributionPill } from "@/components/GroupAttributionPill";
 import { SquadPayoffCard } from "@/components/SquadPayoffCard";
@@ -268,10 +269,11 @@ function CrewLobby({
       </section>
 
       {isHost ? (
-        <button
+        <Button
           onClick={start}
           disabled={!canStart || starting}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+          size="lg"
+          className="w-full"
         >
           {starting
             ? "Launching…"
@@ -280,7 +282,7 @@ function CrewLobby({
               : count > 5
                 ? "Too many — Crew is 3-5"
                 : "Launch the mission"}
-        </button>
+        </Button>
       ) : (
         <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           Awaiting the host
@@ -768,13 +770,14 @@ function CrewReveal({
       )}
 
       {isHost ? (
-        <button
+        <Button
           onClick={nextMission}
           disabled={busy}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
+          size="lg"
+          className="w-full"
         >
           {busy ? "Dealing…" : "New mission"}
-        </button>
+        </Button>
       ) : (
         <p className="text-center text-[11px] uppercase tracking-[0.2em] text-ink-faint">
           Awaiting the host to deal a new mission
