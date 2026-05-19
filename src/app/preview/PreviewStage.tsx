@@ -102,6 +102,7 @@ function phasesFor(slug: string): PhaseSpec[] {
               view={imposterRevealView()}
               playerId={VIEWER_ID}
               code={CODE}
+              skipStaging
             />
           ),
         },
