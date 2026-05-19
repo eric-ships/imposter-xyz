@@ -8,6 +8,8 @@ import { useIdentity, getOrMintDeviceToken, signOut } from "@/lib/identity";
 import { avatarFor } from "@/lib/avatar";
 import { UpperLoader } from "@/components/UpperLoader";
 import { GAME_VIGNETTES } from "@/components/GameVignettes";
+import { Button } from "@/components/Button";
+import { Modal } from "@/components/Modal";
 
 type Mode = "choose" | "create" | "join";
 
@@ -337,14 +339,14 @@ export default function HomePage() {
             />
           </label>
 
-          <motion.button
-            whileTap={{ scale: 0.97 }}
+          <Button
+            size="lg"
             onClick={joinRoom}
             disabled={!canJoin}
-            className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
+            className="w-full"
           >
             {submitting ? "Joining…" : "Join room"}
-          </motion.button>
+          </Button>
 
           <button
             onClick={() => {
@@ -489,25 +491,25 @@ export default function HomePage() {
             transition={{ duration: 0.4, delay: 0.6, ease: "easeOut" }}
             className="w-full space-y-3"
           >
-            <motion.button
-              whileTap={{ scale: 0.97 }}
-              whileHover={{ y: -2 }}
+            <Button
+              size="lg"
               onClick={startGame}
               disabled={submitting}
-              className="w-full rounded-2xl bg-accent px-6 py-5 text-xl font-bold lowercase tracking-tight text-white shadow-sm transition-all duration-100 hover:shadow-md hover:brightness-110 disabled:opacity-60"
+              className="w-full lowercase"
             >
               {submitting ? "starting…" : "start a game →"}
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.97 }}
+            </Button>
+            <Button
+              variant="secondary"
+              size="md"
               onClick={() => {
                 setMode("join");
                 setError(null);
               }}
-              className="w-full rounded-2xl border border-line px-6 py-3.5 text-sm font-semibold lowercase tracking-tight text-ink-soft transition-all duration-100 hover:border-ink hover:text-ink"
+              className="w-full lowercase"
             >
               got a code? join →
-            </motion.button>
+            </Button>
           </motion.div>
           </div>
 
@@ -604,18 +606,18 @@ export default function HomePage() {
             ) : null;
             const playBlock = (
               <div key="play" className="w-full space-y-2.5">
-                <motion.button
-                  whileTap={{ scale: 0.97 }}
+                <Button
+                  size="lg"
                   onClick={startGame}
                   disabled={submitting}
-                  className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:opacity-60"
+                  className="w-full"
                 >
                   {submitting
                     ? "Starting…"
                     : hasSquads
                       ? "+ New game"
                       : "Start a game"}
-                </motion.button>
+                </Button>
                 <button
                   onClick={() => {
                     setMode("join");
@@ -769,14 +771,14 @@ function IdentityStep({
         </p>
       </label>
 
-      <motion.button
-        whileTap={{ scale: 0.97 }}
+      <Button
+        size="lg"
         onClick={save}
         disabled={value.trim().length === 0 || saving}
-        className="w-full rounded-2xl bg-accent px-6 py-5 text-lg font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
+        className="w-full"
       >
         {saving ? "Saving…" : "Continue →"}
-      </motion.button>
+      </Button>
 
       {/* Or sign in — the same step, finished a faster way. */}
       <div className="flex items-center gap-3" aria-hidden>
@@ -851,14 +853,6 @@ function DisplayNamePrompt({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onDismiss();
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onDismiss]);
-
   async function save() {
     const next = value.trim();
     if (!next || saving) return;
@@ -890,43 +884,15 @@ function DisplayNamePrompt({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center px-6">
-      {/* Scrim — tapping it defers the prompt. */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.18 }}
-        onClick={onDismiss}
-        className="absolute inset-0 bg-ink/40 backdrop-blur-sm"
-      />
-      <motion.div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Set your display name"
-        initial={{ opacity: 0, y: 14, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
-        className="relative w-full max-w-sm space-y-5 rounded-2xl border border-line bg-surface p-6 shadow-lg"
-      >
-        <button
-          type="button"
-          onClick={onDismiss}
-          aria-label="Dismiss"
-          className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center rounded-full text-lg text-ink-faint transition hover:bg-cream hover:text-ink"
-        >
-          ×
-        </button>
-
-        <div className="space-y-1.5">
-          <h2 className="text-2xl font-bold tracking-tight text-ink">
-            What should we call you?
-          </h2>
-          <p className="text-sm text-ink-soft">
-            Your squad sees this name in every room and game. Without
-            one you show up as a plain “?”.
-          </p>
-        </div>
-
+    <Modal
+      open
+      onOpenChange={(o) => {
+        if (!o) onDismiss();
+      }}
+      title="What should we call you?"
+      description="Your squad sees this name in every room and game. Without one you show up as a plain “?”."
+    >
+      <div className="space-y-4">
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -945,17 +911,17 @@ function DisplayNamePrompt({
           onKeyDown={(e) => {
             if (e.key === "Enter") save();
           }}
-          className="w-full rounded-xl border border-line bg-surface/40 px-4 py-3.5 text-xl text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
+          className="w-full rounded-xl border border-line bg-surface/40 px-4 py-3 text-lg text-ink outline-none transition placeholder:text-ink-faint focus:border-accent"
         />
 
-        <motion.button
-          whileTap={{ scale: 0.97 }}
+        <Button
           onClick={save}
           disabled={value.trim().length === 0 || saving}
-          className="w-full rounded-2xl bg-accent px-6 py-4 text-lg font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:brightness-100"
+          size="lg"
+          className="w-full"
         >
           {saving ? "Saving…" : "Save"}
-        </motion.button>
+        </Button>
 
         <button
           type="button"
@@ -966,12 +932,12 @@ function DisplayNamePrompt({
         </button>
 
         {error && (
-          <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm font-normal text-oxblood">
+          <p className="rounded-lg border-l-4 border-oxblood bg-oxblood/10 px-4 py-2.5 text-sm text-oxblood">
             {error}
           </p>
         )}
-      </motion.div>
-    </div>
+      </div>
+    </Modal>
   );
 }
 
