@@ -47,12 +47,14 @@ const BRAND_CONIC =
 // home page's loud anchor. With background-clip:text, any glyph ink
 // outside the element box renders transparent — so the leading is
 // loosened, a little bottom padding added for the p descenders, and
-// right padding added so the italic R's terminal doesn't clip past
-// the box. `className` carries size.
+// right padding for the italic R's terminal (sized in em so it
+// scales correctly across the text-7xl / text-8xl call sites — at
+// text-8xl the italic R overhangs ~12px, 0.08em wasn't enough).
+// `className` carries size.
 function Wordmark({ className = "" }: { className?: string }) {
   return (
     <h1
-      className={`font-serif italic leading-[1.05] tracking-tight pb-[0.16em] pr-[0.08em] ${className}`}
+      className={`font-serif italic leading-[1.05] tracking-tight pb-[0.16em] pr-[0.18em] ${className}`}
       style={{
         backgroundImage:
           "linear-gradient(105deg, #d6471f 0%, #e0207a 52%, #2f5cff 100%)",
