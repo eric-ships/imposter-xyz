@@ -13,6 +13,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Button, buttonClasses } from "@/components/Button";
 import { useIdentity } from "@/lib/identity";
 import { useTheme } from "@/lib/theme";
 import { avatarFor } from "@/lib/avatar";
@@ -110,7 +111,7 @@ export default function GroupPage({
           </p>
           <Link
             href="/"
-            className="inline-block rounded-xl border border-line px-4 py-2 text-sm font-medium text-ink transition hover:bg-ink hover:text-page"
+            className={buttonClasses({ variant: "secondary", size: "md" })}
           >
             Back home
           </Link>
@@ -673,13 +674,15 @@ function GamesSection({
         </ul>
       )}
 
-      <button
+      <Button
+        variant="primary"
+        size="lg"
         onClick={startGame}
         disabled={busy}
-        className="w-full rounded-2xl bg-accent px-6 py-3 text-base font-semibold tracking-tight text-white shadow-sm transition hover:brightness-110 active:scale-[0.97] disabled:opacity-40"
+        className="w-full"
       >
         {busy ? "…" : "Start a game for this squad"}
-      </button>
+      </Button>
 
       {error && (
         <p className="border-l border-oxblood bg-oxblood/5 px-3 py-1.5 text-sm text-oxblood">

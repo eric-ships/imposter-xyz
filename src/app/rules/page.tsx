@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { buttonClasses } from "@/components/Button";
 
 export default function RulesPage() {
   return (
@@ -394,7 +397,7 @@ export default function RulesPage() {
       <div className="flex justify-center border-t border-line-soft pt-8">
         <Link
           href="/"
-          className="rounded-2xl bg-accent px-6 py-3 text-base font-semibold tracking-tight text-white shadow-sm transition hover:brightness-110"
+          className={buttonClasses({ variant: "primary", size: "lg" })}
         >
           Back to the table
         </Link>
