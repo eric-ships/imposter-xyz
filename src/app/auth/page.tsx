@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTheme } from "@/lib/theme";
 import { getOrMintDeviceToken } from "@/lib/identity";
+import { Button } from "@/components/Button";
 
 function PageThemeToggle() {
   const { theme, toggle } = useTheme();
@@ -167,13 +168,15 @@ export default function AuthPage() {
               />
             </label>
 
-            <button
+            <Button
+              variant="primary"
+              size="lg"
               onClick={send}
               disabled={pending || email.trim().length === 0}
-              className="w-full rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+              className="w-full"
             >
               {pending ? "Sending…" : "Send sign-in link"}
-            </button>
+            </Button>
 
             <div className="flex items-center gap-3" aria-hidden>
               <span className="h-px flex-1 bg-line" />

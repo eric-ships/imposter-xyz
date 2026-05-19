@@ -8,6 +8,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getOrMintDeviceToken } from "@/lib/identity";
+import { buttonClasses } from "@/components/Button";
 
 type Result =
   | { kind: "loading" }
@@ -108,7 +109,11 @@ function VerifyInner() {
           <p className="text-sm text-ink-soft">{result.error}</p>
           <Link
             href="/auth"
-            className="mt-2 rounded-2xl bg-accent px-6 py-4 text-base font-semibold tracking-tight text-white shadow-sm transition-all duration-100 hover:brightness-110 active:scale-[0.97]"
+            className={buttonClasses({
+              variant: "primary",
+              size: "lg",
+              className: "mt-2",
+            })}
           >
             Request a new link
           </Link>
