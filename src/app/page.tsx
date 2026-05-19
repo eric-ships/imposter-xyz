@@ -564,22 +564,35 @@ export default function HomePage() {
         </main>
       )}
 
-      {/* FACE B — returning-player home. Live banner on top, then
-          one-tap group launchers, the new-game entry, and small
-          de-emphasized stats. */}
+      {/* FACE B — returning-player home. A personal landing: a
+          greeting, then what a returning player came back for — a
+          live-squad banner, the start/join action, their squads, and
+          a one-line stat glance. No marketing wordmark; this is their
+          home, not the front door. */}
       {dataReady && isReturning && !inFlow && !needsRedirect && (
-        <main className="mx-auto flex w-full max-w-md flex-col items-center gap-7 px-6 pb-16 pt-12 sm:gap-8 sm:pt-16 lg:max-w-xl lg:pt-20">
+        <main className="mx-auto flex w-full max-w-md flex-col items-stretch gap-6 px-6 pb-16 pt-14 sm:gap-7 sm:pt-16 lg:max-w-xl lg:pt-20">
+          {/* Greeting — the home's anchor in place of the wordmark.
+              The persistent account menu floats top-right above it. */}
           <motion.header
-            initial={{ opacity: 0, y: 14 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="flex flex-col items-center text-center"
+            className="space-y-4"
           >
-            <Wordmark className="text-6xl sm:text-7xl" />
+            <h1 className="font-serif text-3xl text-ink sm:text-4xl">
+              {name ? (
+                <>
+                  Hey <span className="text-accent">{name}</span>
+                </>
+              ) : (
+                "Welcome back"
+              )}
+            </h1>
+            <div className="h-px w-full bg-line" />
           </motion.header>
 
-          {/* Live group-activity banner — highest priority. Only
-              renders when a group has a live room. */}
+          {/* Live squad activity — the most urgent thing, when there
+              is any. Renders nothing otherwise. */}
           {identity.userId && groups && (
             <LiveGroupActivityBanner
               groups={groups}
@@ -587,71 +600,45 @@ export default function HomePage() {
             />
           )}
 
-          {/* Squads section + the new-game action, ordered by squad
-              count. With squads: the cards lead, "+ New game" is the
-              secondary option. With none: flip it — lead with a clear
-              "Start a game" hero and let the make-a-squad nudge sit
-              below. A low-squad home should be about playing, not an
-              empty section. */}
-          {(() => {
-            const hasSquads = (groups?.length ?? 0) > 0;
-            const squadsBlock = identity.userId ? (
-              <SquadsSection
-                key="squads"
-                userId={identity.userId}
-                email={identity.email}
-                groups={groups}
-                totalMatches={totalMatches}
-              />
-            ) : null;
-            const playBlock = (
-              <div key="play" className="w-full space-y-2.5">
-                <Button
-                  size="lg"
-                  onClick={startGame}
-                  disabled={submitting}
-                  className="w-full"
-                >
-                  {submitting
-                    ? "Starting…"
-                    : hasSquads
-                      ? "+ New game"
-                      : "Start a game"}
-                </Button>
-                <button
-                  onClick={() => {
-                    setMode("join");
-                    setError(null);
-                  }}
-                  className="block w-full text-center text-sm font-medium text-ink-faint transition hover:text-ink"
-                >
-                  Join a room with a code
-                </button>
-              </div>
-            );
-            return hasSquads ? (
-              <>
-                {squadsBlock}
-                {playBlock}
-              </>
-            ) : (
-              <>
-                {playBlock}
-                {squadsBlock}
-              </>
-            );
-          })()}
+          {/* The play action — what they opened the app to do, so it
+              sits high rather than buried below the squads list. */}
+          <div className="w-full space-y-2.5">
+            <Button
+              size="lg"
+              onClick={startGame}
+              disabled={submitting}
+              className="w-full"
+            >
+              {submitting ? "Starting…" : "Start a game"}
+            </Button>
+            <button
+              onClick={() => {
+                setMode("join");
+                setError(null);
+              }}
+              className="block w-full text-center text-sm font-medium text-ink-faint transition hover:text-ink"
+            >
+              or join with a code
+            </button>
+          </div>
 
-          {/* Stats tucked small — a glance, not the hero. */}
+          {/* Squads — one-tap launch into a game with the regulars. */}
           {identity.userId && (
-            <PersonalStatsCard userId={identity.userId} compact />
+            <SquadsSection
+              userId={identity.userId}
+              email={identity.email}
+              groups={groups}
+              totalMatches={totalMatches}
+            />
           )}
 
+          {/* A one-line stat glance, then the rules link. */}
+          {identity.userId && <HomeStatLine userId={identity.userId} />}
           <Link
             href="/rules"
-            className="text-sm font-medium text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
+            className="self-start text-sm font-medium text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
           >
-            How to play →
+            how to play →
           </Link>
         </main>
       )}
@@ -1849,10 +1836,9 @@ function SquadsSection({
   );
 }
 
-// Personal stats card — cross-group rollup, private to viewer.
-// Hidden when the user has 0 matches played (no sad empty state on
-// first visit). Compact card layout: total matches headline + per-game
-// summary lines for whichever games they've actually played.
+// PersonalStats — the cross-game stats rollup for one user. Read by
+// the bootstrap fetch (to decide returning-vs-new) and by the home's
+// one-line stat glance, HomeStatLine.
 type PersonalStats = {
   totalMatches: number;
   games: {
@@ -1867,29 +1853,19 @@ type PersonalStats = {
   };
 };
 
-function PersonalStatsCard({
-  userId,
-  compact = false,
-}: {
-  userId: string;
-  // Returning-player home wants stats as a glance, not a hero — the
-  // compact variant is smaller, de-emphasized, and folds the per-game
-  // detail behind a tap so the headline number is all that shows.
-  compact?: boolean;
-}) {
+// HomeStatLine — one muted line of stats for the returning player's
+// home. A glance, not a section: total games plus the single most
+// characterful highlight. Fetches the cross-game rollup; renders
+// nothing until there's a played game to show.
+function HomeStatLine({ userId }: { userId: string }) {
   const [data, setData] = useState<PersonalStats | null>(null);
-  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     fetch(`/api/users/me/stats?userId=${userId}`)
-      .then(async (res) => {
-        if (!res.ok) return null;
-        return (await res.json()) as PersonalStats;
-      })
-      .then((d) => {
-        if (cancelled || !d) return;
-        setData(d);
+      .then((res) => (res.ok ? res.json() : null))
+      .then((d: PersonalStats | null) => {
+        if (!cancelled && d) setData(d);
       })
       .catch(() => {});
     return () => {
@@ -1899,120 +1875,19 @@ function PersonalStatsCard({
 
   if (!data || data.totalMatches === 0) return null;
 
-  const g = data.games;
-  const detailRows = (
-    <div className="space-y-1.5">
-      {g.imposter.played > 0 && (
-        <PersonalRow
-          label="Imposter"
-          detail={`${g.imposter.played} played${
-            g.imposter.asImposter.played > 0
-              ? ` · imp ${g.imposter.asImposter.won}/${g.imposter.asImposter.played}`
-              : ""
-          }${
-            g.imposter.asCrewmate.played > 0
-              ? ` · crew ${g.imposter.asCrewmate.won}/${g.imposter.asCrewmate.played}`
-              : ""
-          }`}
-        />
-      )}
-      {g.wavelength.played > 0 && (
-        <PersonalRow
-          label="Wavelength"
-          detail={`${g.wavelength.played} played · won ${g.wavelength.won}${
-            g.wavelength.played > 0
-              ? ` · avg ${Math.round(
-                  g.wavelength.totalDelta / g.wavelength.played
-                )} pts`
-              : ""
-          }`}
-        />
-      )}
-      {g.justOne.played > 0 && (
-        <PersonalRow
-          label="Just One"
-          detail={`${g.justOne.played} played · avg ${(
-            g.justOne.totalDelta / g.justOne.played
-          ).toFixed(1)} per match`}
-        />
-      )}
-    </div>
-  );
-
-  // Compact — a small, low-emphasis line. The headline count sits on
-  // one row; tapping it reveals the same per-game detail.
-  if (compact) {
-    return (
-      <section className="w-full">
-        <button
-          type="button"
-          onClick={() => setExpanded((e) => !e)}
-          className="flex w-full items-baseline justify-between gap-2 rounded-xl border border-line-soft bg-surface/30 px-4 py-2.5 text-left transition-all duration-100 hover:border-line active:scale-[0.99]"
-        >
-          <span className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-            Your stats
-          </span>
-          <span className="flex items-baseline gap-1.5">
-            <span className="font-serif text-lg text-ink-soft">
-              {data.totalMatches}
-            </span>
-            <span className="text-[11px] font-normal text-ink-faint">
-              {data.totalMatches === 1 ? "match" : "matches"} ·{" "}
-              {expanded ? "hide" : "details"}
-            </span>
-          </span>
-        </button>
-        {expanded && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2, ease: "easeOut" }}
-            className="mt-2 rounded-xl border border-line-soft bg-surface/30 px-4 py-3"
-          >
-            {detailRows}
-          </motion.div>
-        )}
-      </section>
-    );
+  const total = data.totalMatches;
+  const parts = [`${total} ${total === 1 ? "game" : "games"}`];
+  const impWon = data.games.imposter.asImposter.won;
+  const wvWon = data.games.wavelength.won;
+  if (impWon > 0) {
+    parts.push(`${impWon} as imposter`);
+  } else if (wvWon > 0) {
+    parts.push(`${wvWon} wavelength ${wvWon === 1 ? "win" : "wins"}`);
   }
 
   return (
-    <section className="w-full space-y-3 rounded-2xl border border-line bg-surface/50 p-5">
-      <div className="flex items-baseline justify-between gap-2">
-        <SectionLabel>Your stats</SectionLabel>
-        <span className="text-[11px] font-normal text-ink-faint">
-          across all squads
-        </span>
-      </div>
-      <div className="font-serif text-4xl text-ink">
-        {data.totalMatches}{" "}
-        <span className="text-base font-sans font-normal text-ink-faint">
-          {data.totalMatches === 1 ? "match" : "matches"} played
-        </span>
-      </div>
-      <div className="border-t border-line-soft pt-3">{detailRows}</div>
-
-      {/* CTA used to live here, but the email gate now sits at the
-           group-create moment (see MyGroupsSection) — the natural
-           friction point for users who care about persistent stats.
-           Anonymous users can still play forever and accumulate
-           personal stats locally; they're only nudged to sign in
-           when they try to opt into a friend group. */}
-    </section>
-  );
-}
-
-function PersonalRow({
-  label,
-  detail,
-}: {
-  label: string;
-  detail: string;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-3 text-sm">
-      <span className="font-medium text-ink">{label}</span>
-      <span className="text-ink-soft">{detail}</span>
-    </div>
+    <p className="text-xs font-medium text-ink-faint">
+      {parts.join(" · ")}
+    </p>
   );
 }
