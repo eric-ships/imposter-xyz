@@ -3908,7 +3908,24 @@ function ClueRoundBlock({
             · {clues.length} {clues.length === 1 ? "clue" : "clues"}
           </span>
         </span>
-        {isActive && <span>In progress</span>}
+        {isActive && (
+          <span className="flex items-center gap-1.5">
+            {/* Pulsing dot so the active round looks alive on the
+                lg grid where all rounds sit side-by-side — the eye
+                lands on the column that's still being filled. */}
+            <motion.span
+              aria-hidden
+              animate={{ opacity: [1, 0.35, 1] }}
+              transition={{
+                duration: 1.6,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="block h-1.5 w-1.5 rounded-full bg-accent"
+            />
+            <span>In progress</span>
+          </span>
+        )}
       </div>
       <div>
         <ul className="flex flex-col divide-y divide-line-soft border-y border-line-soft">
@@ -5023,7 +5040,15 @@ export function RevealPhase({
       </AnimatePresence>
 
       <section className="border border-line bg-surface p-8 text-center">
-        <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
+        {/* The four staged-reveal labels (Category / Imposter / Secret
+            word / Imposter guessed) each tint accent the moment their
+            stage fires, so the column reads as a progress ladder
+            instead of four equally-quiet captions. */}
+        <div
+          className={`text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
+            stage >= categoryStage ? "text-accent" : "text-ink-faint"
+          }`}
+        >
           Category
         </div>
         <div className="mt-2 flex min-h-[2rem] items-center justify-center font-serif text-2xl text-ink">
@@ -5041,7 +5066,11 @@ export function RevealPhase({
         </div>
 
         <div className="mt-6 border-t border-line-soft pt-6">
-          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
+          <div
+            className={`text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
+              stage >= imposterStage ? "text-accent" : "text-ink-faint"
+            }`}
+          >
             {multiImposter ? "The imposters were" : "The imposter was"}
           </div>
           <div className="mt-3 flex min-h-[2.5rem] flex-wrap items-center justify-center gap-x-4 gap-y-2 font-serif text-3xl text-oxblood">
@@ -5098,7 +5127,11 @@ export function RevealPhase({
         </div>
 
         <div className="mt-6 border-t border-line-soft pt-6">
-          <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
+          <div
+            className={`text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
+              stage >= wordStage ? "text-accent" : "text-ink-faint"
+            }`}
+          >
             Secret word
           </div>
           <div className="mt-2 flex min-h-[2.5rem] items-center justify-center font-serif text-3xl text-ink">
@@ -5118,7 +5151,11 @@ export function RevealPhase({
 
         {reveal.guess && (
           <div className="mt-6 border-t border-line-soft pt-6">
-            <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
+            <div
+              className={`text-xs font-semibold uppercase tracking-[0.14em] transition-colors ${
+                stage >= guessStage ? "text-accent" : "text-ink-faint"
+              }`}
+            >
               Imposter guessed
             </div>
             <div className="mt-2 flex min-h-[2rem] items-center justify-center gap-3">
