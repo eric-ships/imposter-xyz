@@ -191,12 +191,14 @@ function ImposterView({ view }: { view: PublicRoomView }) {
         : r.guessOutcome === "close"
           ? "Split decision"
           : "Crewmates prevailed";
-    const imposterNames = r.imposterIds
-      .map(
-        (id) =>
-          view.players.find((p) => p.id === id)?.nickname ?? "?"
-      )
-      .join(" & ");
+    const imposters = r.imposterIds.map((id) => {
+      const p = view.players.find((pl) => pl.id === id);
+      return {
+        id,
+        nickname: p?.nickname ?? "?",
+        av: avatarFor(id, p?.nickname ?? "?", p?.avatar, view.players),
+      };
+    });
     return (
       <div className="space-y-6 text-center">
         <PhaseBadge>Reveal</PhaseBadge>
@@ -206,9 +208,37 @@ function ImposterView({ view }: { view: PublicRoomView }) {
         <Section label="Secret word">
           <Hero>{r.secretWord}</Hero>
         </Section>
-        <Section label="The imposter was">
-          <div className="font-serif text-4xl text-oxblood lg:text-5xl">
-            {imposterNames}
+        <Section
+          label={
+            r.imposterIds.length > 1
+              ? "The imposters were"
+              : "The imposter was"
+          }
+        >
+          {/* Avatar(s) + nickname, side by side. Multi-imposter case
+              uses a centered flex with an "&" separator that mirrors
+              the in-game reveal hero (#88). */}
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-3 font-serif text-4xl text-oxblood lg:text-5xl">
+            {imposters.map((imp, i) => (
+              <span
+                key={imp.id}
+                className="inline-flex items-center gap-3"
+              >
+                {i > 0 && (
+                  <span className="text-2xl text-ink-faint">&</span>
+                )}
+                <span
+                  className={`flex h-12 w-12 items-center justify-center rounded-full lg:h-14 lg:w-14 ${imp.av.color} ${
+                    imp.av.isCustom
+                      ? "border border-line text-2xl lg:text-3xl"
+                      : "font-sans text-lg font-medium text-white lg:text-xl"
+                  }`}
+                >
+                  {imp.av.initial}
+                </span>
+                <span>{imp.nickname}</span>
+              </span>
+            ))}
           </div>
         </Section>
         {r.guess && (
@@ -227,6 +257,10 @@ function ImposterView({ view }: { view: PublicRoomView }) {
 
   // playing / voting / guessing — secret word is hidden from spectator
   // (only crewmates see it via you.secretWord; spectator has you=null)
+  const currentClueGiverId =
+    phase === "playing" && view.turnOrder.length > 0
+      ? view.turnOrder[view.turnIndex] ?? null
+      : null;
   return (
     <div className="space-y-6 text-center">
       <PhaseBadge>
@@ -239,6 +273,14 @@ function ImposterView({ view }: { view: PublicRoomView }) {
       <Section label="Category">
         <Headline>{view.category ?? "—"}</Headline>
       </Section>
+      {currentClueGiverId && (
+        <Section label="Now clueing">
+          <PlayerCallout
+            playerId={currentClueGiverId}
+            players={view.players}
+          />
+        </Section>
+      )}
       <ImposterClueLog view={view} />
       {phase === "voting" && (
         <Section label="Voting in progress">
@@ -247,6 +289,37 @@ function ImposterView({ view }: { view: PublicRoomView }) {
           </Subtle>
         </Section>
       )}
+    </div>
+  );
+}
+
+// Big "avatar + name" callout — used for "Now clueing" so OBS viewers
+// can connect a name to a face from across the table. Sized larger
+// than the in-game equivalent because spectator views are usually
+// rendered on a TV / OBS overlay, not a phone.
+function PlayerCallout({
+  playerId,
+  players,
+}: {
+  playerId: string;
+  players: PublicRoomView["players"];
+}) {
+  const p = players.find((x) => x.id === playerId);
+  const av = avatarFor(playerId, p?.nickname ?? "?", p?.avatar, players);
+  return (
+    <div className="flex items-center justify-center gap-3">
+      <span
+        className={`flex h-12 w-12 items-center justify-center rounded-full ${av.color} ${
+          av.isCustom
+            ? "border border-line text-2xl"
+            : "text-lg font-medium text-white"
+        }`}
+      >
+        {av.initial}
+      </span>
+      <span className="font-serif text-3xl text-ink lg:text-4xl">
+        {p?.nickname ?? "?"}
+      </span>
     </div>
   );
 }
@@ -271,15 +344,37 @@ function ImposterClueLog({ view }: { view: PublicRoomView }) {
           </div>
           <ul className="divide-y divide-line-soft border-y border-line-soft">
             {clues.map((c) => {
-              const nick =
-                view.players.find((p) => p.id === c.player_id)?.nickname ??
-                "?";
+              const p = view.players.find((pl) => pl.id === c.player_id);
+              const nick = p?.nickname ?? "?";
+              const av = avatarFor(
+                c.player_id,
+                nick,
+                p?.avatar,
+                view.players
+              );
               return (
                 <li
                   key={`${c.player_id}-${c.round}`}
-                  className="flex items-baseline justify-between gap-3 py-2"
+                  className="flex items-center justify-between gap-3 py-2.5"
                 >
-                  <span className="text-sm text-ink-soft">{nick}</span>
+                  {/* Avatar + nick on the left, italic clue word on
+                      the right. Bigger avatar than the in-game clue
+                      log (h-7 vs h-5) because spectator pages render
+                      on TVs / OBS — readability beats density. */}
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full ${av.color} ${
+                        av.isCustom
+                          ? "border border-line text-sm"
+                          : "text-[11px] font-medium text-white"
+                      }`}
+                    >
+                      {av.initial}
+                    </span>
+                    <span className="truncate text-sm text-ink-soft">
+                      {nick}
+                    </span>
+                  </span>
                   <span className="font-serif text-xl italic text-ink">
                     {c.word}
                   </span>
