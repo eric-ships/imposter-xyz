@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
-import { useTheme } from "@/lib/theme";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useIdentity, getOrMintDeviceToken, signOut } from "@/lib/identity";
 import { avatarFor } from "@/lib/avatar";
 import { UpperLoader } from "@/components/UpperLoader";
@@ -194,29 +194,6 @@ function SoundToggle() {
       className="preference-pill rounded-full px-3 py-1.5 text-xs font-semibold lowercase"
     >
       sound: {enabled ? "on" : "off"}
-    </button>
-  );
-}
-
-// Light/dark theme toggle. Sits next to SoundToggle in the hero
-// control bar. The underlying theme system already exists (used by
-// /room and /group); this exposes it on the landing too. The mounted
-// flag keeps SSR / first-paint stable: until the effect runs we
-// don't know the actual theme, so we render the "light" label.
-function ThemeToggle() {
-  const { theme, toggle } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const isDark = mounted ? theme === "dark" : false;
-  return (
-    <button
-      type="button"
-      onClick={toggle}
-      aria-pressed={isDark}
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      className="preference-pill rounded-full px-3 py-1.5 text-xs font-semibold lowercase"
-    >
-      theme: {isDark ? "dark" : "light"}
     </button>
   );
 }
@@ -603,7 +580,7 @@ export default function HomePage() {
                 the hero's top-right (not the viewport's) so it never
                 collides with the AccountMenu / Sign in link. */}
             <div className="absolute right-0 top-0 z-10 flex items-center gap-2">
-              <ThemeToggle />
+              <ThemeToggle variant="pill" />
               <SoundToggle />
             </div>
             {/* The loud anchor — the wordmark in full brand colour. */}

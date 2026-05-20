@@ -15,7 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, buttonClasses } from "@/components/Button";
 import { useIdentity } from "@/lib/identity";
-import { useTheme } from "@/lib/theme";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { avatarFor } from "@/lib/avatar";
 import type { MatchHistoryEntry } from "@/lib/match-history";
 
@@ -133,7 +133,7 @@ export default function GroupPage({
       {/* Theme toggle pinned to viewport top-right (was absolute
           inside main → wandered to mid-screen on widescreens). */}
       <div className="fixed right-4 top-4 z-50 flex items-center gap-1">
-        <PageThemeToggle />
+        <ThemeToggle />
       </div>
       <main className="mx-auto flex w-full max-w-md flex-col gap-6 px-6 pb-12 pt-8 sm:pt-10 lg:max-w-3xl lg:gap-7 lg:pt-12">
         <Link
@@ -1366,31 +1366,6 @@ function SmallShell({ children }: { children: React.ReactNode }) {
     <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 py-10 text-center text-sm text-ink-soft">
       {children}
     </main>
-  );
-}
-
-function PageThemeToggle() {
-  const { theme, toggle } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const isDark = mounted ? theme === "dark" : false;
-  return (
-    <button
-      onClick={toggle}
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      className="flex h-8 w-8 items-center justify-center text-ink-faint transition hover:text-ink active:scale-90"
-    >
-      {isDark ? (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-        </svg>
-      ) : (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-        </svg>
-      )}
-    </button>
   );
 }
 
