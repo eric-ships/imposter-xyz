@@ -239,3 +239,51 @@ html {
     animation: none;
   }
 }
+
+/* The "squad." pill in the landing hook is the brand's mascot:
+   a small glowing badge that never sits still. Two simultaneous
+   loops drive it:
+
+     wiggle-squad (3s)   rotates the pill between -1deg and -4deg
+                         while scaling 0.98 to 1.02. The tilt is
+                         always leftward (a lean, not a swing) so
+                         the pill reads as eager rather than nervy.
+     pulse-glow (2.5s)   swells a magenta ambient halo from 20px
+                         at alpha 0.3 to 30px at alpha 0.5.
+
+   The cadences are deliberately different (3s vs 2.5s) so the two
+   loops drift in and out of phase, making the motion read as
+   organic instead of mechanical.
+
+   prefers-reduced-motion stops both loops while leaving the pill's
+   final form (gradient, full radius, white type) intact. */
+@keyframes wiggle-squad {
+  0%, 100% {
+    transform: rotate(-1deg) scale(0.98);
+  }
+  50% {
+    transform: rotate(-4deg) scale(1.02);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(224, 32, 122, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(224, 32, 122, 0.5);
+  }
+}
+
+.squad-pill {
+  background-image: var(--squad-gradient);
+  animation:
+    wiggle-squad 3s ease-in-out infinite,
+    pulse-glow 2.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .squad-pill {
+    animation: none;
+  }
+}

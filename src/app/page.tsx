@@ -454,7 +454,7 @@ export default function HomePage() {
               round up
               <br />
               the{" "}
-              <span className="inline-block rounded-xl bg-accent px-2 pb-1 text-white">
+              <span className="squad-pill inline-block rounded-full px-3 pb-1 text-white">
                 squad.
               </span>
             </motion.p>
