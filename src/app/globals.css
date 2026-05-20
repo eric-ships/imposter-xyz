@@ -248,15 +248,23 @@ html {
                          while scaling 0.98 to 1.02. The tilt is
                          always leftward (a lean, not a swing) so
                          the pill reads as eager rather than nervy.
-     pulse-glow (2.5s)   swells a magenta ambient halo from 20px
-                         at alpha 0.3 to 30px at alpha 0.5.
+     pulse-glow (2.5s)   swells a magenta halo via opacity + scale
+                         on a ::before pseudo-element. The shadow
+                         itself is rasterized once and held static;
+                         only the pseudo's opacity and transform
+                         animate, both of which the compositor can
+                         GPU-accelerate without repainting. Animating
+                         box-shadow directly forces a full repaint
+                         every frame and visibly drops the bg
+                         gradient's interpolation rate, so the glow
+                         has to live on its own composited layer.
 
    The cadences are deliberately different (3s vs 2.5s) so the two
    loops drift in and out of phase, making the motion read as
    organic instead of mechanical.
 
    prefers-reduced-motion stops both loops while leaving the pill's
-   final form (gradient, full radius, white type) intact. */
+   final form (gradient, full radius, white type, faint glow) intact. */
 @keyframes wiggle-squad {
   0%, 100% {
     transform: rotate(-1deg) scale(0.98);
@@ -268,22 +276,39 @@ html {
 
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(224, 32, 122, 0.3);
+    opacity: 0.6;
+    transform: scale(0.95);
   }
   50% {
-    box-shadow: 0 0 30px rgba(224, 32, 122, 0.5);
+    opacity: 1;
+    transform: scale(1.05);
   }
 }
 
 .squad-pill {
   background-image: var(--squad-gradient);
-  animation:
-    wiggle-squad 3s ease-in-out infinite,
-    pulse-glow 2.5s ease-in-out infinite;
+  position: relative;
+  /* New stacking context so the ::before with z-index: -1 stays
+     behind the pill's gradient but above anything outside it. */
+  isolation: isolate;
+  animation: wiggle-squad 3s ease-in-out infinite;
+}
+
+.squad-pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 0 30px rgba(224, 32, 122, 0.5);
+  opacity: 0.6;
+  z-index: -1;
+  pointer-events: none;
+  animation: pulse-glow 2.5s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .squad-pill {
+  .squad-pill,
+  .squad-pill::before {
     animation: none;
   }
 }
