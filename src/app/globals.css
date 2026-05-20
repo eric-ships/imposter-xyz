@@ -422,30 +422,35 @@ html {
   }
 }
 
-/* Sound on/off toggle pinned to the hero's top-right. Two distinct
-   treatments per mode: light mode is a solid white sticker pill with
-   the same chunky offset shadow the brief specifies for secondary
-   buttons; dark mode is the brief's glass treatment so the toggle
-   picks up the animated radial-drift bg behind it. Hover slightly
-   scales up for affordance feedback. */
-.sound-toggle {
+/* Preference pills (theme toggle, sound toggle) pinned to the hero's
+   top-right. Two distinct treatments per mode: light is a solid
+   white sticker pill with the brief's chunky offset shadow for
+   secondary buttons; dark is the brief's glass treatment so the
+   pills pick up the animated radial-drift bg behind them. Hover
+   slightly scales up for affordance feedback. */
+.preference-pill {
   background: white;
   color: var(--ink);
   box-shadow: 0 4px 0 rgba(0, 0, 0, 0.08);
   transition: transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.sound-toggle:hover {
+.preference-pill:hover {
   transform: scale(1.05);
 }
-.sound-toggle:focus-visible {
+.preference-pill:focus-visible {
   outline: 2px solid var(--upper-magenta);
   outline-offset: 2px;
 }
-[data-theme="dark"] .sound-toggle {
+[data-theme="dark"] .preference-pill {
   background: rgba(255, 255, 255, 0.1);
   color: white;
   box-shadow: none;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.2);
+}
+@media (prefers-reduced-motion: reduce) {
+  .preference-pill:hover {
+    transform: none;
+  }
 }

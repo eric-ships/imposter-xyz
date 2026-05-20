@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
+import { useTheme } from "@/lib/theme";
 import { useIdentity, getOrMintDeviceToken, signOut } from "@/lib/identity";
 import { avatarFor } from "@/lib/avatar";
 import { UpperLoader } from "@/components/UpperLoader";
@@ -175,14 +176,13 @@ function useSoundEnabled(): [boolean, (on: boolean) => void] {
   return [enabled, setEnabled];
 }
 
-// Sound on/off toggle, pinned to the top-right of the hero. Lives
-// inside the hero column (not the viewport corner) so it never
-// collides with the "Sign in" link / AccountMenu that occupy the
-// viewport's top-right. Solid-white pill on light, glass on dark
-// (.sound-toggle in globals.css). Persists to localStorage via the
-// hover-audio lib. The click itself counts as a user gesture, so any
-// suspended AudioContext gets a chance to unlock here even if the
-// user never hovers a card before toggling.
+// Sound on/off toggle. Paired with the ThemeToggle in a control bar
+// at the hero's top-right (not the viewport's, so it doesn't collide
+// with the AccountMenu / Sign in link). Solid-white sticker pill on
+// light, glass on dark (.preference-pill in globals.css). Persists
+// to localStorage via the hover-audio lib. The click itself counts
+// as a user gesture, so a suspended AudioContext gets a chance to
+// unlock here even if the user never hovers a card before toggling.
 function SoundToggle() {
   const [enabled, setEnabled] = useSoundEnabled();
   return (
@@ -191,9 +191,32 @@ function SoundToggle() {
       onClick={() => setEnabled(!enabled)}
       aria-pressed={enabled}
       aria-label={enabled ? "Mute card hover sounds" : "Enable card hover sounds"}
-      className="sound-toggle absolute right-0 top-0 z-10 rounded-full px-3 py-1.5 text-xs font-semibold lowercase"
+      className="preference-pill rounded-full px-3 py-1.5 text-xs font-semibold lowercase"
     >
       sound: {enabled ? "on" : "off"}
+    </button>
+  );
+}
+
+// Light/dark theme toggle. Sits next to SoundToggle in the hero
+// control bar. The underlying theme system already exists (used by
+// /room and /group); this exposes it on the landing too. The mounted
+// flag keeps SSR / first-paint stable: until the effect runs we
+// don't know the actual theme, so we render the "light" label.
+function ThemeToggle() {
+  const { theme, toggle } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isDark = mounted ? theme === "dark" : false;
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      aria-pressed={isDark}
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      className="preference-pill rounded-full px-3 py-1.5 text-xs font-semibold lowercase"
+    >
+      theme: {isDark ? "dark" : "light"}
     </button>
   );
 }
@@ -217,6 +240,13 @@ export default function HomePage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("choose");
   const [joinCode, setJoinCode] = useState("");
+  // prefers-reduced-motion gate, used by the lineup-card hover. CSS-
+  // driven animations (squad pill, blobs, sparkles, bg drift) already
+  // honor the media query directly; motion's whileHover does not, so
+  // we read the preference here and zero out the per-card rotation
+  // for reduced-motion users while keeping the lift + scale (those
+  // are small enough to be safe under WCAG vestibular guidance).
+  const reducedMotion = useReducedMotion();
   // Identity bootstrap: ensures the device has a userId in
   // localStorage, upserts the users row server-side, bumps presence.
   // userId is forwarded into create/join calls so the resulting
@@ -569,8 +599,13 @@ export default function HomePage() {
           >
             {/* Sparkle dots scattered across the hero. */}
             <Sparkles />
-            {/* Sound on/off pinned to the hero's top-right. */}
-            <SoundToggle />
+            {/* Hero control bar: theme + sound toggles. Anchored to
+                the hero's top-right (not the viewport's) so it never
+                collides with the AccountMenu / Sign in link. */}
+            <div className="absolute right-0 top-0 z-10 flex items-center gap-2">
+              <ThemeToggle />
+              <SoundToggle />
+            </div>
             {/* The loud anchor — the wordmark in full brand colour. */}
             <Wordmark className="text-7xl sm:text-8xl" />
             {/* The hook — oversized, loud, lowercase. */}
@@ -661,7 +696,9 @@ export default function HomePage() {
                     whileHover={{
                       y: -3,
                       scale: 1.02,
-                      rotate: CARD_HOVER_ROTATIONS[g.kind],
+                      rotate: reducedMotion
+                        ? 0
+                        : CARD_HOVER_ROTATIONS[g.kind],
                       transition: {
                         type: "tween",
                         ease: [0.34, 1.56, 0.64, 1],
@@ -681,7 +718,7 @@ export default function HomePage() {
                         tile reacts to the parent's tilt instead of
                         sitting still inside it. */}
                     {Vignette && (
-                      <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-[-8deg] group-hover:scale-110">
+                      <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-safe:group-hover:rotate-[-8deg] motion-safe:group-hover:scale-110">
                         <Vignette />
                       </span>
                     )}
