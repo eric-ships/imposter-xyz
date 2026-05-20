@@ -3156,7 +3156,7 @@ export function PlayingPhase({
                   data-form-type="other"
                   data-1p-ignore="true"
                   data-lpignore="true"
-                  className="min-w-0 flex-1 rounded-xl border border-accent bg-surface/40 px-4 py-3 font-serif text-2xl  text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
+                  className="min-w-0 flex-1 rounded-xl border border-accent bg-surface/40 px-4 py-3 font-serif text-2xl text-ink outline-none transition placeholder:text-ink-faint/70 focus:border-ink"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && word.trim() && !submitting) submit();
                   }}
@@ -3164,10 +3164,25 @@ export function PlayingPhase({
                 <button
                   onClick={submit}
                   disabled={submitting || word.trim().length === 0}
-                  className="rounded-xl bg-ink px-5 text-[11px] font-medium uppercase tracking-[0.2em] text-page transition-all duration-100 hover:bg-accent active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
+                  className="rounded-xl bg-ink px-5 text-[11px] font-medium uppercase tracking-[0.2em] text-page outline-none transition-all duration-100 hover:bg-accent focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-page active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-30"
                 >
                   {submitting ? "..." : "Submit"}
                 </button>
+              </div>
+              {/* Character-counter hint under the input. Sits quiet
+                  by default; turns oxblood as the player closes in
+                  on the 24-char cap so they don't get cut off
+                  mid-clue. The ↵ key hint shows the keyboard path
+                  for desktop. */}
+              <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.16em] text-ink-faint">
+                <span>↵ to submit</span>
+                <span
+                  className={
+                    word.length >= 20 ? "text-oxblood" : undefined
+                  }
+                >
+                  {word.length} / 24
+                </span>
               </div>
               {error && (
                 <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
