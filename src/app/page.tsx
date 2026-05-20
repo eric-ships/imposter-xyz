@@ -11,6 +11,11 @@ import { GAME_VIGNETTES } from "@/components/GameVignettes";
 import { Button, buttonClasses } from "@/components/Button";
 import { Modal } from "@/components/Modal";
 import { CARD_GRADIENT } from "@/lib/game-cards";
+import {
+  isSoundEnabled,
+  playHoverSound,
+  setSoundEnabled,
+} from "@/lib/hover-audio";
 
 type Mode = "choose" | "create" | "join";
 
@@ -147,6 +152,51 @@ const CARD_HOVER_ROTATIONS: Record<GameKind, number> = {
   crew: 1.2,
   hold: -1,
 };
+
+// Tracks the hover-sound preference (persisted to localStorage in
+// the hover-audio lib). Initialized to false on first render so SSR
+// markup matches the client's pre-effect render, then synced to the
+// actual stored / defaulted value in an effect. The brief flash of
+// "off" before "on" is invisible because the toggle pill renders in
+// the hero's top-right and is too small for the eye to track an
+// initial state on.
+function useSoundEnabled(): [boolean, (on: boolean) => void] {
+  const [enabled, setEnabledState] = useState(false);
+
+  useEffect(() => {
+    setEnabledState(isSoundEnabled());
+  }, []);
+
+  const setEnabled = useCallback((on: boolean) => {
+    setSoundEnabled(on);
+    setEnabledState(on);
+  }, []);
+
+  return [enabled, setEnabled];
+}
+
+// Sound on/off toggle, pinned to the top-right of the hero. Lives
+// inside the hero column (not the viewport corner) so it never
+// collides with the "Sign in" link / AccountMenu that occupy the
+// viewport's top-right. Solid-white pill on light, glass on dark
+// (.sound-toggle in globals.css). Persists to localStorage via the
+// hover-audio lib. The click itself counts as a user gesture, so any
+// suspended AudioContext gets a chance to unlock here even if the
+// user never hovers a card before toggling.
+function SoundToggle() {
+  const [enabled, setEnabled] = useSoundEnabled();
+  return (
+    <button
+      type="button"
+      onClick={() => setEnabled(!enabled)}
+      aria-pressed={enabled}
+      aria-label={enabled ? "Mute card hover sounds" : "Enable card hover sounds"}
+      className="sound-toggle absolute right-0 top-0 z-10 rounded-full px-3 py-1.5 text-xs font-semibold lowercase"
+    >
+      sound: {enabled ? "on" : "off"}
+    </button>
+  );
+}
 
 // Section heading — bolder than the old hairline tracked label.
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -519,6 +569,8 @@ export default function HomePage() {
           >
             {/* Sparkle dots scattered across the hero. */}
             <Sparkles />
+            {/* Sound on/off pinned to the hero's top-right. */}
+            <SoundToggle />
             {/* The loud anchor — the wordmark in full brand colour. */}
             <Wordmark className="text-7xl sm:text-8xl" />
             {/* The hook — oversized, loud, lowercase. */}
@@ -616,6 +668,8 @@ export default function HomePage() {
                         duration: 0.3,
                       },
                     }}
+                    onMouseEnter={() => playHoverSound(g.kind)}
+                    onFocus={() => playHoverSound(g.kind)}
                     className="group flex w-full items-center gap-4 rounded-3xl px-5 py-4 shadow-lg"
                     style={{
                       background: CARD_GRADIENT[g.kind],
