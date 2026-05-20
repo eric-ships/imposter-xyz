@@ -5023,10 +5023,17 @@ export function RevealPhase({
   view,
   playerId,
   code,
+  skipStaging = false,
 }: {
   view: PublicRoomView;
   playerId: string;
   code: string;
+  // When true, render the reveal in its final state immediately — no
+  // staged unspooling, no chimes. Used by /preview pages so QA can
+  // see the whole UI at a glance instead of waiting 7s for the timer
+  // ladder. Defaults to false so the real game keeps the dramatic
+  // staged reveal.
+  skipStaging?: boolean;
 }) {
   const nicknameById = new Map(view.players.map((p) => [p.id, p.nickname]));
   const reveal = view.reveal!;
@@ -5053,8 +5060,11 @@ export function RevealPhase({
   const wordStage = 3;
   const guessStage = 4;
   const finalStage = hasGuess ? 5 : 4;
-  const [stage, setStage] = useState(0);
+  // Start at finalStage in preview mode so the full reveal is visible
+  // immediately; otherwise unspool from 0 via the staged timers.
+  const [stage, setStage] = useState(skipStaging ? finalStage : 0);
   useEffect(() => {
+    if (skipStaging) return;
     const timers: ReturnType<typeof setTimeout>[] = [];
     const advance = (s: number, delay: number) => {
       timers.push(
@@ -5073,7 +5083,7 @@ export function RevealPhase({
     return () => {
       for (const x of timers) clearTimeout(x);
     };
-  }, [hasGuess, categoryStage, imposterStage, wordStage, guessStage, finalStage]);
+  }, [skipStaging, hasGuess, categoryStage, imposterStage, wordStage, guessStage, finalStage]);
   const multiImposter = reveal.imposterIds.length > 1;
 
   type Side = "imposter" | "crewmates" | "draw";
@@ -5383,27 +5393,57 @@ export function RevealPhase({
           <div className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
             The shortlist
           </div>
-          <div className="flex flex-wrap gap-2">
-            {view.guessCandidates.map((c) => {
+          <div className="flex flex-wrap items-center gap-2">
+            {view.guessCandidates.map((c, i) => {
               const isSecret =
                 reveal.secretWord &&
                 c.toLowerCase() === reveal.secretWord.toLowerCase();
               const isGuess =
                 reveal.guess &&
                 c.toLowerCase() === reveal.guess.toLowerCase();
+              const highlighted = isSecret || isGuess;
+              // Hierarchy: the secret + the imposter's guess are the
+              // story — they get larger pills, inline mini-labels, and
+              // weighted ink. Everything else fades back so the eye
+              // lands on the two important chips. Staggered entrance
+              // so the shortlist unfurls instead of dumping in.
+              const label = isSecret && isGuess
+                ? "nailed it"
+                : isSecret
+                  ? "the word"
+                  : isGuess
+                    ? "imposter said"
+                    : null;
               return (
-                <span
+                <motion.span
                   key={c}
-                  className={`rounded-full border px-3 py-1 text-sm ${
+                  initial={{ opacity: 0, y: 4, scale: 0.92 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 360,
+                    damping: 26,
+                    delay: 0.04 * i,
+                  }}
+                  className={`inline-flex items-baseline gap-2 rounded-full border transition ${
+                    highlighted
+                      ? "px-3.5 py-1.5 text-base font-medium"
+                      : "px-3 py-1 text-sm"
+                  } ${
                     isSecret
-                      ? "border-leaf bg-leaf/10 text-leaf"
+                      ? "border-leaf bg-leaf/10 text-leaf shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-leaf,#6b7f5c)_10%,transparent)]"
                       : isGuess
-                        ? "border-oxblood bg-oxblood/10 text-oxblood"
-                        : "border-line bg-page text-ink-soft"
+                        ? "border-oxblood bg-oxblood/10 text-oxblood shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-oxblood,#8a4146)_10%,transparent)]"
+                        : "border-line-soft bg-page/50 text-ink-faint"
                   }`}
                 >
-                  {c}
-                </span>
+                  <span>{c}</span>
+                  {label && (
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.18em] opacity-75">
+                      {label}
+                    </span>
+                  )}
+                </motion.span>
               );
             })}
           </div>
