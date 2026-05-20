@@ -287,3 +287,112 @@ html {
     animation: none;
   }
 }
+
+/* Floating brand blobs: four blurred color circles drifting over the
+   animated bg. Each blob runs its own loop at its own duration (and
+   negative delays so all four are mid-cycle at page load), and the
+   durations are deliberately co-prime so the four motions never sync
+   up. The asymmetry is the whole point: without it the blobs read as
+   a coordinated parade instead of ambient drift.
+
+   Colors come from the four palette anchors only (red, gold, purple,
+   blue). The blobs are the channel through which the saturated brand
+   palette shows up on the calm peach/pink/lavender bg. Dark mode
+   bumps opacity slightly because the radial-drift bg is darker and
+   the blobs need a touch more presence to register. */
+@keyframes float-blob-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 60px) scale(1.1); }
+}
+@keyframes float-blob-b {
+  0%, 100% { transform: translate(0, 0) scale(0.9); }
+  50% { transform: translate(-60px, 40px) scale(1.05); }
+}
+@keyframes float-blob-c {
+  0%, 100% { transform: translate(0, 0) scale(1.05); }
+  50% { transform: translate(50px, -40px) scale(0.95); }
+}
+@keyframes float-blob-d {
+  0%, 100% { transform: translate(0, 0) scale(0.95); }
+  50% { transform: translate(-30px, -50px) scale(1.1); }
+}
+
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(50px);
+  opacity: 0.5;
+  pointer-events: none;
+}
+[data-theme="dark"] .blob {
+  opacity: 0.55;
+}
+.blob-a {
+  width: 180px;
+  height: 180px;
+  background: var(--upper-red);
+  top: 8%;
+  left: 6%;
+  animation: float-blob-a 13s ease-in-out infinite;
+}
+.blob-b {
+  width: 160px;
+  height: 160px;
+  background: var(--upper-gold);
+  top: 12%;
+  right: 8%;
+  animation: float-blob-b 17s ease-in-out infinite;
+  animation-delay: -3s;
+}
+.blob-c {
+  width: 140px;
+  height: 140px;
+  background: var(--upper-purple);
+  bottom: 18%;
+  left: 12%;
+  animation: float-blob-c 11s ease-in-out infinite;
+  animation-delay: -5s;
+}
+.blob-d {
+  width: 100px;
+  height: 100px;
+  background: var(--upper-blue);
+  bottom: 8%;
+  right: 14%;
+  animation: float-blob-d 9s ease-in-out infinite;
+  animation-delay: -2s;
+}
+
+/* Tiny ✦ / ✧ sparkle dots scattered through the hero, each fading
+   opacity and scale on its own staggered loop. Magenta on light so
+   they pop against peach; white on dark so they read against the
+   deep purple. Decorative only: reduced-motion hides them entirely
+   rather than freezing them at peak (a permanently-bright sparkle
+   reads as a UI element, not a decoration). */
+@keyframes sparkle-dot {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(1); }
+}
+.sparkle-dot {
+  position: absolute;
+  color: var(--upper-magenta);
+  font-size: 1.25rem;
+  line-height: 1;
+  pointer-events: none;
+  animation-name: sparkle-dot;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+[data-theme="dark"] .sparkle-dot {
+  color: white;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blob,
+  .sparkle-dot {
+    animation: none;
+  }
+  .sparkle-dot {
+    opacity: 0;
+  }
+}
