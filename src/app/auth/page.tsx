@@ -6,34 +6,8 @@
 // an existing email.
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useTheme } from "@/lib/theme";
 import { getOrMintDeviceToken } from "@/lib/identity";
-import { Button } from "@/components/Button";
-
-function PageThemeToggle() {
-  const { theme, toggle } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const isDark = mounted ? theme === "dark" : false;
-  return (
-    <button
-      onClick={toggle}
-      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
-      className="flex h-9 w-9 items-center justify-center text-ink-faint transition hover:text-ink active:scale-90"
-    >
-      {isDark ? (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-        </svg>
-      ) : (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />
-        </svg>
-      )}
-    </button>
-  );
-}
+import { Button, buttonClasses } from "@/components/Button";
 
 export default function AuthPage() {
   const [email, setEmail] = useState("");
@@ -87,11 +61,7 @@ export default function AuthPage() {
   }
 
   return (
-    <>
-      <div className="fixed right-4 top-4 z-50">
-        <PageThemeToggle />
-      </div>
-      <main className="mx-auto flex w-full max-w-md flex-col gap-7 px-6 pb-12 pt-10 sm:pt-16 lg:max-w-lg lg:pt-24">
+    <main className="mx-auto flex w-full max-w-md flex-col gap-7 px-6 pb-12 pt-10 sm:pt-16 lg:max-w-lg lg:pt-24">
         <Link
           href="/"
           className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint transition hover:text-ink"
@@ -188,7 +158,15 @@ export default function AuthPage() {
 
             <button
               onClick={signInWithDiscord}
-              className="flex w-full items-center justify-center gap-2.5 rounded-xl bg-[#5865F2] px-6 py-4 text-sm font-medium text-white transition-all duration-100 hover:bg-[#4752c4] active:scale-[0.97]"
+              // Brand colour required by Discord's design guidelines —
+              // route through buttonClasses for the kit pill shape,
+              // focus ring, and active-scale, but override the accent
+              // bg/hover with Discord's blurple.
+              className={buttonClasses({
+                size: "lg",
+                className:
+                  "w-full bg-[#5865F2] text-white hover:bg-[#4752c4] hover:shadow-md focus-visible:ring-[#5865F2]",
+              })}
             >
               <svg
                 width="20"
@@ -214,7 +192,6 @@ export default function AuthPage() {
             )}
           </section>
         )}
-      </main>
-    </>
+    </main>
   );
 }
