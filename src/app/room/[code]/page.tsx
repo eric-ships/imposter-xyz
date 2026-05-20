@@ -47,6 +47,7 @@ import { GroupLobbyPanel } from "@/components/GroupLobbyPanel";
 import { useIdentity } from "@/lib/identity";
 import { Button } from "@/components/Button";
 import { PlayerCard } from "@/components/PlayerCard";
+import { Toggle } from "@/components/Toggle";
 
 export default function RoomPage({
   params,
@@ -2504,30 +2505,13 @@ function PoliceModeToggle({
             the imposter.
           </p>
         </div>
-        {isHost ? (
-          <button
-            onClick={toggle}
-            disabled={pending}
-            className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-medium uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.97] disabled:opacity-40 ${
-              enabled
-                ? "bg-accent text-page hover:bg-ink"
-                : "border border-line text-ink hover:bg-ink hover:text-page"
-            }`}
-          >
-            {pending ? "..." : enabled ? "On" : "Off"}
-          </button>
-        ) : (
-          <span
-            className={`shrink-0 rounded-xl border px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] ${
-              enabled
-                ? "border-accent/60 text-accent"
-                : "border-line text-ink-faint"
-            }`}
-            title="Only the host can change this"
-          >
-            {enabled ? "On" : "Off"}
-          </span>
-        )}
+        <Toggle
+          enabled={enabled}
+          onChange={toggle}
+          pending={pending}
+          readOnly={!isHost}
+          readOnlyHint="Only the host can change this"
+        />
       </div>
       {error && (
         <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
@@ -2592,30 +2576,13 @@ function JesusModeToggle({
             </p>
           )}
         </div>
-        {isHost ? (
-          <button
-            onClick={toggle}
-            disabled={pending}
-            className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-medium uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
-              enabled
-                ? "bg-accent text-page hover:bg-ink"
-                : "border border-line text-ink hover:bg-ink hover:text-page"
-            }`}
-          >
-            {pending ? "..." : enabled ? "On" : "Off"}
-          </button>
-        ) : (
-          <span
-            className={`shrink-0 rounded-xl border px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] ${
-              enabled
-                ? "border-accent/60 text-accent"
-                : "border-line text-ink-faint"
-            }`}
-            title="Only the host can change this"
-          >
-            {enabled ? "On" : "Off"}
-          </span>
-        )}
+        <Toggle
+          enabled={enabled}
+          onChange={toggle}
+          pending={pending}
+          readOnly={!isHost}
+          readOnlyHint="Only the host can change this"
+        />
       </div>
       {error && (
         <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
@@ -2691,30 +2658,13 @@ function MoleModeToggle({
             </p>
           )}
         </div>
-        {isHost ? (
-          <button
-            onClick={toggle}
-            disabled={pending}
-            className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-medium uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
-              enabled
-                ? "bg-accent text-page hover:bg-ink"
-                : "border border-line text-ink hover:bg-ink hover:text-page"
-            }`}
-          >
-            {pending ? "..." : enabled ? "On" : "Off"}
-          </button>
-        ) : (
-          <span
-            className={`shrink-0 rounded-xl border px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] ${
-              enabled
-                ? "border-accent/60 text-accent"
-                : "border-line text-ink-faint"
-            }`}
-            title="Only the host can change this"
-          >
-            {enabled ? "On" : "Off"}
-          </span>
-        )}
+        <Toggle
+          enabled={enabled}
+          onChange={toggle}
+          pending={pending}
+          readOnly={!isHost}
+          readOnlyHint="Only the host can change this"
+        />
       </div>
       {error && (
         <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
@@ -2773,30 +2723,13 @@ function CandidatesModeToggle({
             Show the guess shortlist to everyone the whole match.
           </p>
         </div>
-        {isHost ? (
-          <button
-            onClick={toggle}
-            disabled={pending}
-            className={`shrink-0 rounded-xl px-4 py-2 text-[11px] font-medium uppercase tracking-[0.2em] transition-all duration-100 active:scale-[0.96] disabled:opacity-40 disabled:active:scale-100 ${
-              enabled
-                ? "bg-accent text-page hover:bg-ink"
-                : "border border-line text-ink hover:bg-ink hover:text-page"
-            }`}
-          >
-            {pending ? "..." : enabled ? "On" : "Off"}
-          </button>
-        ) : (
-          <span
-            className={`shrink-0 rounded-xl border px-3 py-1 text-[11px] font-medium uppercase tracking-[0.2em] ${
-              enabled
-                ? "border-accent/60 text-accent"
-                : "border-line text-ink-faint"
-            }`}
-            title="Only the host can change this"
-          >
-            {enabled ? "On" : "Off"}
-          </span>
-        )}
+        <Toggle
+          enabled={enabled}
+          onChange={toggle}
+          pending={pending}
+          readOnly={!isHost}
+          readOnlyHint="Only the host can change this"
+        />
       </div>
       {error && (
         <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
