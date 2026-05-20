@@ -655,15 +655,17 @@ export default function HomePage() {
             >
               {submitting ? "Starting…" : "Start a game"}
             </Button>
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setMode("join");
                 setError(null);
               }}
-              className="block w-full text-center text-sm font-medium text-ink-faint transition hover:text-ink"
+              className="w-full"
             >
               or join with a code
-            </button>
+            </Button>
           </div>
 
           {/* Squads — one-tap launch into a game with the regulars. */}
@@ -680,7 +682,7 @@ export default function HomePage() {
           {identity.userId && <HomeStatLine userId={identity.userId} />}
           <Link
             href="/rules"
-            className="self-start text-sm font-medium text-accent underline decoration-2 underline-offset-4 transition hover:text-ink"
+            className="self-start text-sm font-medium text-accent transition hover:text-ink"
           >
             how to play →
           </Link>
