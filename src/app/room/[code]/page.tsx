@@ -12,7 +12,12 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { supabase } from "@/lib/supabase/browser";
-import type { GuessOutcome, PublicRoomView, RoomState } from "@/lib/game";
+import type {
+  GameKind,
+  GuessOutcome,
+  PublicRoomView,
+  RoomState,
+} from "@/lib/game";
 import { blockExplorerUrl } from "@/lib/chain";
 import {
   DEFAULT_ALLOWANCE,
@@ -527,55 +532,13 @@ function RoomPlay({
       className={`mx-auto grid min-h-screen w-full grid-rows-[auto_1fr_auto] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 ${mainWidth}`}
     >
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-      <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-        <span className="flex items-baseline gap-2">
-          <span>Room</span>
-          <span className="text-base tracking-[0.25em] text-ink normal-case">
-            {code}
-          </span>
-          {/* The game-name badge doubles as the rules entry — tap
-              it to open how-to-play in a new tab so you don't lose
-              your room. Replaces the standalone Rules link the
-              header used to carry. */}
-          <Link
-            href="/rules#imposter"
-            target="_blank"
-            rel="noreferrer"
-            title="How to play"
-            className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
-          >
-            Imposter
-          </Link>
-          {view.groupName && (
-            <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
-              {view.groupName}
-            </span>
-          )}
-        </span>
-        <span className="flex items-center gap-3">
-          <span className="flex items-center gap-2">
-            <AvatarPicker
-              code={code}
-              playerId={playerId}
-              nickname={nicknameById.get(playerId) ?? ""}
-              avatar={
-                view.players.find((p) => p.id === playerId)?.avatar ?? null
-              }
-              players={view.players}
-              userId={userId}
-            />
-            <span className="text-base text-ink normal-case tracking-normal">
-              {nicknameById.get(playerId)}
-            </span>
-            {you.isHost && (
-              <span className="rounded-xl border border-accent/60 px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-accent">
-                Host
-              </span>
-            )}
-          </span>
-          <RoomChromeControls />
-        </span>
-      </header>
+      <RoomHeader
+        code={code}
+        kind="imposter"
+        view={view}
+        playerId={playerId}
+        userId={userId}
+      />
 
       {timedState && view.phaseDeadline && (
         <PhaseCountdown
@@ -972,52 +935,13 @@ function WavelengthRoomShell({
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-          <span className="flex items-baseline gap-2">
-            <span>Room</span>
-            <span className="text-base tracking-[0.25em] text-ink normal-case">
-              {code}
-            </span>
-            <Link
-              href="/rules#wavelength"
-              target="_blank"
-              rel="noreferrer"
-              title="How to play"
-              className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
-            >
-              Wavelength
-            </Link>
-            {view.groupName && (
-              <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
-                {view.groupName}
-              </span>
-            )}
-          </span>
-          <span className="flex items-center gap-3">
-            <span className="flex items-center gap-2">
-              <AvatarPicker
-                code={code}
-                playerId={playerId}
-                nickname={nicknameById.get(playerId) ?? ""}
-                avatar={
-                  view.players.find((p) => p.id === playerId)?.avatar ??
-                  null
-                }
-                players={view.players}
-                userId={userId}
-              />
-              <span className="text-base text-ink normal-case tracking-normal">
-                {nicknameById.get(playerId)}
-              </span>
-              {you.isHost && (
-                <span className="rounded-xl border border-accent/60 px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-accent">
-                  Host
-                </span>
-              )}
-            </span>
-            <RoomChromeControls />
-          </span>
-        </header>
+        <RoomHeader
+          code={code}
+          kind="wavelength"
+          view={view}
+          playerId={playerId}
+          userId={userId}
+        />
         <StreamerCastBanner view={view} />
       </div>
 
@@ -1066,52 +990,13 @@ function JustOneRoomShell({
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-          <span className="flex items-baseline gap-2">
-            <span>Room</span>
-            <span className="text-base tracking-[0.25em] text-ink normal-case">
-              {code}
-            </span>
-            <Link
-              href="/rules#just-one"
-              target="_blank"
-              rel="noreferrer"
-              title="How to play"
-              className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
-            >
-              Just One
-            </Link>
-            {view.groupName && (
-              <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
-                {view.groupName}
-              </span>
-            )}
-          </span>
-          <span className="flex items-center gap-3">
-            <span className="flex items-center gap-2">
-              <AvatarPicker
-                code={code}
-                playerId={playerId}
-                nickname={nicknameById.get(playerId) ?? ""}
-                avatar={
-                  view.players.find((p) => p.id === playerId)?.avatar ??
-                  null
-                }
-                players={view.players}
-                userId={userId}
-              />
-              <span className="text-base text-ink normal-case tracking-normal">
-                {nicknameById.get(playerId)}
-              </span>
-              {you.isHost && (
-                <span className="rounded-xl border border-accent/60 px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-accent">
-                  Host
-                </span>
-              )}
-            </span>
-            <RoomChromeControls />
-          </span>
-        </header>
+        <RoomHeader
+          code={code}
+          kind="just-one"
+          view={view}
+          playerId={playerId}
+          userId={userId}
+        />
         <StreamerCastBanner view={view} />
       </div>
 
@@ -1160,52 +1045,13 @@ function CrewRoomShell({
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-          <span className="flex items-baseline gap-2">
-            <span>Room</span>
-            <span className="text-base tracking-[0.25em] text-ink normal-case">
-              {code}
-            </span>
-            <Link
-              href="/rules#crew"
-              target="_blank"
-              rel="noreferrer"
-              title="How to play"
-              className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
-            >
-              Crew
-            </Link>
-            {view.groupName && (
-              <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
-                {view.groupName}
-              </span>
-            )}
-          </span>
-          <span className="flex items-center gap-3">
-            <span className="flex items-center gap-2">
-              <AvatarPicker
-                code={code}
-                playerId={playerId}
-                nickname={nicknameById.get(playerId) ?? ""}
-                avatar={
-                  view.players.find((p) => p.id === playerId)?.avatar ??
-                  null
-                }
-                players={view.players}
-                userId={userId}
-              />
-              <span className="text-base text-ink normal-case tracking-normal">
-                {nicknameById.get(playerId)}
-              </span>
-              {you.isHost && (
-                <span className="rounded-xl border border-accent/60 px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-accent">
-                  Host
-                </span>
-              )}
-            </span>
-            <RoomChromeControls />
-          </span>
-        </header>
+        <RoomHeader
+          code={code}
+          kind="crew"
+          view={view}
+          playerId={playerId}
+          userId={userId}
+        />
         <StreamerCastBanner view={view} />
       </div>
 
@@ -1253,52 +1099,13 @@ function HoldRoomShell({
   return (
     <main className="mx-auto grid min-h-screen w-full grid-rows-[auto_1fr] gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-6 lg:gap-7 lg:px-8 lg:py-8 max-w-xl md:max-w-2xl lg:max-w-4xl xl:max-w-5xl">
       <div className="sticky top-0 z-30 -mx-4 -mt-4 space-y-3 bg-page/95 px-4 pb-3 pt-4 backdrop-blur-sm sm:-mx-6 sm:-mt-6 sm:space-y-4 sm:px-6 sm:pt-6 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
-        <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-          <span className="flex items-baseline gap-2">
-            <span>Room</span>
-            <span className="text-base tracking-[0.25em] text-ink normal-case">
-              {code}
-            </span>
-            <Link
-              href="/rules#hold"
-              target="_blank"
-              rel="noreferrer"
-              title="How to play"
-              className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
-            >
-              Hold
-            </Link>
-            {view.groupName && (
-              <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
-                {view.groupName}
-              </span>
-            )}
-          </span>
-          <span className="flex items-center gap-3">
-            <span className="flex items-center gap-2">
-              <AvatarPicker
-                code={code}
-                playerId={playerId}
-                nickname={nicknameById.get(playerId) ?? ""}
-                avatar={
-                  view.players.find((p) => p.id === playerId)?.avatar ??
-                  null
-                }
-                players={view.players}
-                userId={userId}
-              />
-              <span className="text-base text-ink normal-case tracking-normal">
-                {nicknameById.get(playerId)}
-              </span>
-              {you.isHost && (
-                <span className="rounded-xl border border-accent/60 px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-accent">
-                  Host
-                </span>
-              )}
-            </span>
-            <RoomChromeControls />
-          </span>
-        </header>
+        <RoomHeader
+          code={code}
+          kind="hold"
+          view={view}
+          playerId={playerId}
+          userId={userId}
+        />
         <StreamerCastBanner view={view} />
       </div>
 
@@ -1317,6 +1124,92 @@ function HoldRoomShell({
         />
       </div>
     </main>
+  );
+}
+
+// Shared room header. Every game shell used to hand-roll the same
+// 30-line block of header chrome (room code · kind badge · group
+// pill · you avatar+name+host · theme · sound), differing only by
+// the kind label and the rules anchor. Now a single component does
+// it, keyed off `kind`.
+//
+// AvatarPicker and RoomChromeControls live inside this same file —
+// keeping RoomHeader inline (rather than extracting to its own
+// module) avoids pulling those two dependencies and their
+// transitive state out of page.tsx in this PR. Worth doing later
+// if any other surface needs the header.
+const KIND_LABEL: Record<GameKind, string> = {
+  imposter: "Imposter",
+  wavelength: "Wavelength",
+  "just-one": "Just One",
+  crew: "Crew",
+  hold: "Hold",
+};
+
+function RoomHeader({
+  code,
+  kind,
+  view,
+  playerId,
+  userId,
+}: {
+  code: string;
+  kind: GameKind;
+  view: PublicRoomView;
+  playerId: string;
+  userId: string | null;
+}) {
+  const me = view.players.find((p) => p.id === playerId);
+  const myNickname = me?.nickname ?? "";
+  const myAvatar = me?.avatar ?? null;
+  const isHost = playerId === view.hostId;
+  return (
+    <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-line pb-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
+      <span className="flex items-baseline gap-2">
+        <span>Room</span>
+        <span className="text-base tracking-[0.25em] text-ink normal-case">
+          {code}
+        </span>
+        {/* The game-name badge doubles as the rules entry — tap it
+            to open how-to-play in a new tab so you don't lose your
+            room. */}
+        <Link
+          href={`/rules#${kind}`}
+          target="_blank"
+          rel="noreferrer"
+          title="How to play"
+          className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
+        >
+          {KIND_LABEL[kind]}
+        </Link>
+        {view.groupName && (
+          <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
+            {view.groupName}
+          </span>
+        )}
+      </span>
+      <span className="flex items-center gap-3">
+        <span className="flex items-center gap-2">
+          <AvatarPicker
+            code={code}
+            playerId={playerId}
+            nickname={myNickname}
+            avatar={myAvatar}
+            players={view.players}
+            userId={userId}
+          />
+          <span className="text-base text-ink normal-case tracking-normal">
+            {myNickname}
+          </span>
+          {isHost && (
+            <span className="rounded-xl border border-accent/60 px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-accent">
+              Host
+            </span>
+          )}
+        </span>
+        <RoomChromeControls />
+      </span>
+    </header>
   );
 }
 
