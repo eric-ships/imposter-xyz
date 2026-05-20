@@ -217,6 +217,19 @@ export default function HomePage() {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("choose");
   const [joinCode, setJoinCode] = useState("");
+  // Which lineup card's action modal is currently open. null = no
+  // modal. Set by clicking a card; cleared on close, create, or join.
+  const [cardActionKind, setCardActionKind] = useState<GameKind | null>(
+    null
+  );
+  // When a nameless user picks Create from a card modal, the chosen
+  // kind has to ride along across the IdentityStep so createRoom can
+  // use it after the name is saved. The state is also cleared on
+  // identity-step cancel and on the regular "start a game" button so
+  // the imposter default doesn't leak the last-selected kind.
+  const [pendingCreateKind, setPendingCreateKind] = useState<GameKind | null>(
+    null
+  );
   // prefers-reduced-motion gate, used by the lineup-card hover. CSS-
   // driven animations (squad pill, blobs, sparkles, bg drift) already
   // honor the media query directly; motion's whileHover does not, so
@@ -297,11 +310,18 @@ export default function HomePage() {
     localStorage.setItem(`ci:${code}:nickname`, nickname);
   }
 
-  // Instant create: a fresh Imposter room, no pre-flow. The host picks
-  // a different game and attributes a squad from the lobby. `uid` and
-  // `displayName` are passed when create fires straight after the
-  // identity step, before the identity hook has re-read the new row.
-  async function createRoom(uid?: string, displayName?: string) {
+  // Instant create: a fresh room. Defaults to Imposter (the original
+  // entry point), but the optional `kind` arg lets card-action modal
+  // callers create a room of a specific game directly instead of
+  // making the host switch kinds in the lobby. The host can still
+  // switch later either way. `uid` and `displayName` are passed when
+  // create fires straight after the identity step, before the
+  // identity hook has re-read the new row.
+  async function createRoom(
+    uid?: string,
+    displayName?: string,
+    kind?: GameKind
+  ) {
     setError(null);
     setSubmitting(true);
     try {
@@ -309,7 +329,7 @@ export default function HomePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          kind: "imposter",
+          kind: kind ?? "imposter",
           userId: uid ?? identity.userId ?? undefined,
         }),
       });
@@ -325,14 +345,44 @@ export default function HomePage() {
 
   // "Start a game" — named players go straight into a fresh room;
   // nameless players hit the identity step first, which then fires
-  // createRoom itself.
+  // createRoom itself. The pendingCreateKind clear keeps this button
+  // anchored to the imposter default, even if a previous card modal
+  // had stashed a different kind.
   function startGame() {
     setError(null);
+    setPendingCreateKind(null);
     if (hasName) {
       void createRoom();
     } else {
       setMode("create");
     }
+  }
+
+  // Variant of startGame for the card-action modal: create a room of
+  // a specific game kind. Named players get a room of that kind
+  // immediately; nameless players store the kind in pendingCreateKind
+  // so the IdentityStep's onSave can pass it to createRoom after the
+  // name is captured.
+  function startGameWithKind(kind: GameKind) {
+    setError(null);
+    setCardActionKind(null);
+    if (hasName) {
+      void createRoom(undefined, undefined, kind);
+    } else {
+      setPendingCreateKind(kind);
+      setMode("create");
+    }
+  }
+
+  // Join path from the card-action modal: just enters the existing
+  // join flow. The kind isn't passed to join (rooms are looked up by
+  // code regardless of kind), but the card click still reads as
+  // intentional because it opened this modal.
+  function joinFromCardModal() {
+    setError(null);
+    setCardActionKind(null);
+    setPendingCreateKind(null);
+    setMode("join");
   }
 
   async function joinRoom() {
@@ -412,12 +462,17 @@ export default function HomePage() {
             // Create: room is made immediately. Join: this re-render
             // now drops through to the code input below.
             if (mode === "create") {
-              void createRoom(uid ?? undefined, savedName);
+              void createRoom(
+                uid ?? undefined,
+                savedName,
+                pendingCreateKind ?? undefined
+              );
             }
           }}
           onCancel={() => {
             setMode("choose");
             setError(null);
+            setPendingCreateKind(null);
           }}
         />
       ) : mode === "join" ? (
@@ -484,12 +539,56 @@ export default function HomePage() {
     </div>
   );
 
+  // Look up the in-flight card's game for the action modal's title /
+  // sub. Held in a separate const so the JSX below isn't doing string
+  // gymnastics inline.
+  const cardActionGame =
+    cardActionKind != null
+      ? GAMES.find((g) => g.kind === cardActionKind) ?? null
+      : null;
+
   return (
     <>
       {/* Animated brand backdrop, behind everything. */}
       <AnimatedBackdrop />
       {/* Saturated brand blobs drifting above the bg. */}
       <FloatingBlobs />
+
+      {/* Modal that pops on lineup-card click: lets the visitor go
+          straight into a fresh room of the clicked game, or jump to
+          the join-by-code flow. The same CTAs the landing already
+          offers, scoped to one game so the path is "click the thing
+          you want to play" instead of "pick the start button and
+          hope the lobby has your game." */}
+      <Modal
+        open={cardActionGame != null}
+        onOpenChange={(open) => {
+          if (!open) setCardActionKind(null);
+        }}
+        title={cardActionGame?.title ?? ""}
+        description={cardActionGame?.sub}
+      >
+        <div className="flex flex-col gap-3">
+          <Button
+            size="xl"
+            onClick={() => {
+              if (cardActionKind != null) startGameWithKind(cardActionKind);
+            }}
+            disabled={submitting}
+            className="w-full lowercase"
+          >
+            {submitting ? "starting…" : "start a game →"}
+          </Button>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={joinFromCardModal}
+            className="w-full lowercase"
+          >
+            got a code? join →
+          </Button>
+        </div>
+      </Modal>
 
       {/* Persistent account control — pinned top-right, present on
           every home face once identity has resolved (FACE A and
@@ -660,8 +759,10 @@ export default function HomePage() {
               {GAMES.map((g, i) => {
                 const Vignette = GAME_VIGNETTES[g.kind];
                 return (
-                  <motion.div
+                  <motion.button
                     key={g.kind}
+                    type="button"
+                    onClick={() => setCardActionKind(g.kind)}
                     initial={{ opacity: 0, y: 16, scale: 0.92 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     transition={{
@@ -684,7 +785,7 @@ export default function HomePage() {
                     }}
                     onMouseEnter={() => playHoverSound(g.kind)}
                     onFocus={() => playHoverSound(g.kind)}
-                    className="group flex w-full items-center gap-4 rounded-3xl px-5 py-4 shadow-lg"
+                    className="group flex w-full cursor-pointer items-center gap-4 rounded-3xl border-0 px-5 py-4 text-left shadow-lg"
                     style={{
                       background: CARD_GRADIENT[g.kind],
                     }}
@@ -707,7 +808,7 @@ export default function HomePage() {
                         {g.sub}
                       </span>
                     </span>
-                  </motion.div>
+                  </motion.button>
                 );
               })}
             </div>
