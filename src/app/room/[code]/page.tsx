@@ -2053,6 +2053,7 @@ function PlayerList({
   deltas,
   kick,
   displayPlayers,
+  ghostsToMin = 0,
 }: {
   view: PublicRoomView;
   showScores?: boolean;
@@ -2071,8 +2072,13 @@ function PlayerList({
   // assignment tied to the canonical joined-order in view.players —
   // otherwise colors would shuffle as scores change.
   displayPlayers?: PublicRoomView["players"];
+  // When > 0, render dimmed ghost slots so the roster has
+  // max(rows, ghostsToMin) rows total. Used in the lobby to
+  // communicate "waiting for N more" visually.
+  ghostsToMin?: number;
 }) {
   const rows = displayPlayers ?? view.players;
+  const ghostCount = Math.max(0, ghostsToMin - rows.length);
   return (
     <ul className="divide-y divide-line-soft border-y border-line-soft">
       {rows.map((p, i) => {
@@ -2180,6 +2186,26 @@ function PlayerList({
           </li>
         );
       })}
+      {/* Dimmed ghost slots so the lobby reads "waiting for N more"
+          visually, not just textually. Renders nothing once enough
+          players have joined. */}
+      {Array.from({ length: ghostCount }).map((_, i) => (
+        <li
+          key={`ghost-${i}`}
+          className="flex items-center gap-4 py-3"
+        >
+          {showRank && <div className="w-4" aria-hidden />}
+          <span
+            aria-hidden
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-dashed border-line text-base text-ink-faint/60"
+          >
+            ?
+          </span>
+          <span className="text-sm text-ink-faint">
+            Waiting for a player…
+          </span>
+        </li>
+      ))}
     </ul>
   );
 }
@@ -2868,29 +2894,31 @@ function LobbyPhase({
         currentKind={view.kind}
       />
 
-      <div>
-        <GroupAttributionPill
-          code={code}
-          playerId={playerId}
-          userId={userId}
-          isHost={isHost}
-          isLobby
-          currentGroupId={view.groupId}
-          currentGroupName={view.groupName}
-        />
-      </div>
-
       <section className="space-y-4">
-        <div className="flex items-baseline justify-between">
+        <div className="flex flex-wrap items-baseline justify-between gap-y-2">
           <SectionLabel>
             {anyScore
               ? "Match Score"
               : `Players · ${view.players.length} of 8`}
           </SectionLabel>
-          {anyScore && (
+          {anyScore ? (
             <span className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
               {view.players.length} players
             </span>
+          ) : (
+            // Stats attribution lives inline with the player count so
+            // the squad-vs-casual context sits right next to the
+            // roster it actually counts for — no more orphan chip in
+            // its own row above.
+            <GroupAttributionPill
+              code={code}
+              playerId={playerId}
+              userId={userId}
+              isHost={isHost}
+              isLobby
+              currentGroupId={view.groupId}
+              currentGroupName={view.groupName}
+            />
           )}
         </div>
         <PlayerList
@@ -2899,6 +2927,10 @@ function LobbyPhase({
           showScores={anyScore}
           showAnte={potEnabled}
           showRank={anyScore}
+          // Dim ghost slots for the first 3 players — every game's
+          // minimum start size — so the lobby reads "waiting for N
+          // more" visually, not just textually.
+          ghostsToMin={view.state === "lobby" ? 3 : 0}
           kick={
             isHost && view.state === "lobby"
               ? { code, viewerId: playerId }
