@@ -6,6 +6,8 @@
 //   imposter   → split W/L by role (imposter vs crewmate)
 //   wavelength → top-scorer wins; track avg points
 //   just-one   → cooperative; track avg team-score per match
+//   crew       → cooperative; mission completed = win
+//   hold       → cooperative; all waves cleared = win
 //
 // Lifted into its own module so both /api/groups/[id]/stats AND
 // /api/users/me/stats can call it.
@@ -44,6 +46,16 @@ export type GameRollup = {
     played: number;
     totalDelta: number; // sum of team-correct counts across matches
   };
+  crew: {
+    played: number;
+    won: number; // missions completed
+    totalDelta: number;
+  };
+  hold: {
+    played: number;
+    won: number; // full-clear runs (all waves cleared)
+    totalDelta: number;
+  };
 };
 
 export function emptyRollup(): GameRollup {
@@ -56,6 +68,8 @@ export function emptyRollup(): GameRollup {
     },
     wavelength: { played: 0, won: 0, totalDelta: 0 },
     justOne: { played: 0, totalDelta: 0 },
+    crew: { played: 0, won: 0, totalDelta: 0 },
+    hold: { played: 0, won: 0, totalDelta: 0 },
   };
 }
 
@@ -92,6 +106,14 @@ export function rollupByUser(args: {
     } else if (match.game_kind === "just-one") {
       r.justOne.played += 1;
       r.justOne.totalDelta += pr.delta;
+    } else if (match.game_kind === "crew") {
+      r.crew.played += 1;
+      r.crew.totalDelta += pr.delta;
+      if (pr.won === true) r.crew.won += 1;
+    } else if (match.game_kind === "hold") {
+      r.hold.played += 1;
+      r.hold.totalDelta += pr.delta;
+      if (pr.won === true) r.hold.won += 1;
     }
   }
   return out;
