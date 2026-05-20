@@ -10,6 +10,7 @@ import { UpperLoader } from "@/components/UpperLoader";
 import { GAME_VIGNETTES } from "@/components/GameVignettes";
 import { Button, buttonClasses } from "@/components/Button";
 import { Modal } from "@/components/Modal";
+import { CARD_GRADIENT } from "@/lib/game-cards";
 
 type Mode = "choose" | "create" | "join";
 
@@ -27,28 +28,10 @@ const GAMES: { kind: GameKind; title: string; sub: string }[] = [
   { kind: "hold", title: "Hold", sub: "3–5 · co-op tower defense" },
 ];
 
-// Per-game card gradient. Each card is a journey between two palette
-// anchors, so the lineup reads as a tour of the same color wheel the
-// wordmark and conic icon already use. No card invents a hue;
-// everything is two-anchor mixes from globals.css.
-//
-//   Imposter   red → magenta    (hottest, most attention-grabbing)
-//   Wavelength blue → purple    (cool, spectrum-y, mental)
-//   Just One   magenta → purple (cooperative, warm but not hot)
-//   Crew       purple → blue    (cool quartet, contemplative co-op)
-//   Hold       gold → amber     (fully-warm, treasure / defense)
-//
-// The derived purple (#873EBC, the magenta↔blue midpoint) threads
-// through Wavelength, Just One, and Crew, becoming the connective
-// tissue of the palette instead of a one-off card color. Indexed in
-// the same order as GAMES above.
-const CARD_GRADIENTS = [
-  "linear-gradient(135deg, var(--upper-red) 0%, var(--upper-magenta) 100%)",
-  "linear-gradient(135deg, var(--upper-blue) 0%, var(--upper-purple) 100%)",
-  "linear-gradient(135deg, var(--upper-magenta) 0%, var(--upper-purple) 100%)",
-  "linear-gradient(135deg, var(--upper-purple) 0%, var(--upper-blue) 100%)",
-  "linear-gradient(135deg, var(--upper-gold) 0%, var(--upper-amber) 100%)",
-];
+// Per-game card gradients live in @/lib/game-cards so the in-room
+// lobby picker can reuse them — the row of game cards reads as the
+// same lineup on every surface. The kind→gradient map there explains
+// the colour intent per game.
 
 // "Upper" wordmark: the home page's loud anchor. Now wears the
 // canonical --wordmark-gradient token (red → magenta → purple → blue,
@@ -549,8 +532,7 @@ export default function HomePage() {
                     whileHover={{ y: -5, scale: 1.035 }}
                     className="flex w-full items-center gap-4 rounded-3xl px-5 py-4 shadow-lg"
                     style={{
-                      background:
-                        CARD_GRADIENTS[i % CARD_GRADIENTS.length],
+                      background: CARD_GRADIENT[g.kind],
                     }}
                   >
                     {/* The game's animated vignette in a white badge,

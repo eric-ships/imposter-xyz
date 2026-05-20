@@ -1,13 +1,23 @@
 "use client";
 
-// Lobby-only kind switcher. Host taps the other game's pill to flip
+// Lobby-only kind switcher. Host taps another game's card to flip
 // the room's kind in place — players don't need to leave and rejoin.
-// Non-host viewers see the same row but the inactive pill is read-only.
+// Non-host viewers see the same row but with read-only treatment on
+// the inactive cards.
 //
 // Endpoint enforces the same rules independently (lobby + host only,
 // pot-not-anted). This component just gates the UI.
+//
+// Visual matches the landing's "lineup ↓" cards: same two-anchor
+// gradients (CARD_GRADIENT), same white vignette badge, same serif
+// label. The selected card grows an accent ring; non-host viewers
+// see inactive cards muted so the choice still reads as "the host's
+// to make".
+
 import { useState } from "react";
 import type { GameKind } from "@/lib/game";
+import { CARD_GRADIENT } from "@/lib/game-cards";
+import { GAME_VIGNETTES } from "@/components/GameVignettes";
 
 type KindOption = {
   kind: GameKind;
@@ -61,10 +71,17 @@ export function GameKindSwitcher({
       <h2 className="text-[11px] uppercase tracking-[0.22em] text-ink-faint">
         Game{!isHost && " · host picks"}
       </h2>
-      <div className="grid grid-cols-1 gap-2">
+      <div className="grid grid-cols-1 gap-2.5">
         {OPTIONS.map((o) => {
           const selected = o.kind === currentKind;
           const interactive = isHost && !selected && !pending;
+          const Vignette = GAME_VIGNETTES[o.kind];
+          // Three visual states. The card is always rendered in its
+          // brand gradient — the only difference is the ring on
+          // selected, the hover lift on host-interactive, and a
+          // slight desaturation on read-only inactive cards
+          // (non-host or already-pending switch) so the choice still
+          // reads as "the host's to make".
           return (
             <button
               key={o.kind}
@@ -72,24 +89,33 @@ export function GameKindSwitcher({
               onClick={() => pick(o.kind)}
               disabled={!interactive}
               aria-pressed={selected}
-              className={`flex flex-col items-start gap-1 rounded-sm border px-3 py-2.5 text-left transition-all duration-100 ${
+              className={`group/gamecard relative flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left shadow-md transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-page ${
                 selected
-                  ? "border-accent bg-accent/10"
+                  ? "scale-[1.01] ring-2 ring-accent ring-offset-2 ring-offset-page"
                   : interactive
-                    ? "border-line text-ink-soft hover:border-ink hover:text-ink active:scale-[0.98]"
-                    : "border-line text-ink-faint cursor-default"
+                    ? "hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.99]"
+                    : "opacity-65 saturate-75 cursor-default"
               }`}
+              style={{ background: CARD_GRADIENT[o.kind] }}
             >
-              <span
-                className={`font-serif text-base ${
-                  selected ? "text-ink" : ""
-                }`}
-              >
-                {o.label}
+              {Vignette && (
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white">
+                  <Vignette />
+                </span>
+              )}
+              <span className="flex flex-col gap-0.5">
+                <span className="font-serif text-xl text-white">
+                  {o.label}
+                </span>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.16em] text-white/85">
+                  {o.sub}
+                </span>
               </span>
-              <span className="text-[10px] uppercase tracking-[0.18em] text-ink-faint">
-                {o.sub}
-              </span>
+              {selected && (
+                <span className="ml-auto rounded-full bg-white/95 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink">
+                  Picked
+                </span>
+              )}
             </button>
           );
         })}
