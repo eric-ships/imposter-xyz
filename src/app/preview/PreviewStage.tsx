@@ -15,13 +15,16 @@ import { JustOneBody } from "@/games/just-one/JustOneBody";
 import { CrewBody } from "@/games/crew/CrewBody";
 import { HoldBody } from "@/games/hold/HoldBody";
 import {
+  LobbyPhase,
   PlayingPhase,
-  VotingPhase,
   RevealPhase,
+  RoomHeader,
+  VotingPhase,
 } from "@/app/room/[code]/page";
 import {
   PREVIEW_GAMES,
   VIEWER_ID,
+  imposterLobbyView,
   imposterPlayingView,
   imposterVotingView,
   imposterRevealView,
@@ -69,6 +72,32 @@ function phasesFor(slug: string): PhaseSpec[] {
   switch (slug) {
     case "imposter":
       return [
+        {
+          label: "Lobby",
+          caption:
+            "Fresh room — Eric (you) is the host, Alice just joined. Game picker, share invite, ghost slot for the third player still needed.",
+          node: (() => {
+            const view = imposterLobbyView();
+            return (
+              <div className="space-y-4">
+                <RoomHeader
+                  code={CODE}
+                  kind="imposter"
+                  view={view}
+                  playerId={VIEWER_ID}
+                  userId={null}
+                />
+                <LobbyPhase
+                  view={view}
+                  playerId={VIEWER_ID}
+                  code={CODE}
+                  onRefetch={() => {}}
+                  userId={null}
+                />
+              </div>
+            );
+          })(),
+        },
         {
           label: "Clue phase",
           caption:
