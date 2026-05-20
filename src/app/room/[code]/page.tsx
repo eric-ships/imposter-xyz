@@ -533,9 +533,19 @@ function RoomPlay({
           <span className="text-base tracking-[0.25em] text-ink normal-case">
             {code}
           </span>
-          <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+          {/* The game-name badge doubles as the rules entry — tap
+              it to open how-to-play in a new tab so you don't lose
+              your room. Replaces the standalone Rules link the
+              header used to carry. */}
+          <Link
+            href="/rules#imposter"
+            target="_blank"
+            rel="noreferrer"
+            title="How to play"
+            className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
+          >
             Imposter
-          </span>
+          </Link>
           {view.groupName && (
             <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
               {view.groupName}
@@ -543,22 +553,6 @@ function RoomPlay({
           )}
         </span>
         <span className="flex items-center gap-3">
-          {you.isHost && (
-            <CasualModeButton
-              code={code}
-              playerId={playerId}
-              enabled={view.showCandidatesAlways}
-            />
-          )}
-          <Link
-            href="/rules#imposter"
-            target="_blank"
-            rel="noreferrer"
-            className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
-            title="How to play"
-          >
-            Rules
-          </Link>
           <span className="flex items-center gap-2">
             <AvatarPicker
               code={code}
@@ -984,9 +978,15 @@ function WavelengthRoomShell({
             <span className="text-base tracking-[0.25em] text-ink normal-case">
               {code}
             </span>
-            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+            <Link
+              href="/rules#wavelength"
+              target="_blank"
+              rel="noreferrer"
+              title="How to play"
+              className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
+            >
               Wavelength
-            </span>
+            </Link>
             {view.groupName && (
               <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
                 {view.groupName}
@@ -994,15 +994,6 @@ function WavelengthRoomShell({
             )}
           </span>
           <span className="flex items-center gap-3">
-            <Link
-              href="/rules#wavelength"
-              target="_blank"
-              rel="noreferrer"
-              className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
-              title="How to play"
-            >
-              Rules
-            </Link>
             <span className="flex items-center gap-2">
               <AvatarPicker
                 code={code}
@@ -1081,9 +1072,15 @@ function JustOneRoomShell({
             <span className="text-base tracking-[0.25em] text-ink normal-case">
               {code}
             </span>
-            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+            <Link
+              href="/rules#just-one"
+              target="_blank"
+              rel="noreferrer"
+              title="How to play"
+              className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
+            >
               Just One
-            </span>
+            </Link>
             {view.groupName && (
               <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
                 {view.groupName}
@@ -1091,15 +1088,6 @@ function JustOneRoomShell({
             )}
           </span>
           <span className="flex items-center gap-3">
-            <Link
-              href="/rules#just-one"
-              target="_blank"
-              rel="noreferrer"
-              className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
-              title="How to play"
-            >
-              Rules
-            </Link>
             <span className="flex items-center gap-2">
               <AvatarPicker
                 code={code}
@@ -1178,9 +1166,15 @@ function CrewRoomShell({
             <span className="text-base tracking-[0.25em] text-ink normal-case">
               {code}
             </span>
-            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+            <Link
+              href="/rules#crew"
+              target="_blank"
+              rel="noreferrer"
+              title="How to play"
+              className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
+            >
               Crew
-            </span>
+            </Link>
             {view.groupName && (
               <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
                 {view.groupName}
@@ -1188,15 +1182,6 @@ function CrewRoomShell({
             )}
           </span>
           <span className="flex items-center gap-3">
-            <Link
-              href="/rules#crew"
-              target="_blank"
-              rel="noreferrer"
-              className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
-              title="How to play"
-            >
-              Rules
-            </Link>
             <span className="flex items-center gap-2">
               <AvatarPicker
                 code={code}
@@ -1274,9 +1259,15 @@ function HoldRoomShell({
             <span className="text-base tracking-[0.25em] text-ink normal-case">
               {code}
             </span>
-            <span className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent">
+            <Link
+              href="/rules#hold"
+              target="_blank"
+              rel="noreferrer"
+              title="How to play"
+              className="ml-2 rounded-full border border-accent/40 bg-accent/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-accent transition hover:bg-accent/20 hover:text-ink"
+            >
               Hold
-            </span>
+            </Link>
             {view.groupName && (
               <span className="ml-2 rounded-full border border-leaf/40 bg-leaf/10 px-2 py-0.5 text-[10px] tracking-[0.2em] text-leaf">
                 {view.groupName}
@@ -1284,15 +1275,6 @@ function HoldRoomShell({
             )}
           </span>
           <span className="flex items-center gap-3">
-            <Link
-              href="/rules#hold"
-              target="_blank"
-              rel="noreferrer"
-              className="text-[11px] uppercase tracking-[0.2em] text-ink-faint transition hover:text-ink"
-              title="How to play"
-            >
-              Rules
-            </Link>
             <span className="flex items-center gap-2">
               <AvatarPicker
                 code={code}
@@ -1335,51 +1317,6 @@ function HoldRoomShell({
         />
       </div>
     </main>
-  );
-}
-
-function CasualModeButton({
-  code,
-  playerId,
-  enabled,
-}: {
-  code: string;
-  playerId: string;
-  enabled: boolean;
-}) {
-  const [pending, setPending] = useState(false);
-
-  async function toggle() {
-    if (pending) return;
-    setPending(true);
-    try {
-      await fetch(`/api/rooms/${code}/show-candidates`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ playerId, enabled: !enabled }),
-      });
-    } finally {
-      setPending(false);
-    }
-  }
-
-  return (
-    <button
-      onClick={toggle}
-      disabled={pending}
-      title={
-        enabled
-          ? "Shortlist: visible to all"
-          : "Shortlist: off (host can enable)"
-      }
-      className={`rounded-xl border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.12em] transition-all duration-100 active:scale-[0.95] disabled:opacity-40 disabled:active:scale-100 ${
-        enabled
-          ? "border-accent/60 bg-accent/10 text-accent hover:bg-accent hover:text-page"
-          : "border-line text-ink-faint hover:border-ink hover:text-ink"
-      }`}
-    >
-      Shortlist {enabled ? "on" : "off"}
-    </button>
   );
 }
 
