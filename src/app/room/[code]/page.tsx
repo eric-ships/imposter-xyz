@@ -2732,7 +2732,21 @@ function LobbyInvite({
       <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-faint">
         Your room
       </div>
-      <div className="mt-1 font-serif text-5xl tracking-[0.1em] text-ink">
+      {/* The four-letter code wears the brand wordmark gradient
+          (red → magenta → purple → blue) so the share-card hero
+          echoes the Upper wordmark itself. Same background-clip:
+          text trick the Wordmark component uses, pulling from the
+          shared --wordmark-gradient token so both surfaces stay in
+          sync as the palette evolves. */}
+      <div
+        className="mt-1 font-serif text-5xl tracking-[0.1em]"
+        style={{
+          backgroundImage: "var(--wordmark-gradient)",
+          WebkitBackgroundClip: "text",
+          backgroundClip: "text",
+          color: "transparent",
+        }}
+      >
         {code}
       </div>
       <p className="mt-2 text-sm font-normal text-ink-soft">
