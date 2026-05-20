@@ -174,6 +174,13 @@ export function imposterVotingView(): PublicRoomView {
 
 // The reveal — the crew caught Jonas, his last-ditch guess was wrong,
 // crewmates take the round.
+//
+// The vote ledger tells a story for the preview: three votes nail
+// Jonas (Alice/Eric/Mara), Priya was misled and votes Eric, Jonas
+// tries to deflect onto Eric too. Without this, the votes list on
+// the reveal preview was empty (it spreads from imposterPlayingView
+// → baseView, which defaults votes: []) — so the avatar pairs in
+// the votes section from #88 weren't visible on /preview/imposter.
 export function imposterRevealView(): PublicRoomView {
   const playing = imposterPlayingView();
   return {
@@ -181,6 +188,13 @@ export function imposterRevealView(): PublicRoomView {
     state: "reveal",
     caughtImposterId: SEED_PLAYER_IDS.jonas,
     guessCandidates: ["Waffles", "Pancakes", "Omelette", "Toast", "Cereal"],
+    votes: [
+      { voter_id: SEED_PLAYER_IDS.alice, target_id: SEED_PLAYER_IDS.jonas },
+      { voter_id: SEED_PLAYER_IDS.eric, target_id: SEED_PLAYER_IDS.jonas },
+      { voter_id: SEED_PLAYER_IDS.mara, target_id: SEED_PLAYER_IDS.jonas },
+      { voter_id: SEED_PLAYER_IDS.priya, target_id: SEED_PLAYER_IDS.eric },
+      { voter_id: SEED_PLAYER_IDS.jonas, target_id: SEED_PLAYER_IDS.eric },
+    ],
     reveal: {
       imposterIds: [SEED_PLAYER_IDS.jonas],
       secretWord: "Pancakes",
