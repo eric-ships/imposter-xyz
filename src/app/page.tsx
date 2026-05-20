@@ -27,54 +27,51 @@ const GAMES: { kind: GameKind; title: string; sub: string }[] = [
   { kind: "hold", title: "Hold", sub: "3–5 · co-op tower defense" },
 ];
 
-// One bold brand colour per game card — each one is a sample from
-// the brand conic so the lineup reads as a slice of the same sweep,
-// not five arbitrary hues.
+// Per-game card gradient. Each card is a journey between two palette
+// anchors, so the lineup reads as a tour of the same color wheel the
+// wordmark and conic icon already use. No card invents a hue;
+// everything is two-anchor mixes from globals.css.
 //
-// The conic stops are red (0°), gold (110°), magenta (220°), blue
-// (320°). Cards take the three exact stops + two interpolations
-// (purple at 270° between magenta and blue, deep amber at 55° between
-// red and gold). Gold's native #f3ba26 is too light for white text —
-// the amber slot uses a darkened conic gold (#c47416) that passes
-// WCAG AA on white. All five are still dark enough for white text
-// and the vignette art's white badge.
-const CARD_COLORS = [
-  "#d6471f", // red — imposter      · conic 0°
-  "#2f5cff", // blue — wavelength   · conic 320°
-  "#e0207a", // magenta — just one  · conic 220°
-  "#873ebc", // purple — crew       · conic 270° (magenta↔blue midpoint)
-  "#c47416", // amber — hold        · conic gold darkened for contrast
+//   Imposter   red → magenta    (hottest, most attention-grabbing)
+//   Wavelength blue → purple    (cool, spectrum-y, mental)
+//   Just One   magenta → purple (cooperative, warm but not hot)
+//   Crew       purple → blue    (cool quartet, contemplative co-op)
+//   Hold       gold → amber     (fully-warm, treasure / defense)
+//
+// The derived purple (#873EBC, the magenta↔blue midpoint) threads
+// through Wavelength, Just One, and Crew, becoming the connective
+// tissue of the palette instead of a one-off card color. Indexed in
+// the same order as GAMES above.
+const CARD_GRADIENTS = [
+  "linear-gradient(135deg, var(--upper-red) 0%, var(--upper-magenta) 100%)",
+  "linear-gradient(135deg, var(--upper-blue) 0%, var(--upper-purple) 100%)",
+  "linear-gradient(135deg, var(--upper-magenta) 0%, var(--upper-purple) 100%)",
+  "linear-gradient(135deg, var(--upper-purple) 0%, var(--upper-blue) 100%)",
+  "linear-gradient(135deg, var(--upper-gold) 0%, var(--upper-amber) 100%)",
 ];
 
-// Card backgrounds use a subtle within-hue gradient — same brand
-// colour at the top-left, mixed toward black at the bottom-right.
-// Reads as a soft "lit from above" depth without changing identity
-// or contrast with the white text. color-mix(in srgb …) is widely
-// supported in Baseline 2024+.
-function cardGradient(color: string): string {
-  return `linear-gradient(135deg, ${color} 0%, color-mix(in srgb, ${color} 72%, black) 100%)`;
-}
-
-// The brand conic sweep — the four-accent gradient of the app icon
+// The brand conic sweep: the four-accent gradient of the app icon
 // (scripts/gen-icon.mjs) and the loader. The home page wears it too.
+// Anchor stops resolve from the brand tokens in globals.css.
 const BRAND_CONIC =
-  "conic-gradient(from 0deg, #d6471f 0deg, #f3ba26 110deg, #e0207a 220deg, #2f5cff 320deg, #d6471f 360deg)";
+  "conic-gradient(from 0deg, var(--upper-red) 0deg, var(--upper-gold) 110deg, var(--upper-magenta) 220deg, var(--upper-blue) 320deg, var(--upper-red) 360deg)";
 
-// "Upper" wordmark — a vivid red→magenta→blue gradient serif, the
-// home page's loud anchor. With background-clip:text, any glyph ink
-// outside the element box renders transparent — so the leading is
-// loosened, a little bottom padding added for the p descenders, and
-// right padding for the italic R's terminal (sized in em so it
-// scales correctly across the text-7xl / text-8xl call sites — at
-// text-8xl the italic R overhangs ~12px, 0.08em wasn't enough).
-// `className` carries size.
+// "Upper" wordmark: the home page's loud anchor. Now wears the
+// canonical --wordmark-gradient token (red → magenta → purple → blue,
+// a literal tour of the brand color wheel), so the wordmark and the
+// lineup of cards read as the same system. With background-clip:text,
+// any glyph ink outside the element box renders transparent — so the
+// leading is loosened, a little bottom padding added for the p
+// descenders, and right padding for the italic R's terminal (sized in
+// em so it scales correctly across the text-7xl / text-8xl call
+// sites — at text-8xl the italic R overhangs ~12px, 0.08em wasn't
+// enough). `className` carries size.
 function Wordmark({ className = "" }: { className?: string }) {
   return (
     <h1
       className={`font-serif italic leading-[1.05] tracking-tight pb-[0.16em] pr-[0.18em] ${className}`}
       style={{
-        backgroundImage:
-          "linear-gradient(105deg, #d6471f 0%, #e0207a 52%, #2f5cff 100%)",
+        backgroundImage: "var(--wordmark-gradient)",
         WebkitBackgroundClip: "text",
         backgroundClip: "text",
         color: "transparent",
@@ -579,9 +576,8 @@ export default function HomePage() {
                     whileHover={{ y: -5, scale: 1.035 }}
                     className="flex w-full items-center gap-4 rounded-3xl px-5 py-4 shadow-lg"
                     style={{
-                      background: cardGradient(
-                        CARD_COLORS[i % CARD_COLORS.length]
-                      ),
+                      background:
+                        CARD_GRADIENTS[i % CARD_GRADIENTS.length],
                     }}
                   >
                     {/* The game's animated vignette in a white badge,

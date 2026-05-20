@@ -21,8 +21,8 @@
    The Upper theme — one cohesive look, light + dark.
    See THEME.md for the full guideline.
 
-   The brand is the conic sweep: red #d6471f, gold #f3ba26,
-   magenta #e0207a, blue #2f5cff. The UI ground is kept clean and
+   The brand is the conic sweep: red #FF3D5A, gold #F3BA26,
+   magenta #E0207A, blue #2F5CFF. The UI ground is kept clean and
    neutral so that colour — the icon, the loader, the home glow,
    the accent — does the popping. (This replaces the older
    four-palette system; data-palette is now ignored.)
@@ -37,6 +37,63 @@
      accent      primary action + brand red   accent-soft tints
      leaf        success              oxblood   error / destructive
    ============================================================ */
+
+/* Upper brand palette: the canonical color system.
+
+   Four anchor hues sampled directly from the conic sweep, plus a
+   small set of derived colors with explicit derivation rules so we
+   never hand-pick a brand color again. These are mode-independent:
+   the same red is the brand red on peach as on near-black. Mode
+   tokens (bg, text, surface) live in the :root[data-theme] blocks
+   above and below.
+
+   Anchors. Only --upper-red moved, from a muddier #d6471f to a
+   saturated 100%, lightness 62% red that finally sits at the same
+   loudness as the other three:
+     --upper-red      350° hue
+     --upper-gold     ~46° hue
+     --upper-magenta  ~330° hue (reading as warm pink)
+     --upper-blue     ~228° hue
+
+   Derived:
+     --upper-purple   srgb mix(magenta, blue, 50%). Connective hue;
+                      threads through 3 card gradients.
+     --upper-amber    --upper-gold darkened to L=42%. Gold→amber is
+                      the warm half of the wheel, and amber is also
+                      the WCAG-safe gold for text on white.
+     --upper-rose     srgb mix(red, magenta, 50%). Bridge between
+                      adjacent anchors.
+     --upper-violet   srgb mix(purple, magenta, 50%). */
+:root {
+  --upper-red:     #FF3D5A;
+  --upper-gold:    #F3BA26;
+  --upper-magenta: #E0207A;
+  --upper-blue:    #2F5CFF;
+
+  --upper-purple:  #873EBC;
+  --upper-amber:   #C47416;
+  --upper-rose:    #F02E6A;
+  --upper-violet:  #B62E99;
+
+  /* Deep variants for text/icons sitting on a same-hue background
+     (e.g. magenta type on a peach bg, red type on rose). */
+  --upper-red-deep:     #B82138;
+  --upper-magenta-deep: #8C0E4A;
+  --upper-blue-deep:    #1530B8;
+
+  /* Brand-defining gradients. The wordmark gradient is a literal
+     tour of the color wheel from red through to blue, so the
+     wordmark and the lineup of cards read as the same system. The
+     squad gradient is the primary-CTA / "squad." pill mix. */
+  --wordmark-gradient: linear-gradient(90deg,
+    var(--upper-red) 0%,
+    var(--upper-magenta) 33%,
+    var(--upper-purple) 66%,
+    var(--upper-blue) 100%);
+  --squad-gradient: linear-gradient(90deg,
+    var(--upper-red) 0%,
+    var(--upper-magenta) 100%);
+}
 
 :root,
 :root[data-theme="light"] {
