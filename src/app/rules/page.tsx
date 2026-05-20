@@ -14,28 +14,27 @@ export default function RulesPage() {
           How to play
         </h1>
         <p className="mt-3 text-sm text-ink-soft">
-          Three short games. Pick one in the lobby and bring three to
+          Five short games. Pick one in the lobby and bring three to
           eight friends.
         </p>
         <nav className="mt-6 flex flex-wrap justify-center gap-2">
-          <a
-            href="#imposter"
-            className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
-          >
-            Imposter
-          </a>
-          <a
-            href="#wavelength"
-            className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
-          >
-            Wavelength
-          </a>
-          <a
-            href="#just-one"
-            className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
-          >
-            Just One
-          </a>
+          {(
+            [
+              ["Imposter", "imposter"],
+              ["Wavelength", "wavelength"],
+              ["Just One", "just-one"],
+              ["Crew", "crew"],
+              ["Hold", "hold"],
+            ] as const
+          ).map(([name, slug]) => (
+            <a
+              key={slug}
+              href={`#${slug}`}
+              className="rounded-full border border-line px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft transition hover:border-ink hover:text-ink"
+            >
+              {name}
+            </a>
+          ))}
         </nav>
       </header>
 
@@ -390,6 +389,171 @@ export default function RulesPage() {
             with whatever clues are in (missing players just don&apos;t
             help that round). If guess time runs out, the card counts
             as wrong.
+          </p>
+        </Section>
+      </article>
+
+      {/* ───────────────────── Crew ───────────────────── */}
+      <article
+        id="crew"
+        className="scroll-mt-12 space-y-10 border-t border-line pt-12"
+      >
+        <header className="border-b border-line pb-4">
+          <h2 className="font-serif text-3xl italic text-ink">Crew</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            A cooperative trick-taking game with secret tasks.
+            <br />
+            Three to five players. Fifteen to twenty-five minutes.
+          </p>
+        </header>
+
+        <Section label="Setup">
+          <p>
+            Thirty-six colored cards (four suits of 1-9) plus three or
+            four <em>rockets</em> as the trump suit. The deck deals out
+            evenly across the table, so every hand is the same size.
+          </p>
+          <p>
+            Each player is also dealt one <em>task</em>: a specific
+            non-rocket card from the deck that <em>they</em> must
+            personally win in a trick. Tasks are open — the table sees
+            who has to win what. Whoever holds the highest rocket leads
+            the first trick.
+          </p>
+        </Section>
+
+        <Section label="Playing tricks">
+          <p>
+            On your turn you play any card. Other players in seat order
+            must <em>follow suit</em> if they can — if a yellow led, you
+            play yellow if you have any. If you&apos;re out of the led
+            suit you can play anything, including a rocket.
+          </p>
+          <p>
+            The trick is won by the highest rocket if any were played,
+            otherwise by the highest card of the led suit. The winner
+            leads the next trick.
+          </p>
+        </Section>
+
+        <Section label="Communication">
+          <p>
+            You can&apos;t talk strategy — but each player has{" "}
+            <span className="text-accent">one communication token</span>{" "}
+            per match. Spend it before a trick to flip one non-rocket
+            card from your hand face-up. The reveal also says whether
+            that card is your <em>highest</em>, <em>lowest</em>, or{" "}
+            <em>only</em> card of its color.
+          </p>
+          <p>
+            That&apos;s the whole table-talk vocabulary. Use it well —
+            once it&apos;s spent, it&apos;s gone for the rest of the
+            mission.
+          </p>
+        </Section>
+
+        <Section label="Winning the mission">
+          <p>
+            The crew wins if{" "}
+            <span className="text-leaf">every task is completed</span> —
+            each task-holder personally wins the trick containing their
+            task card. The moment a task card is won by the wrong player
+            the mission is lost; you can finish the deck or surrender
+            and deal again.
+          </p>
+        </Section>
+
+        <Section label="Timers">
+          <ul className="space-y-2">
+            <Timer label="Per card / signal" value="40 seconds" />
+          </ul>
+          <p>
+            Run out of time and the server plays the lowest legal card
+            for you. Rude, but it keeps the trick moving.
+          </p>
+        </Section>
+      </article>
+
+      {/* ───────────────────── Hold ───────────────────── */}
+      <article
+        id="hold"
+        className="scroll-mt-12 space-y-10 border-t border-line pt-12"
+      >
+        <header className="border-b border-line pb-4">
+          <h2 className="font-serif text-3xl italic text-ink">Hold</h2>
+          <p className="mt-2 text-sm leading-relaxed text-ink-soft">
+            A cooperative tower-defense — hold the line for fourteen
+            waves.
+            <br />
+            Three to five players. Twenty to thirty minutes.
+          </p>
+        </header>
+
+        <Section label="The board">
+          <p>
+            One shared map: an S-curve path that enemies march down
+            toward your <span className="text-oxblood">core</span>.
+            Towers may be placed anywhere off the path. The core has 20
+            HP — leak too many enemies and it&apos;s over.
+          </p>
+        </Section>
+
+        <Section label="Towers">
+          <ul className="space-y-2">
+            <Outcome
+              label="Cannon"
+              detail="Heavy shots, ignores armor"
+            />
+            <Outcome
+              label="Arc"
+              detail="Chains to extra targets — swarm-killer"
+            />
+            <Outcome
+              label="Frost"
+              detail="Aura that slows enemies in range"
+            />
+            <Outcome label="Sniper" detail="Long range, hits flyers" />
+          </ul>
+          <p>
+            Each tower can be upgraded once to level 2 (more damage,
+            more range) or sold back for 60% of total spend if you
+            misplaced it.
+          </p>
+        </Section>
+
+        <Section label="Enemies">
+          <ul className="space-y-2">
+            <Outcome label="Runner" detail="Fast, low HP" />
+            <Outcome label="Brute" detail="Slow, armored — cannons only" />
+            <Outcome label="Flier" detail="Skips the path — snipers only" />
+            <Outcome label="Shielded" detail="Resists the first hit" />
+          </ul>
+        </Section>
+
+        <Section label="The round">
+          <p>
+            Every wave has two phases. In{" "}
+            <span className="text-accent">planning</span> the table
+            places towers, upgrades, or sells. When everyone hits{" "}
+            <em>ready</em>, the wave plays as a deterministic
+            simulation — same animation for every player.
+          </p>
+          <p>
+            Survive every wave with at least 1 core HP and you win.
+            Drop to zero and the mission fails.
+          </p>
+        </Section>
+
+        <Section label="Economy">
+          <ul className="space-y-2">
+            <Timer label="Starting supply" value="14 per player" />
+            <Timer label="Per-round income" value="+9 per player" />
+            <Timer label="Sell refund" value="60% of spend" />
+          </ul>
+          <p>
+            Bounty from kills accrues to the player whose tower landed
+            the killing shot. Coordinate placements — uneven supply
+            means uneven board coverage.
           </p>
         </Section>
       </article>
