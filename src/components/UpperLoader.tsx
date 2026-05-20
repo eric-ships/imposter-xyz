@@ -10,8 +10,10 @@
 import { motion, useReducedMotion } from "motion/react";
 
 // The same four-accent sweep as the app icon — see scripts/gen-icon.mjs.
+// Anchors come from the brand tokens in globals.css; CSS resolves the
+// var() references inside the gradient string at paint time.
 const CONIC =
-  "conic-gradient(from 0deg, #d6471f 0deg, #f3ba26 110deg, #e0207a 220deg, #2f5cff 320deg, #d6471f 360deg)";
+  "conic-gradient(from 0deg, var(--upper-red) 0deg, var(--upper-gold) 110deg, var(--upper-magenta) 220deg, var(--upper-blue) 320deg, var(--upper-red) 360deg)";
 
 // The app icon's up-arrow silhouette, in a 64×64 box.
 const ARROW = "M32 11 L55 34 L42 34 L42 55 L22 55 L22 34 L9 34 Z";
