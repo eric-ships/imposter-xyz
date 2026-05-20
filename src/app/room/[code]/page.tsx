@@ -1146,7 +1146,9 @@ const KIND_LABEL: Record<GameKind, string> = {
   hold: "Hold",
 };
 
-function RoomHeader({
+// Exported for /preview pages so the lobby preview can render the
+// same chrome the real room wears.
+export function RoomHeader({
   code,
   kind,
   view,
@@ -2616,7 +2618,10 @@ function LobbyInvite({
   );
 }
 
-function LobbyPhase({
+// Exported for /preview pages — see PlayingPhase above for the same
+// pattern. API calls inside (e.g. word-prewarm POST) will 404 against
+// the mock room, which is fine; UI renders.
+export function LobbyPhase({
   view,
   playerId,
   code,

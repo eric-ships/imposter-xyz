@@ -111,6 +111,19 @@ const IMPOSTER_PLAYERS = roster(5, {
   [SEED_PLAYER_IDS.priya]: 2,
 });
 
+// Fresh lobby: Eric (the viewer) is the host, Alice has joined.
+// Only two players so the player list shows one ghost slot — the
+// preview can show off today's lobby polish: the bold gradient game
+// cards, the share-card with the wordmark-gradient code, the ghosts.
+export function imposterLobbyView(): PublicRoomView {
+  const base = baseView("imposter", roster(2));
+  return {
+    ...base,
+    state: "lobby",
+    hostId: VIEWER_ID,
+  };
+}
+
 // Round 2 of a "Breakfast foods" match. Secret word is "Pancakes";
 // Jonas is the imposter. Eric (the viewer) is an honest crewmate.
 export function imposterPlayingView(): PublicRoomView {
