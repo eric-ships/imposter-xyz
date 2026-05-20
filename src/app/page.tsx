@@ -46,7 +46,7 @@ const GAMES: { kind: GameKind; title: string; sub: string }[] = [
 function Wordmark({ className = "" }: { className?: string }) {
   return (
     <h1
-      className={`font-serif italic leading-[1.05] tracking-tight pb-[0.16em] pr-[0.18em] ${className}`}
+      className={`font-serif font-bold italic leading-[1.05] tracking-tight pb-[0.16em] pr-[0.18em] ${className}`}
       style={{
         backgroundImage: "var(--wordmark-gradient)",
         WebkitBackgroundClip: "text",
@@ -74,6 +74,79 @@ function AnimatedBackdrop() {
     />
   );
 }
+
+// Four brand-anchor blobs drifting above the animated bg. Each blob
+// has its own duration and a negative animation-delay so all four are
+// mid-cycle on first paint; the durations are deliberately co-prime
+// (9, 11, 13, 17s) so they never sync up. Lives on a fixed full-
+// viewport overflow-hidden layer just below content (z-[-5]) so the
+// blobs never cause horizontal scroll at peak translate.
+function FloatingBlobs() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 z-[-5] overflow-hidden"
+    >
+      <div className="blob blob-a" />
+      <div className="blob blob-b" />
+      <div className="blob blob-c" />
+      <div className="blob blob-d" />
+    </div>
+  );
+}
+
+// Four sparkle dots scattered across the hero, each fading in and
+// out on its own staggered loop. Magenta on light / white on dark.
+// Position + cadence are deliberately uneven so the dots feel
+// scattered rather than placed. Rendered inside a `relative` parent
+// so the percentages anchor to the hero column.
+const SPARKLES: ReadonlyArray<{
+  top: string;
+  left: string;
+  duration: string;
+  delay: string;
+  char: "✦" | "✧";
+}> = [
+  { top: "8%",  left: "82%", duration: "3.2s", delay: "0s",   char: "✦" },
+  { top: "42%", left: "6%",  duration: "4.1s", delay: "0.8s", char: "✧" },
+  { top: "68%", left: "74%", duration: "3.7s", delay: "1.5s", char: "✦" },
+  { top: "88%", left: "18%", duration: "4.5s", delay: "2.2s", char: "✧" },
+];
+
+function Sparkles() {
+  return (
+    <>
+      {SPARKLES.map((s, i) => (
+        <span
+          key={i}
+          aria-hidden
+          className="sparkle-dot"
+          style={{
+            top: s.top,
+            left: s.left,
+            animationDuration: s.duration,
+            animationDelay: s.delay,
+          }}
+        >
+          {s.char}
+        </span>
+      ))}
+    </>
+  );
+}
+
+// Per-card hover rotation in degrees, keyed by game kind so reorders
+// in the GAMES roster don't shuffle the per-card tilt. The values are
+// asymmetric on purpose: a uniform +2deg across all cards reads as a
+// design system being applied, whereas five different small angles
+// read as five separate stickers that landed slightly crooked.
+const CARD_HOVER_ROTATIONS: Record<GameKind, number> = {
+  imposter: -1.5,
+  wavelength: 1,
+  "just-one": -0.8,
+  crew: 1.2,
+  hold: -1,
+};
 
 // Section heading — bolder than the old hairline tracked label.
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -358,6 +431,8 @@ export default function HomePage() {
     <>
       {/* Animated brand backdrop, behind everything. */}
       <AnimatedBackdrop />
+      {/* Saturated brand blobs drifting above the bg. */}
+      <FloatingBlobs />
 
       {/* Persistent account control — pinned top-right, present on
           every home face once identity has resolved (FACE A and
@@ -440,8 +515,10 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
-            className="flex w-full flex-col items-start"
+            className="relative flex w-full flex-col items-start"
           >
+            {/* Sparkle dots scattered across the hero. */}
+            <Sparkles />
             {/* The loud anchor — the wordmark in full brand colour. */}
             <Wordmark className="text-7xl sm:text-8xl" />
             {/* The hook — oversized, loud, lowercase. */}
@@ -529,16 +606,28 @@ export default function HomePage() {
                       damping: 20,
                       delay: 0.28 + i * 0.07,
                     }}
-                    whileHover={{ y: -5, scale: 1.035 }}
-                    className="flex w-full items-center gap-4 rounded-3xl px-5 py-4 shadow-lg"
+                    whileHover={{
+                      y: -3,
+                      scale: 1.02,
+                      rotate: CARD_HOVER_ROTATIONS[g.kind],
+                      transition: {
+                        type: "tween",
+                        ease: [0.34, 1.56, 0.64, 1],
+                        duration: 0.3,
+                      },
+                    }}
+                    className="group flex w-full items-center gap-4 rounded-3xl px-5 py-4 shadow-lg"
                     style={{
                       background: CARD_GRADIENT[g.kind],
                     }}
                   >
                     {/* The game's animated vignette in a white badge,
-                        on the card's bold brand colour. */}
+                        on the card's bold brand colour. The badge
+                        gets its own counter-rotation on hover so the
+                        tile reacts to the parent's tilt instead of
+                        sitting still inside it. */}
                     {Vignette && (
-                      <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white">
+                      <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:rotate-[-8deg] group-hover:scale-110">
                         <Vignette />
                       </span>
                     )}
