@@ -130,8 +130,8 @@
 
 /* The base background lives on <html> only. <body> is kept
    transparent so a fixed, negative-z background layer (the home
-   page's conic glow) paints over the page colour instead of being
-   hidden behind an opaque body background. */
+   page's animated brand backdrop) paints over the page colour
+   instead of being hidden behind an opaque body background. */
 html {
   background: var(--page);
 }
@@ -149,13 +149,6 @@ html {
   transition:
     background-color 200ms ease,
     color 200ms ease;
-}
-
-/* The home page's conic glow. On the near-black dark ground a plain
-   translucent layer just goes muddy, so a screen blend turns it into
-   an actual glow; on light it stays a normal translucent tint. */
-[data-theme="dark"] .conic-glow {
-  mix-blend-mode: screen;
 }
 
 .font-serif {
@@ -182,5 +175,67 @@ html {
   .upper-modal-overlay,
   .upper-modal-content {
     animation-duration: 1ms;
+  }
+}
+
+/* Animated brand backdrop: the landing page's ambient ground, in
+   place of the older static conic glow.
+
+   Light mode drifts a four-stop linear gradient through peach, pink,
+   lavender, and sky on a 12s loop. Dark mode drifts a deep purple
+   radial gradient's focal point around the viewport on a slower 15s
+   loop (dark is more ambient by nature). Browsers interpolate
+   between gradient keyframes when stop positions match, so all four
+   linear keyframes use the same 0/35/70/100 stops and all four
+   radial keyframes use the same 0/40/100 stops with only the focal
+   point varying. The 0% frame is repeated as 100% so the loop closes
+   smoothly.
+
+   prefers-reduced-motion holds the 0% frame: the background-image is
+   already set on the base class, so disabling the animation just
+   freezes that initial gradient. */
+@keyframes upper-bg-light {
+  0%, 100% {
+    background-image: linear-gradient(135deg, #F5DCC8 0%, #F0D4D8 35%, #E8D0E0 70%, #DDD0E8 100%);
+  }
+  25% {
+    background-image: linear-gradient(135deg, #FFBE7D 0%, #FF9FB8 35%, #E5A8FF 70%, #A8C5FF 100%);
+  }
+  50% {
+    background-image: linear-gradient(135deg, #FFC9A0 0%, #FFA8D4 35%, #C7A8FF 70%, #A8E1FF 100%);
+  }
+  75% {
+    background-image: linear-gradient(135deg, #FFD9A8 0%, #FFB8D0 35%, #D8B5FF 70%, #FFCBA8 100%);
+  }
+}
+
+@keyframes upper-bg-dark {
+  0%, 100% {
+    background-image: radial-gradient(ellipse at 20% 20%, #2D1B4E 0%, #1A0B2E 40%, #0D0518 100%);
+  }
+  25% {
+    background-image: radial-gradient(ellipse at 80% 30%, #2D1B4E 0%, #1A0B2E 40%, #0D0518 100%);
+  }
+  50% {
+    background-image: radial-gradient(ellipse at 70% 70%, #2D1B4E 0%, #1A0B2E 40%, #0D0518 100%);
+  }
+  75% {
+    background-image: radial-gradient(ellipse at 20% 80%, #2D1B4E 0%, #1A0B2E 40%, #0D0518 100%);
+  }
+}
+
+.upper-bg-animated {
+  background-image: linear-gradient(135deg, #F5DCC8 0%, #F0D4D8 35%, #E8D0E0 70%, #DDD0E8 100%);
+  animation: upper-bg-light 12s ease-in-out infinite;
+}
+
+[data-theme="dark"] .upper-bg-animated {
+  background-image: radial-gradient(ellipse at 20% 20%, #2D1B4E 0%, #1A0B2E 40%, #0D0518 100%);
+  animation: upper-bg-dark 15s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .upper-bg-animated {
+    animation: none;
   }
 }

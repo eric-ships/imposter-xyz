@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
 import { useIdentity, getOrMintDeviceToken, signOut } from "@/lib/identity";
 import { avatarFor } from "@/lib/avatar";
 import { UpperLoader } from "@/components/UpperLoader";
@@ -50,12 +50,6 @@ const CARD_GRADIENTS = [
   "linear-gradient(135deg, var(--upper-gold) 0%, var(--upper-amber) 100%)",
 ];
 
-// The brand conic sweep: the four-accent gradient of the app icon
-// (scripts/gen-icon.mjs) and the loader. The home page wears it too.
-// Anchor stops resolve from the brand tokens in globals.css.
-const BRAND_CONIC =
-  "conic-gradient(from 0deg, var(--upper-red) 0deg, var(--upper-gold) 110deg, var(--upper-magenta) 220deg, var(--upper-blue) 320deg, var(--upper-red) 360deg)";
-
 // "Upper" wordmark: the home page's loud anchor. Now wears the
 // canonical --wordmark-gradient token (red → magenta → purple → blue,
 // a literal tour of the brand color wheel), so the wordmark and the
@@ -82,40 +76,19 @@ function Wordmark({ className = "" }: { className?: string }) {
   );
 }
 
-// A slow, blurred conic glow behind the whole page — the app icon's
-// sweep turned into ambient energy. Honors prefers-reduced-motion.
-function ConicBackdrop() {
-  const reduced = useReducedMotion();
+// The landing's ambient ground: a slow color drift that keeps the
+// page from feeling static. CSS owns the animation: see
+// `.upper-bg-animated` in globals.css for the keyframes. In light
+// mode the bg drifts a four-stop linear gradient through peach,
+// pink, lavender, and sky on a 12s loop; in dark mode it drifts a
+// deep purple radial focal point around the viewport on a 15s loop.
+// prefers-reduced-motion holds the 0% frame.
+function AnimatedBackdrop() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-    >
-      {/* A zero-size anchor at the top-right viewport corner. */}
-      <div className="absolute right-0 top-0 h-0 w-0">
-        {/* The conic sweep, centred on that corner — its muddy
-            convergence point tucks into the corner, so the page gets
-            a clean fan of distinct brand colour. Turns slowly. */}
-        <motion.div
-          className="conic-glow"
-          style={{
-            width: "190vmax",
-            height: "190vmax",
-            marginLeft: "-95vmax",
-            marginTop: "-95vmax",
-            background: BRAND_CONIC,
-            filter: "blur(64px)",
-            opacity: 0.22,
-          }}
-          animate={reduced ? undefined : { rotate: 360 }}
-          transition={
-            reduced
-              ? undefined
-              : { duration: 48, ease: "linear", repeat: Infinity }
-          }
-        />
-      </div>
-    </div>
+      className="upper-bg-animated pointer-events-none fixed inset-0 -z-10"
+    />
   );
 }
 
@@ -400,8 +373,8 @@ export default function HomePage() {
 
   return (
     <>
-      {/* Ambient conic glow — the brand sweep, behind everything. */}
-      <ConicBackdrop />
+      {/* Animated brand backdrop, behind everything. */}
+      <AnimatedBackdrop />
 
       {/* Persistent account control — pinned top-right, present on
           every home face once identity has resolved (FACE A and
