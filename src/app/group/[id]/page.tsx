@@ -704,6 +704,8 @@ type GameRollup = {
   };
   wavelength: { played: number; won: number; totalDelta: number };
   justOne: { played: number; totalDelta: number };
+  crew: { played: number; won: number; totalDelta: number };
+  hold: { played: number; won: number; totalDelta: number };
 };
 
 type StandingRow = {
@@ -782,17 +784,16 @@ function StatsTab({
   }
 
   // Sort members by total matches played desc — most-active first.
-  const sorted = [...data.perMember].sort((a, b) => {
-    const aPlayed =
-      a.games.imposter.played +
-      a.games.wavelength.played +
-      a.games.justOne.played;
-    const bPlayed =
-      b.games.imposter.played +
-      b.games.wavelength.played +
-      b.games.justOne.played;
-    return bPlayed - aPlayed;
-  });
+  // Sum across all five games so Crew + Hold players aren't undercounted.
+  const totalPlayedFor = (g: GameRollup) =>
+    g.imposter.played +
+    g.wavelength.played +
+    g.justOne.played +
+    g.crew.played +
+    g.hold.played;
+  const sorted = [...data.perMember].sort(
+    (a, b) => totalPlayedFor(b.games) - totalPlayedFor(a.games)
+  );
 
   const standings = data.standings ?? [];
 
@@ -832,10 +833,7 @@ function StatsTab({
               m.defaultAvatar,
               sorted.map((s) => ({ id: s.userId }))
             );
-            const totalPlayed =
-              m.games.imposter.played +
-              m.games.wavelength.played +
-              m.games.justOne.played;
+            const totalPlayed = totalPlayedFor(m.games);
             return (
               <li
                 key={m.userId}
@@ -875,6 +873,12 @@ function StatsTab({
                   )}
                   {m.games.justOne.played > 0 && (
                     <JustOneStatRow stats={m.games.justOne} />
+                  )}
+                  {m.games.crew.played > 0 && (
+                    <CrewStatRow stats={m.games.crew} />
+                  )}
+                  {m.games.hold.played > 0 && (
+                    <HoldStatRow stats={m.games.hold} />
                   )}
                   {totalPlayed === 0 && (
                     <p className="text-[11px] text-ink-faint">
@@ -1077,6 +1081,52 @@ function JustOneStatRow({
           <span>
             avg <span className="text-ink">{avg}</span> per match
           </span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function CrewStatRow({ stats }: { stats: GameRollup["crew"] }) {
+  const winRate =
+    stats.played === 0
+      ? null
+      : Math.round((stats.won / stats.played) * 100);
+  return (
+    <div className="flex items-baseline justify-between gap-3 text-xs">
+      <span className="text-ink-soft">
+        Crew <span className="text-ink-faint">·</span> {stats.played}{" "}
+        played
+      </span>
+      <span className="text-ink-soft">
+        <span className="text-ink">
+          {stats.won}/{stats.played}
+        </span>{" "}
+        {winRate !== null && (
+          <span className="text-ink-faint">({winRate}% missions)</span>
+        )}
+      </span>
+    </div>
+  );
+}
+
+function HoldStatRow({ stats }: { stats: GameRollup["hold"] }) {
+  const winRate =
+    stats.played === 0
+      ? null
+      : Math.round((stats.won / stats.played) * 100);
+  return (
+    <div className="flex items-baseline justify-between gap-3 text-xs">
+      <span className="text-ink-soft">
+        Hold <span className="text-ink-faint">·</span> {stats.played}{" "}
+        played
+      </span>
+      <span className="text-ink-soft">
+        <span className="text-ink">
+          {stats.won}/{stats.played}
+        </span>{" "}
+        {winRate !== null && (
+          <span className="text-ink-faint">({winRate}% holds)</span>
         )}
       </span>
     </div>

@@ -64,7 +64,11 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     totalMatches:
-      my.imposter.played + my.wavelength.played + my.justOne.played,
+      my.imposter.played +
+      my.wavelength.played +
+      my.justOne.played +
+      my.crew.played +
+      my.hold.played,
     games: my,
   });
 }
