@@ -2344,29 +2344,13 @@ function PotPanel({
     }
   }
 
-  // Host, pot disabled
+  // Pot-mode is hidden from the lobby for now — no new rooms can opt
+  // in. The /api/rooms/[code]/pot endpoint, the on-chain plumbing,
+  // and the ante / payout UI further down still work, so any room
+  // that's already got an active pot keeps functioning. Re-enabling
+  // is a one-line revert of this branch.
   if (!pot) {
-    if (!isHost) return null;
-    return (
-      <section className="space-y-3">
-        <SectionLabel>Pot mode</SectionLabel>
-        <button
-          onClick={() => toggle(true)}
-          disabled={hostToggling}
-          className="w-full rounded-xl border border-line px-4 py-3 text-[11px] font-medium uppercase tracking-[0.2em] text-ink transition-all duration-100 hover:bg-ink hover:text-page active:scale-[0.97] disabled:opacity-40"
-        >
-          {hostToggling ? "Enabling..." : "Enable 1 USDC pot"}
-        </button>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-ink-faint">
-          Base Sepolia · testnet USDC · winner takes the pot
-        </p>
-        {error && (
-          <p className="border-l border-oxblood bg-oxblood/5 px-4 py-2 text-sm text-oxblood">
-            {error}
-          </p>
-        )}
-      </section>
-    );
+    return null;
   }
 
   // Pot active
