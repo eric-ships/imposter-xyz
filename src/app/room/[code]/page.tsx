@@ -3085,13 +3085,29 @@ export function PlayingPhase({
             </span>
           </span>
           {you.isImposter ? (
-            <div className="font-serif text-2xl  text-ink sm:text-3xl">
-              Bluff · Find the word
+            // The imposter's directive. "Bluff" gets italic-serif +
+            // oxblood so the role reads as the role, not just a verb
+            // floating in a sentence.
+            <div className="font-serif text-2xl text-ink sm:text-3xl">
+              <span className="italic text-oxblood">Bluff</span>
+              <span className="mx-2 text-ink-faint">·</span>
+              Find the word
             </div>
           ) : (
-            <div className="font-serif text-4xl font-medium leading-none tracking-tight text-ink sm:text-5xl">
+            // The crewmate's secret word lands with a soft spring-in
+            // + blur-out so the reveal feels like a discovery moment
+            // on first paint, not just a static label. Keyed on the
+            // word itself so a fresh round (or a skip-word swap)
+            // replays the entrance.
+            <motion.div
+              key={you.secretWord}
+              initial={{ opacity: 0, scale: 0.88, filter: "blur(6px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              transition={{ type: "spring", stiffness: 360, damping: 28 }}
+              className="font-serif text-4xl font-medium leading-none tracking-tight text-ink sm:text-5xl"
+            >
               {you.secretWord}
-            </div>
+            </motion.div>
           )}
           <MoleModeBadge view={view} you={you} />
           <PoliceBadge view={view} code={code} you={you} />
@@ -4087,8 +4103,16 @@ export function VotingPhase({
         </section>
 
         <section className="space-y-4">
-          <div className="text-center">
-            <div className="font-serif text-3xl  text-ink">
+          {/* The voting headline lands with a small spring entrance so
+              the phase transition feels punchy — the room state just
+              flipped from clue → vote, the UI should announce it. */}
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 360, damping: 28 }}
+            className="text-center"
+          >
+            <div className="font-serif text-3xl text-ink">
               Who is the imposter?
             </div>
             <div className="mt-1 text-[11px] uppercase tracking-[0.2em] text-ink-faint">
@@ -4096,7 +4120,7 @@ export function VotingPhase({
                 ? `Vote locked · ${votesReceived} of ${totalPlayers}`
                 : `Cast your vote · ${votesReceived} of ${totalPlayers} in`}
             </div>
-          </div>
+          </motion.div>
           <div className="flex items-center justify-center gap-2 pb-1">
             {view.players.map((p) => {
               const cast = mergedVotes.some((v) => v.voter_id === p.id);
